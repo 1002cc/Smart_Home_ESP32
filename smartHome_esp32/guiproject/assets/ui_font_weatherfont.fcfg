@@ -1,0 +1,16 @@
+{
+  "codename": "weatherfont",
+  "ttf_path": "/assets/SourceHanSansCN-Normal-2.otf",
+  "bin_path": "/assets\\ui_font_weatherfont.bin",
+  "c_path": "/assets\\ui_font_weatherfont.c",
+  "cfg_path": "/assets\\ui_font_weatherfont.fcfg",
+  "size": 16,
+  "bpp": 1,
+  "letters": 0,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "多云晴小大雨雪阴风已未室外温度天气°C城市订阅主题发布应用中阵",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

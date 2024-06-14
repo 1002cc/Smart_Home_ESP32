@@ -1,0 +1,60 @@
+
+def calendarIsHideCB(event_struct):
+    return
+
+
+def ui_calendarIsHideCB(event_struct):
+    return
+
+
+def ui_closeCalendarCB(event_struct):
+    return
+
+
+def lampScreenCall(event_struct):
+    return
+
+
+def lampCall2(event_struct):
+    return
+
+
+def lampCall1(event_struct):
+    return
+
+
+def lampButtonCB(event_struct):
+    return
+
+
+def wifiswitchCD(event_struct):
+    return
+
+
+def mqttSwitch(event_struct):
+    return
+
+
+def mqttSwitchCD(event_struct):
+    return
+
+
+def UseButtonCD(event_struct):
+    return
+
+
+def UsentpButtonCD(event_struct):
+    return
+
+
+def setChooseScreenCD(event_struct):
+    return
+
+
+def chooseBtEventCD(event_struct):
+    return
+
+
+def switchEventCD(event_struct):
+    return
+

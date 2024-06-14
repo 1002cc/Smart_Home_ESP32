@@ -1,0 +1,14 @@
+{
+    "C_Cpp.errorSquiggles": "disabled",
+    "files.associations": {
+        "*.cjson": "jsonc",
+        "*.wxss": "css",
+        "*.wxs": "javascript",
+        "lvgl.h": "c",
+        "module_devices.h": "c",
+        "ui.h": "c",
+        "ui_helpers.h": "c",
+        "unity_internals.h": "c"
+    },
+    "idf.portWin": "COM5"
+}
