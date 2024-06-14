@@ -7,11 +7,8 @@ extern "C" {
 #include <freertos/timers.h>
 }
 
-void weatherQuery();
 void ntpTask(void *param);
 void ntpTimerCallback(TimerHandle_t xTimer);
-void ui_calender_update();
 bool isNetworkAvailable();
-void updateCityID(String cityIDStr);
-void parse_json(const char *json_string);
+
 #endif
