@@ -60,6 +60,8 @@ void initDHT();
 float dhtReadTemperature();
 float dhtReadHumidity();
 
+void readdataList();
+
 void initDevices();
 
 #endif

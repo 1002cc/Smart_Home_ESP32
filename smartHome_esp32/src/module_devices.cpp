@@ -24,6 +24,8 @@ uint8_t cur_volume = 0;
 extern Preferences preferences;
 #endif
 
+int pos = 0;
+
 /********************************************************************
                          led
 ********************************************************************/
@@ -84,26 +86,7 @@ void rgbled_setColor(int r, int g, int b)
                          audio
 ********************************************************************/
 #if USE_AUDIO
-String musicSubstring(String str)
-{
-    int lastSlashIndex = str.lastIndexOf('/');
-    if (lastSlashIndex != -1) {
-        return str.substring(lastSlashIndex + 1);
-    }
-    return "";
-}
 
-String optionsGet()
-{
-    String options;
-    for (int i = 0; i < sizeof(stations) / sizeof(stations[0]); i++) {
-        String url = stations[i];
-        options += musicSubstring(url);
-        options += "\n";
-    }
-    options.trim();
-    return options;
-}
 void audio_init()
 {
     max_stations = sizeof(stations) / sizeof(stations[0]);
@@ -145,17 +128,13 @@ void audioNext()
 void audioPlay()
 {
     Serial.println("Play");
-    lv_dropdown_set_selected(ui_musicDropdown, cur_station);
-    lv_label_set_text(ui_Label25, musicSubstring(stations[cur_station]).c_str());
     if (audio.isRunning()) {
         audio.stopSong();
     }
     if (audio.connecttohost(stations[cur_station].c_str())) {
         Serial.println("Connect to host");
-        lv_label_set_text(ui_playLabel, LV_SYMBOL_PAUSE);
     } else {
         Serial.println("Connect to host failed");
-        lv_label_set_text(ui_playLabel, LV_SYMBOL_PLAY);
     }
     Serial.printf("cur station %s\n", stations[cur_station].c_str());
 }
@@ -170,7 +149,7 @@ void audioTask(void *pt)
 {
     while (1) {
         audio.loop();
-        vTaskDelay(2);
+        vTaskDelay(5);
     }
     vTaskDelete(NULL);
 }
@@ -182,12 +161,79 @@ void startAudioTack()
 #endif
 
 /********************************************************************
+                         sg90
+********************************************************************/
+
+void sg90_init()
+{
+    pinMode(SG90_PIN, OUTPUT);
+    ledcSetup(1, 50, 8);
+    ledcAttachPin(SG90_PIN, 1);
+}
+void sg90_setAngle(int angle)
+{
+    ledcWrite(1, angle);
+}
+
+/********************************************************************
+                         RAIN
+********************************************************************/
+
+void rainTask(void *pt)
+{
+    int rain;
+    while (1) {
+        // analogWrite(RAIN_PIN, (map(analogRead(A0), 0, 1023, 235, 0)));
+        rain = map(analogRead(A0), 0, 1023, 235, 0);
+        Serial.print("rain = ");
+        Serial.println(rain); // 串口输出雨量
+        int soundState = digitalRead(SOUND_PIN);
+        Serial.print("soundState = ");
+        Serial.println(soundState);
+        int pirState = digitalRead(PIR_PIN);
+        Serial.print("PIR_PIN = ");
+        Serial.println(pirState);
+        if (rain > 100) {
+            if (pos <= 0) {
+                for (pos = 0; pos <= 180; pos += 1) {
+                    sg90_setAngle(pos);
+                    vTaskDelay(15);
+                }
+            }
+        } else {
+            if (pos >= 180) {
+                for (pos = 180; pos >= 0; pos -= 1) {
+                    sg90_setAngle(pos);
+                    vTaskDelay(15);
+                }
+            }
+        }
+        vTaskDelay(500);
+    }
+}
+
+void rain_init()
+{
+    pinMode(RAINADCPIN, INPUT); // A0口接收模拟输入信号，即接收是否有雨水的信号
+    pinMode(RAIN_PIN, OUTPUT);
+}
+
+void startRainTask()
+{
+    xTaskCreatePinnedToCore(rainTask, "rain_task", 1024 * 5, NULL, 2, NULL, 1);
+}
+
+/********************************************************************
                          initDevices
 ********************************************************************/
 void initDevices()
 {
     led_init();
     rgbled_init();
+    pinMode(SOUND_PIN, INPUT);
+    pinMode(PIR_PIN, INPUT);
+    sg90_init();
+    rain_init();
 #if USE_AUDIO
     audio_init();
 #endif

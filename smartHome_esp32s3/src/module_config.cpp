@@ -633,6 +633,8 @@ void initNetWorkUIConfig()
 {
     initchooseSetUI();
     buildPWMsgBox();
+    // 读取文件musiclist文件
+    // readdataList();
 #if USE_AUDIO
     initUIspeech();
 #endif

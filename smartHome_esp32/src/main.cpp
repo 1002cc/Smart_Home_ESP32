@@ -37,7 +37,6 @@ void setup()
 
     initDevices();
     updateFlashDate();
-    delay(500);
 
     WiFi.onEvent(WiFiEvent);
     if (!wifiConnect()) {
@@ -45,7 +44,6 @@ void setup()
     } else {
         Serial.println("Connection to WiFi success");
     }
-    delay(500);
     hasNetwork = isNetworkAvailable();
     if (hasNetwork) {
         Serial.println("NetworkAvailable is true");
@@ -65,6 +63,7 @@ void setup()
 #if USE_AUDIO
     startAudioTack();
 #endif
+    startRainTask();
 }
 
 void loop()

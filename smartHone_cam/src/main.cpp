@@ -13,8 +13,6 @@
 #include <nvs.h>
 #include <nvs_flash.h>
 
-#include "WiFiUser.h"
-
 bool PIR_On = false;
 
 static unsigned long lastMotionTime = 0;
@@ -73,9 +71,6 @@ void setup()
     Serial.begin(115200);
 
     // device_init();
-    wifiUser.LEDinit();
-    // 配置WiFi
-    wifiUser.connectToWiFi(15);
     // connectToWiFi();
     Serial.print("IP Address: http://");
     Serial.println(WiFi.localIP());

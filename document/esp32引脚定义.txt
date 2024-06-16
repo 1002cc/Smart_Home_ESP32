@@ -1,7 +1,62 @@
 // ESP32S3
 
+// 触摸屏
+#define TFT_MISO 17
+#define TFT_MOSI 18
+#define TFT_SCLK 12
+#define TFT_CS 5   // Chip select control pin
+#define TFT_DC 6   // Data Command control pin
+#define TFT_RST 16 // Reset pin (could connect to RST pin)
+#define TFT_BL 15             // LED back-light control pin
+#define TOUCH_CS 4 // Chip select pin (T_CS) of touch screen
+
+// RGB_LED
+#define RGBLEDPIN 48
+
+#define MQ2PIN 8
+#define DHTPIN 7
+#define DHTTYPE DHT11
+
+#define PIN_R 35
+#define PIN_G 36
+#define PIN_B 37
+
+// MAX98357
+#define PIN_I2S_MAX98357_LRC 9
+#define PIN_I2S_MAX98357_BCLK 10
+#define PIN_I2S_MAX98357_DOUT 11
+
+// INMP411
+#define PIN_I2S_INMP411_WS 13
+#define PIN_I2S_INMP411_SD 14
+#define PIN_I2S_INMP411_SCK 21
+
 
 //  ESP32
+
+// RGBLED灯
+#define RPIN 14
+#define GPIN 13
+#define BPIN 12
+#define ONBOARDLAMPPIN 2
+
+// 声音传感器
+#define SOUND_PIN 27
+
+// 雨滴传感器
+#define RAIN_PIN 26
+
+// sg90舵机
+#define SG90_PIN 25
+
+// 距离传感器
+#define PIR_PIN 4
+
+// MAX98357
+#define PIN_I2S_MAX98357_BCLK 22
+#define PIN_I2S_MAX98357_LRC 21
+#define PIN_I2S_MAX98357_DOUT 23
+
 
 
 // ESP32-CAM

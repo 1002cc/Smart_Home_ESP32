@@ -12,6 +12,7 @@
 #include "DHT.h"
 #include "ui.h"
 #include <FastLED.h>
+#include <LittleFS.h>
 #include <MQUnifiedsensor.h>
 
 #if USE_AUDIO
@@ -26,6 +27,10 @@ String stations[] = {
     "edge.audio.3qsdn.com/senderkw-mp3",
     "macslons-irish-pub-radio.com/media.asx",
 };
+
+// #define MAX_LINES 15
+// String stations[MAX_LINES];
+
 Audio audio;
 uint8_t max_stations = 0;
 uint8_t cur_station = 0;
@@ -371,6 +376,44 @@ float dhtReadHumidity()
 /********************************************************************
                          initDevices
 ********************************************************************/
+
+void readdataList()
+{
+    // if (!LittleFS.begin(true)) {
+    //     Serial.println("An Error has occurred while mounting LittleFS");
+    //     return;
+    // }
+
+    // File file = LittleFS.open("/musiclist.txt");
+    // if (!file) {
+    //     Serial.println("Failed to open file for reading");
+    //     return;
+    // }
+    // int lineCount = 0; // 记录已读取的行数
+
+    // Serial.println("File Content:");
+    // while (file.available() && lineCount < MAX_LINES) { // 确保不超过数组大小
+    //     // String line = String(file.read());              // 读取一行直到遇到换行符
+    //     // if (line.length() > 0) {                        // 确保行不为空
+    //     //     stations[lineCount] = line;                 // 存储到数组并去除前后空白
+    //     //     Serial.println(stations[lineCount]);        // 打印出来确认
+    //     //     lineCount++;                                // 行计数加一
+    //     // }
+    //     Serial.println(file.read());
+    //     lineCount++;
+    // }
+
+    // if (lineCount < MAX_LINES) {
+    //     Serial.print("Read ");
+    //     Serial.print(lineCount);
+    //     Serial.println(" lines into the array.");
+    // } else {
+    //     Serial.println("Reached maximum lines limit.");
+    // }
+
+    // file.close();
+}
+
 void initDevices()
 {
     initWSrgbled();
