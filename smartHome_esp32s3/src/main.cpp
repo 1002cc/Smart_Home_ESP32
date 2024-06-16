@@ -218,6 +218,7 @@ void sensor_task(void *pvParameter)
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
+    vTaskDelete(NULL);
 }
 
 void mq2_task(void *pvParameter)
@@ -240,11 +241,16 @@ void mq2_task(void *pvParameter)
         };
         publishSensorData(sensorData);
     }
+    vTaskDelete(NULL);
 }
 
 void setup()
 {
     Serial.begin(115200);
+
+    Serial.printf("Deafult free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+    Serial.printf("PSRAM free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    Serial.printf("Flash size: %d bytes\n", ESP.getFlashChipSize());
 
     initDevices();
 
@@ -277,7 +283,7 @@ void setup()
             lv_label_set_text(ui_mqttStateLabel, "已连接");
         }
         // startMqttTask();
-        ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(3600000), pdTRUE, (void *)0, ntpTimerCallback);
+        ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(3600000), pdTRUE, (void *)1, ntpTimerCallback);
         xTimerStart(ntpTimer, 0);
         ntpTimerCallback(NULL);
     } else {

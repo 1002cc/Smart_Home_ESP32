@@ -1,5 +1,13 @@
 // ESP32S3
 
+// 可用引脚
+1
+2
+4
+38
+47
+48
+
 // 触摸屏
 #define TFT_MISO 17
 #define TFT_MOSI 18

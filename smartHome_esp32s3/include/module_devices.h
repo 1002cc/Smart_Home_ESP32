@@ -12,9 +12,9 @@
 #define DHTPIN 7
 #define DHTTYPE DHT11
 
-#define PIN_R 35
-#define PIN_G 36
-#define PIN_B 37
+#define PIN_R 2
+#define PIN_G 1
+#define PIN_B 38
 
 // MAX98357
 #define PIN_I2S_MAX98357_LRC 9
@@ -46,6 +46,7 @@ String optionsGet();
 void startAudioTack();
 void audioVolume(int volume);
 void audioStation(int station);
+void audiosetStation(int station);
 void audioPrevious();
 void audioNext();
 void audioPlay();

@@ -175,6 +175,11 @@ void audioVolume(int volume)
     audio.setVolume(volume);
 }
 
+void audiosetStation(int station)
+{
+    cur_station = station;
+    preferences.putInt("station", cur_station);
+}
 void audioStation(int station)
 {
     cur_station = station;
@@ -207,15 +212,16 @@ void audioPlay()
     Serial.println("Play");
     lv_dropdown_set_selected(ui_musicDropdown, cur_station);
     lv_label_set_text(ui_Label25, musicSubstring(stations[cur_station]).c_str());
-    if (audio.isRunning()) {
-        audio.stopSong();
-    }
+    // if (audio.isRunning()) {
+    //     audio.stopSong();
+    // }
     if (audio.connecttohost(stations[cur_station].c_str())) {
         Serial.println("Connect to host");
         lv_label_set_text(ui_playLabel, LV_SYMBOL_PAUSE);
     } else {
         Serial.println("Connect to host failed");
         lv_label_set_text(ui_playLabel, LV_SYMBOL_PLAY);
+        audio.stopSong();
     }
     Serial.printf("cur station %s\n", stations[cur_station].c_str());
 }
@@ -223,14 +229,15 @@ void audioPlay()
 void audioPause()
 {
     audio.stopSong();
-    Serial.println(audio.isRunning());
+    Serial.println("stopSong");
+    lv_label_set_text(ui_playLabel, LV_SYMBOL_PAUSE);
 }
 
 void audioTask(void *pt)
 {
     while (1) {
         audio.loop();
-        vTaskDelay(2);
+        vTaskDelay(5);
     }
     vTaskDelete(NULL);
 }

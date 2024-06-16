@@ -58,6 +58,38 @@ void beginWIFITask(void *pvParameters);
 static void buildPWMsgBox();
 static void settext_input_event_cb(lv_event_t *e);
 static void popupMsgBox(String title, String msg);
+void StoreData(const char *key, const char *val);
+String ReadData(const char *val);
+void StoreintData(const char *key, int val);
+int ReadintData(const char *val);
+
+void StoreData(const char *key, const char *val)
+{
+    preferences.begin("config", false);
+    preferences.putString(key, val);
+    preferences.end();
+}
+String ReadData(const char *val)
+{
+    preferences.begin("config", false);
+    String ret = preferences.getString(val, "null");
+    preferences.end();
+    return ret;
+}
+
+void StoreintData(const char *key, int val)
+{
+    preferences.begin("config", false);
+    preferences.putInt(key, val);
+    preferences.end();
+}
+int ReadintData(const char *val)
+{
+    preferences.begin("config", false);
+    int ret = preferences.getInt(val, 1000);
+    preferences.end();
+    return ret;
+}
 
 void setChooseScreenCD(lv_event_t *e)
 {
@@ -325,8 +357,8 @@ void beginWIFITask(void *pvParameters)
 
     if (WiFi.status() == WL_CONNECTED) {
         networkStatus = NETWORK_CONNECTED_POPUP;
-        preferences.putString("ssid", ssidName.c_str());
-        preferences.putString("password", ssidPW.c_str());
+        StoreData("ssid", ssidName.c_str());
+        StoreData("password", ssidPW.c_str());
         Serial.printf("\r\n-- wifi connect success! --\r\n");
         Serial.print("IP address: ");
         Serial.println(WiFi.localIP());
@@ -434,15 +466,15 @@ bool wifiConnect()
     WiFi.disconnect(true);
     Serial.println("preferences read wifi info");
 
-    String storedSSID = preferences.getString("ssid", "");
-    String storedPassword = preferences.getString("password", "");
+    String storedSSID = preferences.getString("ssid", "null");
+    String storedPassword = preferences.getString("password", "null");
 
     Serial.println("Connecting to ");
     lv_label_set_text(ui_tipLabel, "正在连接WiFi...");
     Serial.print(ssid);
     Serial.print(" Password:");
     Serial.println(password);
-    if (storedSSID != "" && storedPassword != "") {
+    if (storedSSID != "null" && storedPassword != "null") {
         Serial.print("use flash wifi info : \nssid :");
         Serial.print(storedSSID);
         Serial.print(" Password:");
@@ -552,25 +584,27 @@ void initchooseSetUI()
 
 void updateFlashDate()
 {
-    preferences.begin("wifi-settings", false);
-
-    if (preferences.getString("cityid", "zz") = "zz") {
-        preferences.getString("cityid", "guangzhou");
+    String cityIDStr = ReadData("cityid");
+    if (cityIDStr == "null") {
         lv_textarea_set_placeholder_text(weatherTextarea, "guangzhou");
         updateCityID("guangzhou");
+        StoreData("cityid", "guangzhou");
     } else {
-        String cityIDStr = preferences.getString("cityid");
         Serial.println(cityIDStr);
         lv_textarea_set_placeholder_text(weatherTextarea, cityIDStr.c_str());
         updateCityID(cityIDStr);
     }
 #if USE_AUDIO
-    if (preferences.getInt("volume", 1000) == 1000) { // if that: pref was never been initialized
-        preferences.putInt("volume", 10);
-        preferences.putInt("station", 0);
+    int volume_c = 15;
+    volume_c = ReadintData("volume");
+    int station_c = 0;
+    station_c = ReadintData("station");
+    if (volume_c == 1000) {
+        StoreintData("volume", 10);
+        StoreintData("station", 0);
     } else {
-        audioStation(preferences.getInt("station"));
-        audioVolume(preferences.getInt("volume"));
+        audiosetStation(station_c);
+        audioVolume(volume_c);
     }
 #endif
 }
@@ -586,12 +620,11 @@ void musicbtnCD(lv_event_t *e)
         Serial.println("next");
         audioNext();
     } else if (btn == ui_playButton) {
-        if (!getaudioPlayStatus) {
-            audioPlay();
-            lv_label_set_text(ui_playLabel, LV_SYMBOL_PAUSE);
-        } else {
+        Serial.println("play or pause");
+        if (getaudioPlayStatus()) {
             audioPause();
-            lv_label_set_text(ui_playLabel, LV_SYMBOL_PLAY);
+        } else {
+            audioPlay();
         }
     }
 }
@@ -625,7 +658,7 @@ void initUIspeech()
     lv_obj_add_event_cb(ui_volumeSlider, slider_event_cb, LV_EVENT_VALUE_CHANGED, NULL);
 
     lv_dropdown_set_options(ui_musicDropdown, optionsGet().c_str());
-    lv_obj_add_event_cb(ui_musicDropdown, dropdown_event_cd, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_musicDropdown, dropdown_event_cd, LV_EVENT_VALUE_CHANGED, NULL);
 }
 #endif
 
