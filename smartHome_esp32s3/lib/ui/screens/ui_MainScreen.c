@@ -51,8 +51,8 @@ void ui_MainScreen_screen_init(void)
     lv_img_set_src(ui_weathericonImage, &ui_img_31831977);
     lv_obj_set_width(ui_weathericonImage, LV_SIZE_CONTENT);   /// 60
     lv_obj_set_height(ui_weathericonImage, LV_SIZE_CONTENT);    /// 85
-    lv_obj_set_x(ui_weathericonImage, 66);
-    lv_obj_set_y(ui_weathericonImage, -100);
+    lv_obj_set_x(ui_weathericonImage, 79);
+    lv_obj_set_y(ui_weathericonImage, -101);
     lv_obj_set_align(ui_weathericonImage, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_weathericonImage, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_weathericonImage, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -279,6 +279,17 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_style_bg_opa(ui_Panel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_Panel2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_Panel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_cityLabel = lv_label_create(ui_MainScreen);
+    lv_obj_set_width(ui_cityLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_cityLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_cityLabel, 35);
+    lv_obj_set_y(ui_cityLabel, -99);
+    lv_obj_set_align(ui_cityLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_cityLabel, "广州");
+    lv_obj_set_style_text_color(ui_cityLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_cityLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_cityLabel, &ui_font_UniversalFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_timeLabel, ui_event_timeLabel, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button6, ui_event_Button6, LV_EVENT_ALL, NULL);

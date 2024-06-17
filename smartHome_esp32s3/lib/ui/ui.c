@@ -53,6 +53,7 @@ lv_obj_t * ui_Button4;
 lv_obj_t * ui_Image6;
 lv_obj_t * ui_Label29;
 lv_obj_t * ui_Panel2;
+lv_obj_t * ui_cityLabel;
 
 
 // SCREEN: ui_DateScreen
@@ -62,14 +63,17 @@ lv_obj_t * ui_DateScreen;
 lv_obj_t * ui_TemperatureWifget;
 lv_obj_t * ui_TemperatureLabel;
 lv_obj_t * ui_Label3;
+void ui_event_TemperatureArc(lv_event_t * e);
 lv_obj_t * ui_TemperatureArc;
 lv_obj_t * ui_HumidityWifget;
 lv_obj_t * ui_HumidityLabel;
 lv_obj_t * ui_Label4;
+void ui_event_HumidityArc(lv_event_t * e);
 lv_obj_t * ui_HumidityArc;
 lv_obj_t * ui_MQ2Wifget;
 lv_obj_t * ui_MQLabel;
 lv_obj_t * ui_Label9;
+void ui_event_MQArc(lv_event_t * e);
 lv_obj_t * ui_MQArc;
 void ui_event_Panel3(lv_event_t * e);
 lv_obj_t * ui_Panel3;
@@ -273,6 +277,30 @@ void ui_event_DateScreen(lv_event_t * e)
     if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
         lv_indev_wait_release(lv_indev_get_act());
         _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, &ui_MainScreen_screen_init);
+    }
+}
+void ui_event_TemperatureArc(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        _ui_arc_set_text_value(ui_TemperatureLabel, target, "", "°C");
+    }
+}
+void ui_event_HumidityArc(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        _ui_arc_set_text_value(ui_HumidityLabel, target, "", "%");
+    }
+}
+void ui_event_MQArc(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        _ui_arc_set_text_value(ui_TemperatureLabel, target, "", "°C");
     }
 }
 void ui_event_Panel3(lv_event_t * e)

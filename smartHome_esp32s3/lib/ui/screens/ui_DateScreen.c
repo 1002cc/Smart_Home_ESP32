@@ -23,7 +23,7 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_style_bg_color(ui_TemperatureWifget, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_TemperatureWifget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_color(ui_TemperatureWifget, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_TemperatureWifget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_TemperatureWifget, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_TemperatureLabel = lv_label_create(ui_TemperatureWifget);
     lv_obj_set_width(ui_TemperatureLabel, LV_SIZE_CONTENT);   /// 1
@@ -114,7 +114,7 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_width(ui_MQLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_MQLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_MQLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_MQLabel, "20%");
+    lv_label_set_text(ui_MQLabel, "20°C");
     lv_obj_set_style_text_font(ui_MQLabel, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label9 = lv_label_create(ui_MQ2Wifget);
@@ -132,7 +132,8 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_x(ui_MQArc, 0);
     lv_obj_set_y(ui_MQArc, 10);
     lv_obj_set_align(ui_MQArc, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_MQArc, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE);      /// Flags
+    lv_obj_clear_flag(ui_MQArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK |
+                      LV_OBJ_FLAG_CLICK_FOCUSABLE);      /// Flags
     lv_arc_set_range(ui_MQArc, -36, 70);
     lv_arc_set_value(ui_MQArc, 0);
     lv_arc_set_bg_angles(ui_MQArc, 180, 0);
@@ -194,6 +195,9 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_style_text_opa(ui_Label19, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label19, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    lv_obj_add_event_cb(ui_TemperatureArc, ui_event_TemperatureArc, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_HumidityArc, ui_event_HumidityArc, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_MQArc, ui_event_MQArc, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Panel3, ui_event_Panel3, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_DateScreen, ui_event_DateScreen, LV_EVENT_ALL, NULL);
 

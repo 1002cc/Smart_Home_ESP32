@@ -1,6 +1,10 @@
 #include "smarthome_mqtt.h"
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
+
+#include "lvgl.h"
+#include "ui.h"
+
 // mqtt
 // MQTT Broker settings
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
@@ -39,6 +43,10 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 
 WiFiClientSecure net;
 PubSubClient mqttClient;
+bool mqtt_connected = false;
+bool enable_mqtt = true;
+
+;
 
 void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
@@ -53,42 +61,34 @@ void mqtt_callback(char *topic, byte *payload, unsigned int length)
 bool mqttconnect()
 {
     Serial.println("Connecting to MQTT...");
-    mqtt_client_id += String(WiFi.macAddress());
     if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
         Serial.println("MQTT connected!");
         mqttClient.publish(mqtt_pub, "ESP32 S3 connect mqtt!");
         mqttClient.subscribe(mqtt_sub);
+        mqtt_connected = true;
+        lv_label_set_text(ui_mqttStateLabel, "已连接");
         return true;
     } else {
         Serial.print("failed, rc=");
         Serial.print(mqttClient.state());
         Serial.println(" try again in 5 seconds");
+        mqtt_connected = false;
+        lv_label_set_text(ui_mqttStateLabel, "连接失败");
         return false;
-    }
-}
-
-void mqttTask(void *pvParameters)
-{
-    mqttClient.loop();
-    if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
-        Serial.println("MQTT disconnected, reconnecting...");
-        mqttconnect();
     }
 }
 
 void mqttLoop()
 {
-    mqttClient.loop();
-    if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
-        Serial.println("MQTT disconnected, reconnecting...");
-        mqttconnect();
+    if (enable_mqtt) {
+        if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
+            lv_label_set_text(ui_mqttStateLabel, "未连接");
+            Serial.println("MQTT disconnected, reconnecting...");
+            initMQTT();
+        }
+        mqttClient.loop();
     }
     vTaskDelay(3000 / portTICK_PERIOD_MS);
-}
-
-void startMqttTask()
-{
-    xTaskCreate(mqttTask, "mqttTask", 4096, NULL, 1, NULL);
 }
 
 bool initMQTT()
@@ -101,6 +101,7 @@ bool initMQTT()
     mqttClient.setBufferSize(mqtt_client_buff_size);
     mqttClient.setCallback(mqtt_callback);
     mqttClient.setKeepAlive(mqtt_keepalive);
+    mqtt_client_id += String(WiFi.macAddress());
 
     return mqttconnect();
 }
@@ -124,6 +125,7 @@ void publishSensorData(const SensorData &data)
 
     // 发布消息到指定的MQTT主题
     publishMQTT(jsonStr);
+    cJSON_Delete(root);
 }
 
 bool publishMQTT(const char payload[])
@@ -134,4 +136,9 @@ bool publishMQTT(const char payload[])
 bool subscribeMQTT(const char topic[])
 {
     return mqttClient.subscribe(topic);
+}
+
+void mqtt_disconnect()
+{
+    mqttClient.disconnect();
 }

@@ -59,6 +59,7 @@ extern lv_obj_t * ui_Button4;
 extern lv_obj_t * ui_Image6;
 extern lv_obj_t * ui_Label29;
 extern lv_obj_t * ui_Panel2;
+extern lv_obj_t * ui_cityLabel;
 // SCREEN: ui_DateScreen
 void ui_DateScreen_screen_init(void);
 void ui_event_DateScreen(lv_event_t * e);
@@ -66,14 +67,17 @@ extern lv_obj_t * ui_DateScreen;
 extern lv_obj_t * ui_TemperatureWifget;
 extern lv_obj_t * ui_TemperatureLabel;
 extern lv_obj_t * ui_Label3;
+void ui_event_TemperatureArc(lv_event_t * e);
 extern lv_obj_t * ui_TemperatureArc;
 extern lv_obj_t * ui_HumidityWifget;
 extern lv_obj_t * ui_HumidityLabel;
 extern lv_obj_t * ui_Label4;
+void ui_event_HumidityArc(lv_event_t * e);
 extern lv_obj_t * ui_HumidityArc;
 extern lv_obj_t * ui_MQ2Wifget;
 extern lv_obj_t * ui_MQLabel;
 extern lv_obj_t * ui_Label9;
+void ui_event_MQArc(lv_event_t * e);
 extern lv_obj_t * ui_MQArc;
 void ui_event_Panel3(lv_event_t * e);
 extern lv_obj_t * ui_Panel3;
@@ -210,6 +214,7 @@ LV_FONT_DECLARE(ui_font_smartsystem);
 LV_FONT_DECLARE(ui_font_tipFont);
 LV_FONT_DECLARE(ui_font_unit);
 LV_FONT_DECLARE(ui_font_weatherfont);
+LV_FONT_DECLARE(ui_font_UniversalFont);
 
 
 

@@ -21,7 +21,9 @@ TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight);
 float temperature, humidity, mq2sensorValue;
 
 bool hasNetwork = false;
+extern bool mqtt_connected;
 extern bool palyState;
+extern bool enable_mqtt;
 void my_disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area, lv_color_t *color_p)
 {
     uint32_t w = (area->x2 - area->x1 + 1);
@@ -175,6 +177,7 @@ void initLvgl()
 
 void lvgl_task(void *pt)
 {
+    initLvgl();
     while (1) {
         lv_timer_handler();
         vTaskDelay(5);
@@ -208,12 +211,14 @@ void sensor_task(void *pvParameter)
             lv_label_set_text(ui_TemperatureLabel, temp_char);
             snprintf(temp_char, sizeof(temp_char), "%.0f%%", humidity);
             lv_label_set_text(ui_HumidityLabel, temp_char);
-            SensorData sensorData = {
-                .temp = temperature,
-                .humidity = humidity,
-                .mq = mq2sensorValue,
-            };
-            publishSensorData(sensorData);
+            if (mqtt_connected) {
+                SensorData sensorData = {
+                    .temp = temperature,
+                    .humidity = humidity,
+                    .mq = mq2sensorValue,
+                };
+                // publishSensorData(sensorData);
+            }
             vTaskDelay(30000 / portTICK_PERIOD_MS);
         }
         vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -233,13 +238,15 @@ void mq2_task(void *pvParameter)
         lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
         snprintf(temp_char, sizeof(temp_char), "%d%%", (int)mq2sensorValue);
         lv_label_set_text(ui_MQLabel, temp_char);
+        if (mqtt_connected) {
+            SensorData sensorData = {
+                .temp = temperature,
+                .humidity = humidity,
+                .mq = mq2sensorValue,
+            };
+            // publishSensorData(sensorData);
+        }
         vTaskDelay(3000 / portTICK_PERIOD_MS);
-        SensorData sensorData = {
-            .temp = temperature,
-            .humidity = humidity,
-            .mq = mq2sensorValue,
-        };
-        publishSensorData(sensorData);
     }
     vTaskDelete(NULL);
 }
@@ -251,15 +258,13 @@ void setup()
     Serial.printf("Deafult free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
     Serial.printf("PSRAM free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
     Serial.printf("Flash size: %d bytes\n", ESP.getFlashChipSize());
-
+    Serial.printf("before init wifi : free_heap_size = %d\n", esp_get_free_heap_size());
     initDevices();
 
-    initLvgl();
-    xTaskCreate(lvgl_task, "lvgl_task", 1024 * 10, NULL, 2, NULL);
+    xTaskCreatePinnedToCore(lvgl_task, "lvgl_task", 1024 * 10, NULL, 3, NULL, 1);
 
     vTaskDelay(500);
 
-    WiFi.onEvent(WiFiEvent);
     if (!wifiConnect()) {
         Serial.println("Connection to WiFi failed");
         lv_label_set_text(ui_tipLabel, "连接wifi失败,当前为离线模式,请在配置中连接wifi");
@@ -277,15 +282,23 @@ void setup()
             lv_label_set_text(ui_tipLabel, "服务器连接失败");
             lv_obj_add_state(ui_mqttSwitch, LV_STATE_DEFAULT);
             lv_label_set_text(ui_mqttStateLabel, "未连接");
+            mqtt_connected = false;
+            enable_mqtt = false;
         } else {
             lv_label_set_text(ui_tipLabel, "服务器连接成功");
             lv_obj_add_state(ui_mqttSwitch, LV_STATE_CHECKED);
             lv_label_set_text(ui_mqttStateLabel, "已连接");
+            mqtt_connected = true;
+            enable_mqtt = true;
         }
-        // startMqttTask();
-        ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(3600000), pdTRUE, (void *)1, ntpTimerCallback);
-        xTimerStart(ntpTimer, 0);
-        ntpTimerCallback(NULL);
+        ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(300000), pdTRUE, (void *)0, ntpTimerCallback);
+        if (ntpTimer == NULL) {
+            Serial.println("Error xTimerCreate");
+        } else {
+            xTimerStart(ntpTimer, 0);
+            ntpTimerCallback(NULL);
+        }
+
     } else {
         Serial.println("NetworkAvailable is false");
         lv_label_set_text(ui_tipLabel, "网络不可用,无法连接服务器");
@@ -293,12 +306,16 @@ void setup()
     vTaskDelay(500);
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, true);
 
-    xTaskCreate(sensor_task, "sensor_task", 3096, NULL, 3, NULL);
-    xTaskCreate(mq2_task, "mq2_task", 3096, NULL, 3, NULL);
+    xTaskCreate(sensor_task, "sensor_task", 3096, NULL, 2, NULL);
+    xTaskCreate(mq2_task, "mq2_task", 3096, NULL, 2, NULL);
 
 #if USE_AUDIO
     startAudioTack();
 #endif
+    Serial.printf("Deafult free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
+    Serial.printf("PSRAM free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    Serial.printf("Flash size: %d bytes\n", ESP.getFlashChipSize());
+    Serial.printf("after init wifi : free_heap_size = %d\n", esp_get_free_heap_size());
 }
 
 void loop()

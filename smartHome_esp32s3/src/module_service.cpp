@@ -8,7 +8,7 @@
 #include <lvgl.h>
 
 String weatherApiUrl = "http://api.seniverse.com/v3/weather/now.json?key=Srhi2-y2LtemJAmOB&location=guangzhou&language=zh-Hans&unit=c";
-
+TaskHandle_t ntpxHandle = NULL;
 void ui_calender_update()
 {
     time_t now;
@@ -25,7 +25,8 @@ void ui_calender_update()
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
     Serial.println("Re-syncing time with NTP server");
-    xTaskCreate(ntpTask, "NTP Task", 4096, NULL, 1, NULL);
+    xTaskCreate(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle);
+
     Serial.println("Update weather information");
     weatherQuery();
 }
@@ -39,12 +40,14 @@ void ntpTask(void *param)
         if (getLocalTime(&timeinfo, 10000)) {
             Serial.println("Time synchronized successfully");
             ui_calender_update();
-            vTaskDelete(NULL);
+            vTaskDelete(ntpxHandle);
+            ntpxHandle = NULL;
         } else {
             Serial.println("Failed to synchronize time. Retrying...");
         }
         vTaskDelay(60000 / portTICK_PERIOD_MS);
     }
+    vTaskDelete(NULL);
 }
 
 bool isNetworkAvailable()
@@ -75,15 +78,33 @@ void parse_json(const char *json_string)
     }
 
     cJSON *results = cJSON_GetObjectItem(root, "results");
-    if (cJSON_IsArray(results) && cJSON_GetArraySize(results) > 0) {
+    if (results != NULL && (results) && cJSON_GetArraySize(results) > 0) {
         cJSON *result = cJSON_GetArrayItem(results, 0);
+        if (result == NULL) {
+            Serial.println("Error parsing JSON");
+            return;
+        }
         cJSON *now = cJSON_GetObjectItem(result, "now");
-
+        if (now == NULL) {
+            Serial.println("Error parsing JSON");
+            return;
+        }
         const char *weather_text = cJSON_GetObjectItem(now, "text")->valuestring;
         const char *temperature_str = cJSON_GetObjectItem(now, "temperature")->valuestring;
         const char *code_str = cJSON_GetObjectItem(now, "code")->valuestring;
         int code_number = atoi(code_str);
 
+        cJSON *result1 = cJSON_GetArrayItem(results, 0);
+        if (result1 == NULL) {
+            Serial.println("Error parsing JSON");
+            return;
+        }
+        cJSON *location = cJSON_GetObjectItem(result1, "location");
+        if (location == NULL) {
+            Serial.println("Error parsing JSON");
+            return;
+        }
+        const char *city_text = cJSON_GetObjectItem(location, "name")->valuestring;
         Serial.print("code_number: ");
         Serial.print(code_number);
         Serial.print(" Weather: ");
@@ -95,7 +116,7 @@ void parse_json(const char *json_string)
         snprintf(weather_char, sizeof(weather_char), "%s 室外温度 :%s°C", weather_text, temperature_str);
         Serial.println(weather_char);
         lv_label_set_text(ui_weatherLabel, weather_char);
-
+        lv_label_set_text(ui_cityLabel, city_text);
         if (code_number == 4 || code_number == 9) {
             lv_img_set_src(ui_weathericonImage, &ui_img_520433372);
         } else if (code_number == 0) {

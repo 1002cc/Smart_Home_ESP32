@@ -35,3 +35,4 @@ fonts/ui_font_smartsystem.c
 fonts/ui_font_tipFont.c
 fonts/ui_font_unit.c
 fonts/ui_font_weatherfont.c
+fonts/ui_font_UniversalFont.c

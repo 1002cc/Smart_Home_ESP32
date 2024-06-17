@@ -1,0 +1,16 @@
+{
+  "codename": "UniversalFont",
+  "ttf_path": "/assets/SourceHanSansCN-Normal-2.otf",
+  "bin_path": "/assets\\ui_font_UniversalFont.bin",
+  "c_path": "/assets\\ui_font_UniversalFont.c",
+  "cfg_path": "/assets\\ui_font_UniversalFont.fcfg",
+  "size": 20,
+  "bpp": 1,
+  "letters": 5,
+  "ranges": [
+    "0x20-0x7f"
+  ],
+  "symbols": "广州南宁长沙湖北厦门北京上海杭深圳湛江",
+  "customparams": "--no-compress --no-prefilter",
+  "uploaded": false
+}

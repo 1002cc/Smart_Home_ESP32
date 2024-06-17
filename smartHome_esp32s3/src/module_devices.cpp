@@ -1,5 +1,5 @@
 #include "module_devices.h"
-
+#include <Arduino.h>
 #if USE_AUDIO
 #include "Audio.h"
 #include <Preferences.h>
@@ -28,7 +28,7 @@ String stations[] = {
     "macslons-irish-pub-radio.com/media.asx",
 };
 
-// #define MAX_LINES 15
+#define MAX_LINES 15
 // String stations[MAX_LINES];
 
 Audio audio;
@@ -212,9 +212,9 @@ void audioPlay()
     Serial.println("Play");
     lv_dropdown_set_selected(ui_musicDropdown, cur_station);
     lv_label_set_text(ui_Label25, musicSubstring(stations[cur_station]).c_str());
-    // if (audio.isRunning()) {
-    //     audio.stopSong();
-    // }
+    if (audio.isRunning()) {
+        audio.stopSong();
+    }
     if (audio.connecttohost(stations[cur_station].c_str())) {
         Serial.println("Connect to host");
         lv_label_set_text(ui_playLabel, LV_SYMBOL_PAUSE);
@@ -237,7 +237,7 @@ void audioTask(void *pt)
 {
     while (1) {
         audio.loop();
-        vTaskDelay(5);
+        vTaskDelay(3);
     }
     vTaskDelete(NULL);
 }
@@ -386,39 +386,34 @@ float dhtReadHumidity()
 
 void readdataList()
 {
-    // if (!LittleFS.begin(true)) {
-    //     Serial.println("An Error has occurred while mounting LittleFS");
-    //     return;
-    // }
+    if (!LittleFS.begin(true)) {
+        Serial.println("An Error has occurred while mounting LittleFS");
+        return;
+    }
 
-    // File file = LittleFS.open("/musiclist.txt");
-    // if (!file) {
-    //     Serial.println("Failed to open file for reading");
-    //     return;
-    // }
-    // int lineCount = 0; // 记录已读取的行数
+    File file = LittleFS.open("/musiclist.txt");
+    if (!file) {
+        Serial.println("Failed to open file for reading");
+        return;
+    }
+    int lineCount = 0;
 
-    // Serial.println("File Content:");
-    // while (file.available() && lineCount < MAX_LINES) { // 确保不超过数组大小
-    //     // String line = String(file.read());              // 读取一行直到遇到换行符
-    //     // if (line.length() > 0) {                        // 确保行不为空
-    //     //     stations[lineCount] = line;                 // 存储到数组并去除前后空白
-    //     //     Serial.println(stations[lineCount]);        // 打印出来确认
-    //     //     lineCount++;                                // 行计数加一
-    //     // }
-    //     Serial.println(file.read());
-    //     lineCount++;
-    // }
+    Serial.println("File Content:");
+    while (file.available() && lineCount < MAX_LINES) {
+        Serial.println(file.read());
+        Serial.println(file.readString());
+        lineCount++;
+    }
 
-    // if (lineCount < MAX_LINES) {
-    //     Serial.print("Read ");
-    //     Serial.print(lineCount);
-    //     Serial.println(" lines into the array.");
-    // } else {
-    //     Serial.println("Reached maximum lines limit.");
-    // }
+    if (lineCount < MAX_LINES) {
+        Serial.print("Read ");
+        Serial.print(lineCount);
+        Serial.println(" lines into the array.");
+    } else {
+        Serial.println("Reached maximum lines limit.");
+    }
 
-    // file.close();
+    file.close();
 }
 
 void initDevices()

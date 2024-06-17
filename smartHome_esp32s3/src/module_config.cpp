@@ -3,6 +3,7 @@
 #include "WiFi.h"
 #include "module_devices.h"
 #include "module_service.h"
+#include "smarthome_mqtt.h"
 #include "ui.h"
 #include <Preferences.h>
 #include <lvgl.h>
@@ -47,6 +48,8 @@ String ssidName, ssidPW;
 std::vector<String> foundWifiList;
 TaskHandle_t ntScanTaskHandler, ntConnectTaskHandler;
 Preferences preferences;
+extern bool enable_mqtt;
+extern bool mqtt_connected;
 
 static void timerForNetwork(lv_timer_t *timer);
 static void showingFoundWiFiList();
@@ -149,7 +152,7 @@ void chooseBtEventCD(lv_event_t *e)
             if (!citystr.isEmpty()) {
                 lv_textarea_set_placeholder_text(weatherTextarea, citystr.c_str());
                 lv_textarea_set_text(weatherTextarea, "");
-                preferences.putString("cityid", citystr.c_str());
+                StoreData("cityid", citystr.c_str());
                 Serial.println(citystr);
                 updateCityID(citystr);
                 weatherQuery();
@@ -187,8 +190,13 @@ void chooseBtEventCD(lv_event_t *e)
             Serial.println(hasNetwork);
             if (WiFi.status() == WL_CONNECTED && hasNetwork) {
                 if (lv_obj_has_state(ui_mqttSwitch, LV_STATE_CHECKED)) {
+                    enable_mqtt = true;
                     Serial.println("ui_mqttSwitch LV_STATE_CHECKED");
                 } else {
+                    enable_mqtt = false;
+                    if (mqtt_connected) {
+                        mqtt_disconnect();
+                    }
                     Serial.println("ui_mqttSwitch NO LV_STATE_CHECKED");
                 }
             } else {
@@ -363,6 +371,7 @@ void beginWIFITask(void *pvParameters)
         Serial.print("IP address: ");
         Serial.println(WiFi.localIP());
         lv_label_set_text(ui_wifiStateLabel, "已连接");
+        hasNetwork = isNetworkAvailable();
     } else {
         networkStatus = NETWORK_CONNECT_FAILED;
         Serial.println("Connection to WiFi failed");
@@ -464,10 +473,11 @@ static void popupMsgBox(String title, String msg)
 bool wifiConnect()
 {
     WiFi.disconnect(true);
+    WiFi.mode(WIFI_STA);
     Serial.println("preferences read wifi info");
 
-    String storedSSID = preferences.getString("ssid", "null");
-    String storedPassword = preferences.getString("password", "null");
+    String storedSSID = ReadData("ssid");
+    String storedPassword = ReadData("password");
 
     Serial.println("Connecting to ");
     lv_label_set_text(ui_tipLabel, "正在连接WiFi...");
@@ -590,6 +600,7 @@ void updateFlashDate()
         updateCityID("guangzhou");
         StoreData("cityid", "guangzhou");
     } else {
+        Serial.print("device city: ");
         Serial.println(cityIDStr);
         lv_textarea_set_placeholder_text(weatherTextarea, cityIDStr.c_str());
         updateCityID(cityIDStr);
@@ -606,6 +617,10 @@ void updateFlashDate()
         audiosetStation(station_c);
         audioVolume(volume_c);
     }
+    Serial.print("volume : ");
+    Serial.print(volume_c);
+    Serial.print("\tstation : ");
+    Serial.println(station_c);
 #endif
 }
 
@@ -666,8 +681,6 @@ void initNetWorkUIConfig()
 {
     initchooseSetUI();
     buildPWMsgBox();
-    // 读取文件musiclist文件
-    // readdataList();
 #if USE_AUDIO
     initUIspeech();
 #endif
