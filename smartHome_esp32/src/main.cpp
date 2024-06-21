@@ -10,7 +10,6 @@ TimerHandle_t ntpTimer;
 unsigned long lastMillis = 0;
 
 bool hasNetwork = false;
-extern bool palyState;
 
 void WiFiEvent(WiFiEvent_t event)
 {

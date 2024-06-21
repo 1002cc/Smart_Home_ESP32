@@ -1,0 +1,21 @@
+{
+    "folders": [
+        {
+            "path": "../../smartHome_esp32"
+        },
+        {
+            "path": ".."
+        },
+        {
+            "path": "../../smarthome_camera"
+        }
+    ],
+    "settings": {
+        "files.associations": {
+            "*.cjson": "jsonc",
+            "*.wxss": "css",
+            "*.wxs": "javascript",
+            "littlefs.h": "c"
+        }
+    }
+}

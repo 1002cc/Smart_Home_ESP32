@@ -34,7 +34,7 @@ SET(SOURCES components/ui_comp_lampbutton.c
     fonts/ui_font_smartsystem.c
     fonts/ui_font_tipFont.c
     fonts/ui_font_unit.c
-    fonts/ui_font_weatherfont.c
-    fonts/ui_font_UniversalFont.c)
+    fonts/ui_font_UniversalFont.c
+    fonts/ui_font_weatherfont.c)
 
 add_library(ui ${SOURCES})

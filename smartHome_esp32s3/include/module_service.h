@@ -9,8 +9,8 @@ extern "C" {
 
 void weatherQuery();
 void ntpTask(void *param);
+void startNTPTask(void);
 void ntpTimerCallback(TimerHandle_t xTimer);
-void ui_calender_update();
 bool isNetworkAvailable();
 void updateCityID(String cityIDStr);
 void parse_json(const char *json_string);

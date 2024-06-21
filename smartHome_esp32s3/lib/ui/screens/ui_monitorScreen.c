@@ -25,7 +25,24 @@ void ui_monitorScreen_screen_init(void)
     lv_obj_set_style_border_color(ui_Panel4, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_Panel4, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_connectButton = lv_btn_create(ui_monitorScreen);
+    lv_obj_set_width(ui_connectButton, 100);
+    lv_obj_set_height(ui_connectButton, 40);
+    lv_obj_set_x(ui_connectButton, 84);
+    lv_obj_set_y(ui_connectButton, -86);
+    lv_obj_set_align(ui_connectButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_connectButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_connectButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label28 = lv_label_create(ui_connectButton);
+    lv_obj_set_width(ui_Label28, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label28, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label28, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label28, "连接");
+    lv_obj_set_style_text_font(ui_Label28, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     lv_obj_add_event_cb(ui_Panel4, ui_event_Panel4, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_connectButton, ui_event_connectButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_monitorScreen, ui_event_monitorScreen, LV_EVENT_ALL, NULL);
 
 }

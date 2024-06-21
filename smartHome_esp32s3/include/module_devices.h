@@ -2,9 +2,6 @@
 #define _MODULE_DEVICES_H_
 #include <Arduino.h>
 
-#define USE_AUDIO 1
-#define USE_INMP411 0
-
 // RGB_LED
 #define RGBLEDPIN 48
 
@@ -39,21 +36,6 @@ void blueled_on();
 void blueled_off();
 void rgbled_setColor(int r, int g, int b);
 
-#if USE_AUDIO
-
-String musicSubstring(String str);
-String optionsGet();
-void startAudioTack();
-void audioVolume(int volume);
-void audioStation(int station);
-void audiosetStation(int station);
-void audioPrevious();
-void audioNext();
-void audioPlay();
-void audioPause();
-bool getaudioPlayStatus();
-#endif
-
 void initmq2();
 float readmq2();
 
@@ -61,8 +43,7 @@ void initDHT();
 float dhtReadTemperature();
 float dhtReadHumidity();
 
-void readdataList();
-
 void initDevices();
+void startSensorTask(void);
 
 #endif

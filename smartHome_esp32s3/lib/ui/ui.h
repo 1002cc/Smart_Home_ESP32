@@ -96,7 +96,6 @@ extern lv_obj_t * ui_lampButton2;
 extern lv_obj_t * ui_lampButton3;
 extern lv_obj_t * ui_lampButton4;
 extern lv_obj_t * ui_TabPage2;
-extern lv_obj_t * ui_Colorwheel1;
 void ui_event_Panel10(lv_event_t * e);
 extern lv_obj_t * ui_Panel10;
 // SCREEN: ui_Calendar
@@ -187,6 +186,9 @@ void ui_event_monitorScreen(lv_event_t * e);
 extern lv_obj_t * ui_monitorScreen;
 void ui_event_Panel4(lv_event_t * e);
 extern lv_obj_t * ui_Panel4;
+void ui_event_connectButton(lv_event_t * e);
+extern lv_obj_t * ui_connectButton;
+extern lv_obj_t * ui_Label28;
 extern lv_obj_t * ui____initial_actions0;
 
 
@@ -213,8 +215,8 @@ LV_FONT_DECLARE(ui_font_misc);
 LV_FONT_DECLARE(ui_font_smartsystem);
 LV_FONT_DECLARE(ui_font_tipFont);
 LV_FONT_DECLARE(ui_font_unit);
-LV_FONT_DECLARE(ui_font_weatherfont);
 LV_FONT_DECLARE(ui_font_UniversalFont);
+LV_FONT_DECLARE(ui_font_weatherfont);
 
 
 

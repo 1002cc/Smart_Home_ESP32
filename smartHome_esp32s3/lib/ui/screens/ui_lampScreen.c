@@ -62,14 +62,6 @@ void ui_lampScreen_screen_init(void)
     lv_obj_set_style_bg_color(ui_TabPage2, lv_color_hex(0xFFFFFF), LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_TabPage2, 0, LV_PART_SCROLLBAR | LV_STATE_DEFAULT);
 
-    ui_Colorwheel1 = lv_colorwheel_create(ui_TabPage2, true);
-    lv_obj_set_width(ui_Colorwheel1, 170);
-    lv_obj_set_height(ui_Colorwheel1, 169);
-    lv_obj_set_x(ui_Colorwheel1, 8);
-    lv_obj_set_y(ui_Colorwheel1, 0);
-    lv_obj_set_align(ui_Colorwheel1, LV_ALIGN_CENTER);
-    lv_obj_set_style_arc_width(ui_Colorwheel1, 20, LV_PART_MAIN | LV_STATE_PRESSED);
-
     ui_Panel10 = lv_obj_create(ui_lampScreen);
     lv_obj_set_width(ui_Panel10, 117);
     lv_obj_set_height(ui_Panel10, 4);

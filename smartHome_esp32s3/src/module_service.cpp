@@ -1,31 +1,18 @@
 #include "module_service.h"
-#include "module_devices.h"
-#include "ui.h"
-#include <Arduino.h>
+#include "lvglconfig.h"
+#include "wificonfig.h"
 #include <HTTPClient.h>
-#include <Preferences.h>
 #include <cJSON.h>
-#include <lvgl.h>
 
 String weatherApiUrl = "http://api.seniverse.com/v3/weather/now.json?key=Srhi2-y2LtemJAmOB&location=guangzhou&language=zh-Hans&unit=c";
 TaskHandle_t ntpxHandle = NULL;
-void ui_calender_update()
-{
-    time_t now;
-    struct tm *timeinfo;
-
-    time(&now);                 // 获取当前时间
-    timeinfo = localtime(&now); // 将时间转化为本地时间
-
-    lv_calendar_set_showed_date(ui_Calendar2, timeinfo->tm_year + 1900, timeinfo->tm_mon + 1);
-    lv_calendar_set_today_date(ui_Calendar2, timeinfo->tm_year + 1900, timeinfo->tm_mon + 1, timeinfo->tm_mday);
-    Serial.println("LVGL_Calender_Update Successfully");
-}
-
+TimerHandle_t ntpTimer;
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
-    Serial.println("Re-syncing time with NTP server");
-    xTaskCreate(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle);
+    if (ntpxHandle == NULL) {
+        Serial.println("Re-syncing time with NTP server");
+        xTaskCreate(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle);
+    }
 
     Serial.println("Update weather information");
     weatherQuery();
@@ -33,7 +20,13 @@ void ntpTimerCallback(TimerHandle_t xTimer)
 
 void ntpTask(void *param)
 {
+    int timenumber = 3;
+
     while (true) {
+        if (!getwifistate()) {
+            vTaskDelete(ntpxHandle);
+            ntpxHandle = NULL;
+        }
         configTime(60 * 60 * 8, 0, "ntp1.aliyun.com", "ntp2.aliyun.com", "cn.pool.ntp.org");
 
         struct tm timeinfo;
@@ -44,8 +37,13 @@ void ntpTask(void *param)
             ntpxHandle = NULL;
         } else {
             Serial.println("Failed to synchronize time. Retrying...");
+            timenumber += 10;
+            if (timenumber > 120) {
+                vTaskDelete(ntpxHandle);
+                ntpxHandle = NULL;
+            }
         }
-        vTaskDelay(60000 / portTICK_PERIOD_MS);
+        vTaskDelay(timenumber * 1000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
@@ -115,20 +113,9 @@ void parse_json(const char *json_string)
         char weather_char[28];
         snprintf(weather_char, sizeof(weather_char), "%s 室外温度 :%s°C", weather_text, temperature_str);
         Serial.println(weather_char);
-        lv_label_set_text(ui_weatherLabel, weather_char);
-        lv_label_set_text(ui_cityLabel, city_text);
-        if (code_number == 4 || code_number == 9) {
-            lv_img_set_src(ui_weathericonImage, &ui_img_520433372);
-        } else if (code_number == 0) {
-            lv_img_set_src(ui_weathericonImage, &ui_img_1282432712);
-        } else if (code_number == 5 || code_number == 8) {
-            lv_img_set_src(ui_weathericonImage, &ui_img_31831977);
-        } else if (code_number >= 10 && code_number <= 19) {
-            lv_img_set_src(ui_weathericonImage, &ui_img_1809401540);
-        } else {
-            lv_img_set_src(ui_weathericonImage, &ui_img_520433372);
-        }
-
+        lv_setWeatherinfo(weather_char);
+        lv_setCityinfo(city_text);
+        lv_setWeatherImage(code_number);
         cJSON_Delete(root);
     } else {
         Serial.println("Invalid or empty 'results' array");
@@ -157,4 +144,17 @@ void weatherQuery()
     }
 
     http.end();
+}
+
+void startNTPTask(void)
+{
+    Serial.println("Starting NTP task");
+    ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(300000), pdTRUE, (void *)0, ntpTimerCallback);
+    if (ntpTimer == NULL) {
+        Serial.println("Error xTimerCreate");
+    } else {
+        Serial.println("Starting NTP task successful");
+        xTimerStart(ntpTimer, 0);
+        ntpTimerCallback(NULL);
+    }
 }

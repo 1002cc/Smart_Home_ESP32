@@ -1,8 +1,7 @@
-#include "smarthome_mqtt.h"
+#include "module_mqtt.h"
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
-// mqtt
-// MQTT Broker settings
+
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
 const char *mqtt_sub = "/smartHome/esp32_sub";
 const char *mqtt_pub = "/smartHome/esp32_pub";
@@ -10,7 +9,7 @@ const uint16_t mqtt_broker_port = 8883;
 const uint16_t mqtt_client_buff_size = 4096;
 const char *mqtt_username = "chen";
 const char *mqtt_password = "1002";
-String mqtt_client_id = "esp32CamSmartHome";
+String mqtt_client_id = "SmartHome_esp32_cam";
 const int mqtt_keepalive = 60;
 const char *ca_cert = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -39,21 +38,27 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 
 WiFiClientSecure net;
 PubSubClient mqttClient;
+bool enable_mqtt = true;
 
-void mqtt_callback(char *topic, byte *payload, unsigned int length)
+static void mqtt_callback(char *topic, byte *payload, unsigned int length);
+
+bool initMQTTConfig(void)
 {
-    Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
-    Serial.print("Message:");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char)payload[i]);
-    }
-    Serial.println("\n----------------END----------------");
+    net.setCACert(ca_cert);
+
+    mqttClient.setClient(net);
+    mqttClient.setServer(mqtt_url, mqtt_broker_port);
+    mqttClient.setBufferSize(mqtt_client_buff_size);
+    mqttClient.setCallback(mqtt_callback);
+    mqttClient.setKeepAlive(mqtt_keepalive);
+    mqtt_client_id += String(WiFi.macAddress());
+
+    return mqttconnect();
 }
 
-bool mqttconnect()
+bool mqttconnect(void)
 {
     Serial.println("Connecting to MQTT...");
-    mqtt_client_id += String(WiFi.macAddress());
     if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
         Serial.println("MQTT connected!");
         mqttClient.publish(mqtt_pub, "ESP32 S3 connect mqtt!");
@@ -67,27 +72,47 @@ bool mqttconnect()
     }
 }
 
-bool initMQTT()
+void mqttLoop(void)
 {
-    // 设置根CA证书
-    net.setCACert(ca_cert);
-
-    mqttClient.setClient(net);
-    mqttClient.setServer(mqtt_url, mqtt_broker_port);
-    mqttClient.setBufferSize(mqtt_client_buff_size);
-    mqttClient.setCallback(mqtt_callback);
-    mqttClient.setKeepAlive(mqtt_keepalive);
-
-    return mqttconnect();
+    if (enable_mqtt) {
+        if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
+            Serial.println("MQTT disconnected, reconnecting...");
+            mqttconnect();
+        }
+        mqttClient.loop();
+    }
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
 }
 
-void mqttloop()
+static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
-    mqttClient.loop();
-    if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
-        Serial.println("MQTT disconnected, reconnecting...");
-        mqttconnect();
+    Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
+    Serial.print("Message:");
+    for (int i = 0; i < length; i++) {
+        Serial.print((char)payload[i]);
     }
+    Serial.println("\n----------------END----------------");
+}
+
+void publishSensorData(const SensorData &data)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "code", "200");
+
+    cJSON *dates = cJSON_CreateObject();
+    char tempCharArray[32], humidityCharArray[32], mq2CharArray[32];
+    snprintf(tempCharArray, sizeof(tempCharArray), "%.0f", data.temp);
+    snprintf(humidityCharArray, sizeof(humidityCharArray), "%.0f", data.humidity);
+    snprintf(mq2CharArray, sizeof(mq2CharArray), "%.0f", data.mq);
+    cJSON_AddItemToObject(root, "dates", dates);
+    cJSON_AddStringToObject(dates, "temp", tempCharArray);
+    cJSON_AddStringToObject(dates, "humidity", humidityCharArray);
+    cJSON_AddStringToObject(dates, "mq", mq2CharArray);
+
+    char *jsonStr = cJSON_PrintUnformatted(root);
+
+    publishMQTT(jsonStr);
+    cJSON_Delete(root);
 }
 
 bool publishMQTT(const char payload[])
@@ -98,4 +123,13 @@ bool publishMQTT(const char payload[])
 bool subscribeMQTT(const char topic[])
 {
     return mqttClient.subscribe(topic);
+}
+
+void mqtt_disconnect(void)
+{
+    mqttClient.disconnect();
+}
+bool getMqttStart()
+{
+    return mqttClient.connected();
 }

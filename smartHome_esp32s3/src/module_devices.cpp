@@ -1,50 +1,9 @@
 #include "module_devices.h"
-#include <Arduino.h>
-#if USE_AUDIO
-#include "Audio.h"
-#include <Preferences.h>
-#endif
-
-#if USE_INMP411
-#include <driver/i2s.h>
-#endif
-
 #include "DHT.h"
+#include "module_mqtt.h"
 #include "ui.h"
 #include <FastLED.h>
-#include <LittleFS.h>
 #include <MQUnifiedsensor.h>
-
-#if USE_AUDIO
-String stations[] = {
-    "0n-80s.radionetz.de:8000/0n-70s.mp3",
-    "https://music.163.com/song/media/outer/url?id=1932354158",
-    "www.surfmusic.de/m3u/100-5-das-hitradio,4529.m3u",
-    "stream.1a-webradio.de/deutsch/mp3-128/vtuner-1a",
-    "mp3.ffh.de/radioffh/hqlivestream.aac", //  128k aac
-    "www.antenne.de/webradio/antenne.m3u",
-    "listen.rusongs.ru/ru-mp3-128",
-    "edge.audio.3qsdn.com/senderkw-mp3",
-    "macslons-irish-pub-radio.com/media.asx",
-};
-
-#define MAX_LINES 15
-// String stations[MAX_LINES];
-
-Audio audio;
-uint8_t max_stations = 0;
-uint8_t cur_station = 0;
-uint8_t cur_volume = 0;
-extern Preferences preferences;
-#endif
-
-#if USE_INMP411
-
-#define I2S_NMP411_PORT I2S_NUM_1
-#define bufferLen 64
-int16_t sBuffer[bufferLen];
-
-#endif
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -59,7 +18,7 @@ MQUnifiedsensor MQ2(Board, Voltage_Resolution, ADC_Bit_Resolution, Pin, Type);
 CRGB leds[1];
 
 /********************************************************************
-                         led
+                         WS2812BRGBLED
 ********************************************************************/
 void initWSrgbled()
 {
@@ -87,6 +46,10 @@ void WSLED_OFF()
     leds[0] = CRGB::Black;
     FastLED.show();
 }
+
+/********************************************************************
+                         RGBled
+********************************************************************/
 
 void rgbled_init()
 {
@@ -136,194 +99,6 @@ void rgbled_setColor(int r, int g, int b)
 {
     setColor(r, g, b);
 }
-
-/********************************************************************
-                         audio
-********************************************************************/
-#if USE_AUDIO
-String musicSubstring(String str)
-{
-    int lastSlashIndex = str.lastIndexOf('/');
-    if (lastSlashIndex != -1) {
-        return str.substring(lastSlashIndex + 1);
-    }
-    return "";
-}
-
-String optionsGet()
-{
-    String options;
-    for (int i = 0; i < sizeof(stations) / sizeof(stations[0]); i++) {
-        String url = stations[i];
-        options += musicSubstring(url);
-        options += "\n";
-    }
-    options.trim();
-    return options;
-}
-void audio_init()
-{
-    max_stations = sizeof(stations) / sizeof(stations[0]);
-    audio.setPinout(PIN_I2S_MAX98357_BCLK, PIN_I2S_MAX98357_LRC, PIN_I2S_MAX98357_DOUT);
-    audio.setVolume(cur_volume);
-}
-
-void audioVolume(int volume)
-{
-    cur_volume = volume;
-    preferences.putInt("volume", cur_volume);
-    audio.setVolume(volume);
-}
-
-void audiosetStation(int station)
-{
-    cur_station = station;
-    preferences.putInt("station", cur_station);
-}
-void audioStation(int station)
-{
-    cur_station = station;
-    preferences.putInt("station", cur_station);
-    audioPlay();
-}
-void audioPrevious()
-{
-    if (cur_station > 0) {
-        cur_station--;
-        audioStation(cur_station);
-    }
-}
-
-void audioNext()
-{
-    if (cur_station < max_stations - 1) {
-        cur_station++;
-        audioStation(cur_station);
-    }
-}
-
-bool getaudioPlayStatus()
-{
-    return audio.isRunning();
-}
-
-void audioPlay()
-{
-    Serial.println("Play");
-    lv_dropdown_set_selected(ui_musicDropdown, cur_station);
-    lv_label_set_text(ui_Label25, musicSubstring(stations[cur_station]).c_str());
-    if (audio.isRunning()) {
-        audio.stopSong();
-    }
-    if (audio.connecttohost(stations[cur_station].c_str())) {
-        Serial.println("Connect to host");
-        lv_label_set_text(ui_playLabel, LV_SYMBOL_PAUSE);
-    } else {
-        Serial.println("Connect to host failed");
-        lv_label_set_text(ui_playLabel, LV_SYMBOL_PLAY);
-        audio.stopSong();
-    }
-    Serial.printf("cur station %s\n", stations[cur_station].c_str());
-}
-
-void audioPause()
-{
-    audio.stopSong();
-    Serial.println("stopSong");
-    lv_label_set_text(ui_playLabel, LV_SYMBOL_PAUSE);
-}
-
-void audioTask(void *pt)
-{
-    while (1) {
-        audio.loop();
-        vTaskDelay(3);
-    }
-    vTaskDelete(NULL);
-}
-
-void startAudioTack()
-{
-    xTaskCreate(audioTask, "audio_task", 1024 * 5, NULL, 2, NULL);
-}
-#endif
-
-/********************************************************************
-                          inmp441
-********************************************************************/
-#if USE_INMP411
-bool initinmp441()
-{
-    const i2s_config_t i2s_config = {
-        .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
-        .sample_rate = 44100,
-        .bits_per_sample = i2s_bits_per_sample_t(16),
-        .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
-        .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_MSB),
-        .intr_alloc_flags = 0,
-        .dma_buf_count = 8,
-        .dma_buf_len = bufferLen,
-        .use_apll = false};
-    esp_err_t err;
-    err = i2s_driver_install(I2S_NMP411_PORT, &i2s_config, 0, NULL);
-    f(err != ESP_OK)
-    {
-        Serial.printf("Failed installing driver: %d\n", err);
-        return false;
-    }
-    const i2s_pin_config_t pin_config = {
-        .bck_io_num = PIN_I2S_INMP411_SCK,
-        .ws_io_num = PIN_I2S_INMP411_WS,
-        .data_out_num = -1,
-        .data_in_num = PIN_I2S_INMP411_SD};
-
-    err = i2s_set_pin(I2S_NMP411_PORT, &pin_config);
-    err = i2s_driver_install(I2S_NMP411_PORT, &i2s_config, 0, NULL);
-    if (err != ESP_OK) {
-        Serial.printf("Failed installing driver: %d\n", err);
-        return false;
-    }
-    return true;
-}
-
-int I2Sread(int16_t *samples, int count) // read from i2s
-{
-    size_t bytes_read = 0;
-    if (count > 128) {
-        count = 128; // 最少读取128
-    }
-    i2s_read(REC_I2S_PORT, (char *)samples_32bit, sizeof(int32_t) * count, &bytes_read, portMAX_DELAY);
-    int samples_read = bytes_read / sizeof(int32_t);
-    for (int i = 0; i < samples_read; i++) {
-        int32_t temp = samples_32bit[i] >> 11;
-        samples[i] = (temp > INT16_MAX) ? INT16_MAX : (temp < -INT16_MAX) ? -INT16_MAX
-                                                                          : (int16_t)temp;
-    }
-    return samples_read;
-}
-
-void micinmp441Task(void *parameter)
-{
-
-    initinmp441();
-    i2s_start(I2S_NMP411_PORT);
-
-    size_t bytesIn = 0;
-    while (1) {
-        esp_err_t result = i2s_read(I2S_NMP411_PORT, &sBuffer, bufferLen, &bytesIn, portMAX_DELAY);
-        if (result == ESP_OK && isWebSocketConnected) {
-            // client.sendBinary((const char *)sBuffer, bytesIn);
-        }
-    }
-}
-
-void startinmp441()
-{
-    i2s_start(I2S_NMP411_PORT);
-    xTaskCreatePinnedToCore(micinmp441Task, "inmp441_task", 1024 * 5, NULL, 2, NULL, 1);
-}
-
-#endif
 
 /********************************************************************
                          mq2
@@ -381,46 +156,69 @@ float dhtReadHumidity()
 }
 
 /********************************************************************
+                         DevicesTask
+********************************************************************/
+
+void sensor_task(void *pvParameter)
+{
+    initDHT();
+    initmq2();
+    float temperature, humidity, mq2sensorValue;
+    char temp_char[12];
+    while (1) {
+        temperature = dhtReadTemperature();
+        humidity = dhtReadHumidity();
+        mq2sensorValue = readmq2();
+
+        if (isnan(temperature) || isnan(humidity) || isnan(mq2sensorValue)) {
+            Serial.println("Failed to read from DHT sensor!");
+        } else {
+            Serial.print("Temperature: ");
+            Serial.print(temperature);
+            Serial.print(" °C, Humidity:");
+            Serial.print(humidity);
+            Serial.print("% ");
+            Serial.print(" mq2: ");
+            Serial.println(mq2sensorValue);
+
+            lv_arc_set_value(ui_TemperatureArc, (int16_t)temperature);
+            lv_arc_set_value(ui_HumidityArc, (int16_t)humidity);
+            snprintf(temp_char, sizeof(temp_char), "%.0f°C", temperature);
+            lv_label_set_text(ui_TemperatureLabel, temp_char);
+            snprintf(temp_char, sizeof(temp_char), "%.0f%%", humidity);
+            lv_label_set_text(ui_HumidityLabel, temp_char);
+            lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
+            snprintf(temp_char, sizeof(temp_char), "%d%%", (int)mq2sensorValue);
+            lv_label_set_text(ui_MQLabel, temp_char);
+            if (getMqttStart()) {
+                SensorData sensorData = {
+                    .temp = temperature,
+                    .humidity = humidity,
+                    .mq = mq2sensorValue,
+                };
+                publishSensorData(sensorData);
+            }
+            vTaskDelay(3000 / portTICK_PERIOD_MS);
+        }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+    vTaskDelete(NULL);
+}
+
+/********************************************************************
                          initDevices
 ********************************************************************/
 
-void readdataList()
-{
-    if (!LittleFS.begin(true)) {
-        Serial.println("An Error has occurred while mounting LittleFS");
-        return;
-    }
-
-    File file = LittleFS.open("/musiclist.txt");
-    if (!file) {
-        Serial.println("Failed to open file for reading");
-        return;
-    }
-    int lineCount = 0;
-
-    Serial.println("File Content:");
-    while (file.available() && lineCount < MAX_LINES) {
-        Serial.println(file.read());
-        Serial.println(file.readString());
-        lineCount++;
-    }
-
-    if (lineCount < MAX_LINES) {
-        Serial.print("Read ");
-        Serial.print(lineCount);
-        Serial.println(" lines into the array.");
-    } else {
-        Serial.println("Reached maximum lines limit.");
-    }
-
-    file.close();
-}
-
 void initDevices()
 {
+    Serial.println("Init Devices ...");
     initWSrgbled();
     rgbled_init();
-#if USE_AUDIO
-    audio_init();
-#endif
+    Serial.println("Init Devices Done");
+}
+
+void startSensorTask(void)
+{
+    Serial.println("Starting sensor task");
+    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 2 * 1024, NULL, 5, NULL, 1);
 }

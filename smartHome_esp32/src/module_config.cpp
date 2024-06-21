@@ -12,7 +12,6 @@ const char *password = "317123456";
 
 int networkTimeout = 10 * 1000;
 extern bool hasNetwork;
-int palyState = 0;
 
 Preferences preferences;
 

@@ -84,7 +84,8 @@ void ui_speechScreen_screen_init(void)
     lv_label_set_text(ui_playLabel, "");
 
     ui_volumeSlider = lv_slider_create(ui_s2);
-    lv_slider_set_value(ui_volumeSlider, 50, LV_ANIM_OFF);
+    lv_slider_set_range(ui_volumeSlider, 0, 21);
+    lv_slider_set_value(ui_volumeSlider, 12, LV_ANIM_OFF);
     if(lv_slider_get_mode(ui_volumeSlider) == LV_SLIDER_MODE_RANGE) lv_slider_set_left_value(ui_volumeSlider, 0,
                                                                                                  LV_ANIM_OFF);
     lv_obj_set_width(ui_volumeSlider, 14);

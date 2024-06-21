@@ -1,12 +1,9 @@
-#include "smarthome_mqtt.h"
+#include "module_mqtt.h"
+#include "confighelpr.h"
+#include "lvglconfig.h"
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 
-#include "lvgl.h"
-#include "ui.h"
-
-// mqtt
-// MQTT Broker settings
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
 const char *mqtt_sub = "/smartHome/esp32_sub";
 const char *mqtt_pub = "/smartHome/esp32_pub";
@@ -43,57 +40,11 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 
 WiFiClientSecure net;
 PubSubClient mqttClient;
-bool mqtt_connected = false;
-bool enable_mqtt = true;
 
-;
+static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
-void mqtt_callback(char *topic, byte *payload, unsigned int length)
+bool initMQTTConfig(void)
 {
-    Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
-    Serial.print("Message:");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char)payload[i]);
-    }
-    Serial.println("\n----------------END----------------");
-}
-
-bool mqttconnect()
-{
-    Serial.println("Connecting to MQTT...");
-    if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
-        Serial.println("MQTT connected!");
-        mqttClient.publish(mqtt_pub, "ESP32 S3 connect mqtt!");
-        mqttClient.subscribe(mqtt_sub);
-        mqtt_connected = true;
-        lv_label_set_text(ui_mqttStateLabel, "已连接");
-        return true;
-    } else {
-        Serial.print("failed, rc=");
-        Serial.print(mqttClient.state());
-        Serial.println(" try again in 5 seconds");
-        mqtt_connected = false;
-        lv_label_set_text(ui_mqttStateLabel, "连接失败");
-        return false;
-    }
-}
-
-void mqttLoop()
-{
-    if (enable_mqtt) {
-        if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
-            lv_label_set_text(ui_mqttStateLabel, "未连接");
-            Serial.println("MQTT disconnected, reconnecting...");
-            initMQTT();
-        }
-        mqttClient.loop();
-    }
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
-}
-
-bool initMQTT()
-{
-    // 设置根CA证书
     net.setCACert(ca_cert);
 
     mqttClient.setClient(net);
@@ -104,6 +55,47 @@ bool initMQTT()
     mqtt_client_id += String(WiFi.macAddress());
 
     return mqttconnect();
+}
+
+bool mqttconnect(void)
+{
+    Serial.println("Connecting to MQTT...");
+    if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
+        Serial.println("MQTT connected!");
+        mqttClient.publish(mqtt_pub, "ESP32 S3 connect mqtt!");
+        mqttClient.subscribe(mqtt_sub);
+        lv_setMQTTState("已连接");
+        return true;
+    } else {
+        Serial.print("failed, rc=");
+        Serial.print(mqttClient.state());
+        Serial.println(" try again in 5 seconds");
+        lv_setMQTTState("连接失败");
+        return false;
+    }
+}
+
+void mqttLoop(void)
+{
+    if (enable_mqtt) {
+        if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
+            lv_setMQTTState("未连接");
+            Serial.println("MQTT disconnected, reconnecting...");
+            mqttconnect();
+        }
+        mqttClient.loop();
+    }
+    vTaskDelay(3000 / portTICK_PERIOD_MS);
+}
+
+static void mqtt_callback(char *topic, byte *payload, unsigned int length)
+{
+    Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
+    Serial.print("Message:");
+    for (int i = 0; i < length; i++) {
+        Serial.print((char)payload[i]);
+    }
+    Serial.println("\n----------------END----------------");
 }
 
 void publishSensorData(const SensorData &data)
@@ -121,9 +113,8 @@ void publishSensorData(const SensorData &data)
     cJSON_AddStringToObject(dates, "humidity", humidityCharArray);
     cJSON_AddStringToObject(dates, "mq", mq2CharArray);
 
-    char *jsonStr = cJSON_PrintUnformatted(root); // 获取未格式化的JSON字符串
+    char *jsonStr = cJSON_PrintUnformatted(root);
 
-    // 发布消息到指定的MQTT主题
     publishMQTT(jsonStr);
     cJSON_Delete(root);
 }
@@ -138,7 +129,11 @@ bool subscribeMQTT(const char topic[])
     return mqttClient.subscribe(topic);
 }
 
-void mqtt_disconnect()
+void mqtt_disconnect(void)
 {
     mqttClient.disconnect();
+}
+bool getMqttStart()
+{
+    return mqttClient.connected();
 }
