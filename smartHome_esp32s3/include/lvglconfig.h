@@ -4,6 +4,7 @@
 
 void initLVGLConfig(void);
 void startLVGLTask(void);
+
 void lv_setMQTTState(const char *text);
 void lv_setMQTTSwitchState(bool state);
 void lv_setWIFIState(const char *text);
@@ -19,6 +20,8 @@ void lv_setMusicinfo(const char *text);
 void lv_setDropdowninfo(const char *options);
 void lv_setDropdownaddinfo(const char *option, int pos);
 void lv_setSliderVolume(int value);
+void lv_setCameraImage(const void *path);
+
 void ui_calender_update(void);
 void startCameraTask();
 bool wifiConnect();

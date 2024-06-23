@@ -220,5 +220,5 @@ void initDevices()
 void startSensorTask(void)
 {
     Serial.println("Starting sensor task");
-    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 2 * 1024, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 4 * 1024, NULL, 5, NULL, 1);
 }

@@ -92,7 +92,8 @@ bool readfsDirlist(std::vector<String> &musiclist)
     Serial.println("File Content:");
     int count = 0;
     while (file.available()) {
-        String line = file.readStringUntil('|');
+        String line = file.readStringUntil('\n');
+        line.trim();
         musiclist.push_back(line);
         Serial.println(line);
         if (++count >= MAX_MUSIC_NUM) {

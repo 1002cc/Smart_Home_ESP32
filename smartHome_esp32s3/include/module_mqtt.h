@@ -15,6 +15,7 @@ void mqttLoop(void);
 bool publishMQTT(const char payload[]);
 bool subscribeMQTT(const char topic[]);
 void publishSensorData(const SensorData &data);
+void publishGetImage();
 void mqtt_disconnect(void);
 bool getMqttStart();
 

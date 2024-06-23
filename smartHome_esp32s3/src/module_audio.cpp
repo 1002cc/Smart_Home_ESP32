@@ -10,6 +10,7 @@
 
 #if USE_INMP411
 #include <driver/i2s.h>
+i2s_bits_per_sample_t BITS_PER_SAMPLE;
 #endif
 
 #if USE_AUDIO
@@ -24,19 +25,11 @@ String stations[] = {
     "0n-80s.radionetz.de:8000/0n-70s.mp3",
     "mediaserv30.live-streams.nl:8000/stream",
     "www.surfmusic.de/m3u/100-5-das-hitradio,4529.m3u",
-    "stream.1a-webradio.de/deutsch/mp3-128/vtuner-1a",
-    "mp3.ffh.de/radioffh/hqlivestream.aac", //  128k aac
-    "www.antenne.de/webradio/antenne.m3u",
-    "listen.rusongs.ru/ru-mp3-128",
-    "edge.audio.3qsdn.com/senderkw-mp3",
-    "https://stream.srg-ssr.ch/rsp/aacp_48.asx", // SWISS POP
 };
 
 #endif
 
 #if USE_INMP411
-
-#define I2S_NMP411_PORT I2S_NUM_1
 #define bufferLen 64
 int16_t sBuffer[bufferLen];
 
@@ -75,16 +68,9 @@ void audio_init()
         }
         audioVolume(volume_c);
     }
-    Serial.printf("volume : %d  station: %d\n", volume_c, station_c);
-    Serial.println(max_stations);
+    Serial.printf("volume : %d  station: %d  max_stations:%d\n", volume_c, station_c, max_stations);
     if (stations_list.size() >= 1) {
-        // String str = optionsGet(stations_list);
-        // Serial.println(str);
-        // lv_setDropdowninfo(str.c_str());
-        for (int i = 0; i < stations_list.size(); i++) {
-            Serial.println(stations_list[i]);
-            lv_setDropdownaddinfo(musicSubstring(stations_list[i]).c_str(), i);
-        }
+        lv_setDropdowninfo(optionsGet(stations_list).c_str());
         lv_setDropdown(cur_station);
         lv_setMusicinfo(musicSubstring(stations_list[cur_station]).c_str());
         lv_setSliderVolume(cur_volume);
@@ -165,6 +151,11 @@ void audioTask(void *pt)
     vTaskDelete(NULL);
 }
 
+void audioLoop()
+{
+    audio.loop();
+}
+
 void startAudioTack()
 {
     Serial.println("start Audio Tack");
@@ -174,11 +165,43 @@ void startAudioTack()
 #endif
 
 /********************************************************************
+                         max98357
+********************************************************************/
+#if USE_MAX98357
+
+bool initMax98357()
+{
+    i2s_config_t i2s_config = {
+        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_TX),
+        .sample_rate = SAMPLE_RATE,
+        .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
+        .channel_format = I2S_CHANNEL_FMT_ALL_RIGHT, // 1-channels
+        .communication_format = (i2s_comm_format_t)(I2S_COMM_FORMAT_I2S | I2S_COMM_FORMAT_I2S_LSB),
+        .intr_alloc_flags = 0,
+        .dma_buf_count = 128,
+        .dma_buf_len = 64};
+
+    i2s_pin_config_t pin_config = {
+        .bck_io_num = PIN_I2S_MAX98357_BCLK,
+        .ws_io_num = PIN_I2S_MAX98357_LRC,
+        .data_out_num = PIN_I2S_MAX98357_DOUT,
+        .data_in_num = -1 // Not used
+    };
+    i2s_driver_install(I2S_MAX_PORT, &i2s_config, 0, NULL);
+    i2s_set_pin(I2S_MAX_PORT, &pin_config);
+    i2s_set_clk(I2S_MAX_PORT, SAMPLE_RATE, (i2s_bits_per_sample_t)16, (i2s_channel_t)1);
+    i2s_zero_dma_buffer(I2S_MAX_PORT);
+}
+
+#endif
+
+/********************************************************************
                           inmp441
 ********************************************************************/
 #if USE_INMP411
 bool initinmp441()
 {
+    BITS_PER_SAMPLE = I2S_BITS_PER_SAMPLE_32BIT;
     const i2s_config_t i2s_config = {
         .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_RX),
         .sample_rate = 44100,
@@ -188,11 +211,11 @@ bool initinmp441()
         .intr_alloc_flags = 0,
         .dma_buf_count = 8,
         .dma_buf_len = bufferLen,
-        .use_apll = false};
+        .use_apll = false //
+    };
     esp_err_t err;
     err = i2s_driver_install(I2S_NMP411_PORT, &i2s_config, 0, NULL);
-    f(err != ESP_OK)
-    {
+    if (err != ESP_OK) {
         Serial.printf("Failed installing driver: %d\n", err);
         return false;
     }
@@ -200,7 +223,8 @@ bool initinmp441()
         .bck_io_num = PIN_I2S_INMP411_SCK,
         .ws_io_num = PIN_I2S_INMP411_WS,
         .data_out_num = -1,
-        .data_in_num = PIN_I2S_INMP411_SD};
+        .data_in_num = PIN_I2S_INMP411_SD //
+    };
 
     err = i2s_set_pin(I2S_NMP411_PORT, &pin_config);
     err = i2s_driver_install(I2S_NMP411_PORT, &i2s_config, 0, NULL);
@@ -208,44 +232,62 @@ bool initinmp441()
         Serial.printf("Failed installing driver: %d\n", err);
         return false;
     }
+    i2s_set_clk(I2S_NMP411_PORT, SAMPLE_RATE, BITS_PER_SAMPLE, I2S_CHANNEL_STEREO);
     return true;
 }
 
-int I2Sread(int16_t *samples, int count) // read from i2s
+int inmp411Read(char *data, int numData)
 {
-    size_t bytes_read = 0;
-    if (count > 128) {
-        count = 128; // 最少读取128
-    }
-    i2s_read(REC_I2S_PORT, (char *)samples_32bit, sizeof(int32_t) * count, &bytes_read, portMAX_DELAY);
-    int samples_read = bytes_read / sizeof(int32_t);
-    for (int i = 0; i < samples_read; i++) {
-        int32_t temp = samples_32bit[i] >> 11;
-        samples[i] = (temp > INT16_MAX) ? INT16_MAX : (temp < -INT16_MAX) ? -INT16_MAX
-                                                                          : (int16_t)temp;
-    }
-    return samples_read;
+    size_t bytesRead;
+    i2s_read(I2S_NMP411_PORT, (char *)data, numData, &bytesRead, portMAX_DELAY);
+    return bytesRead;
 }
 
-void micinmp441Task(void *parameter)
+int inmp411GetBitPerSample()
 {
-
-    initinmp441();
-    i2s_start(I2S_NMP411_PORT);
-
-    size_t bytesIn = 0;
-    while (1) {
-        esp_err_t result = i2s_read(I2S_NMP411_PORT, &sBuffer, bufferLen, &bytesIn, portMAX_DELAY);
-        if (result == ESP_OK && isWebSocketConnected) {
-            // client.sendBinary((const char *)sBuffer, bytesIn);
-        }
-    }
+    return (int)BITS_PER_SAMPLE;
 }
 
-void startinmp441()
+void inmp411Clear()
 {
-    i2s_start(I2S_NMP411_PORT);
-    xTaskCreatePinnedToCore(micinmp441Task, "inmp441_task", 1024 * 5, NULL, 2, NULL, 1);
+    i2s_zero_dma_buffer(I2S_NMP411_PORT);
 }
+
+// int I2Sread(int16_t *samples, int count) // read from i2s
+// {
+//     size_t bytes_read = 0;
+//     if (count > 128) {
+//         count = 128; // 最少读取128
+//     }
+//     i2s_read(REC_I2S_PORT, (char *)samples_32bit, sizeof(int32_t) * count, &bytes_read, portMAX_DELAY);
+//     int samples_read = bytes_read / sizeof(int32_t);
+//     for (int i = 0; i < samples_read; i++) {
+//         int32_t temp = samples_32bit[i] >> 11;
+//         samples[i] = (temp > INT16_MAX) ? INT16_MAX : (temp < -INT16_MAX) ? -INT16_MAX
+//                                                                           : (int16_t)temp;
+//     }
+//     return samples_read;
+// }
+
+// void micinmp441Task(void *parameter)
+// {
+
+//     initinmp441();
+//     i2s_start(I2S_NMP411_PORT);
+
+//     size_t bytesIn = 0;
+//     while (1) {
+//         esp_err_t result = i2s_read(I2S_NMP411_PORT, &sBuffer, bufferLen, &bytesIn, portMAX_DELAY);
+//         if (result == ESP_OK && isWebSocketConnected) {
+//             // client.sendBinary((const char *)sBuffer, bytesIn);
+//         }
+//     }
+// }
+
+// void startinmp441()
+// {
+//     i2s_start(I2S_NMP411_PORT);
+//     xTaskCreatePinnedToCore(micinmp441Task, "inmp441_task", 1024 * 5, NULL, 2, NULL, 1);
+// }
 
 #endif

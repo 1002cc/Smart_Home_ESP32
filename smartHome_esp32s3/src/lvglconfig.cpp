@@ -27,6 +27,8 @@ std::vector<String> foundWifiList;
 // web camera
 websockets::WebsocketsClient client;
 
+extern bool enable_mqtt;
+
 /********************************************************************
                          BUILD UI
 ********************************************************************/
@@ -101,11 +103,14 @@ void initLVGLConfig(void)
     digitalWrite(TFT_BL, 1);
     uint16_t calData[5] = {490, 3259, 422, 3210, 1};
     tft.setTouch(calData);
-    static lv_color_t draw_buf1[screenWidth * screenHeight / 2];
-    static lv_color_t draw_buf2[screenWidth * screenHeight / 2];
+    // static lv_color_t draw_buf1[screenWidth * screenHeight / 2];
+    // static lv_color_t draw_buf2[screenWidth * screenHeight / 2];
 
-    lv_disp_draw_buf_init(&draw_buf, draw_buf1, draw_buf2, screenWidth * screenHeight / 10);
+    lv_color_t *draw_buf1 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    lv_color_t *draw_buf2 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
 
+    lv_disp_draw_buf_init(&draw_buf, draw_buf1, draw_buf2, screenWidth * screenHeight);
+    // lv_disp_draw_buf_init(&draw_buf, draw_buf1, draw_buf2, screenWidth * screenHeight / 10);
     /*Initialize the display*/
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
@@ -323,6 +328,11 @@ void lv_setSliderVolume(int value)
     lv_slider_set_value(ui_volumeSlider, value, LV_ANIM_OFF);
 }
 
+void lv_setCameraImage(const void *path)
+{
+    lv_img_set_src(videoImage, path);
+}
+
 /********************************************************************
                          LVGL_SET_UI
 ********************************************************************/
@@ -444,8 +454,8 @@ void chooseBtEventCD(lv_event_t *e)
         } else if (btn == ui_timeuseButton) {
             Serial.println("ui_timeuseButton LV_EVENT_CLICKED");
         } else if (btn == ui_connectButton) {
-            Serial.println("change screen monitor");
-            startCameraTask();
+            Serial.println("get photo");
+            publishGetImage();
         }
     } else if (code == LV_EVENT_VALUE_CHANGED) {
         if (btn == ui_wifiSwitch) {
@@ -480,8 +490,7 @@ void chooseBtEventCD(lv_event_t *e)
                 }
             }
         } else if (btn == ui_mqttSwitch) {
-            Serial.println(hasNetwork);
-            if (getwifistate() && hasNetwork) {
+            if (getwifistate()) {
                 if (lv_obj_has_state(ui_mqttSwitch, LV_STATE_CHECKED)) {
                     enable_mqtt = true;
                     lv_setMQTTState("正在连接");
@@ -778,28 +787,28 @@ void initCameraUI()
     videoImage = lv_img_create(ui_monitorScreen);
     lv_obj_set_pos(videoImage, 0, 0);
     lv_obj_set_size(videoImage, 320, 240);
-    initCameraService();
+    // initCameraService();
 }
 
 void videocameratask(void *pvParameter)
 {
 
-    while (1) {
-        Serial.println("start camera ....");
-        vTaskDelay(1000);
+    // while (1) {
+    //     Serial.println("start camera ....");
+    //     vTaskDelay(1000);
 
-        if (client.available()) {
-            client.poll();
-        }
+    //     if (client.available()) {
+    //         client.poll();
+    //     }
 
-        // if (fb == NULL) {
-        //     vTaskDelay(100);
-        //     Serial.println("get fb failed");
-        // } else {
-        //     lv_img_set_src(videoImage, &videoimg_dsc);
-        // }
-        vTaskDelay(100);
-    }
+    //     if (fb == NULL) {
+    //         vTaskDelay(100);
+    //         Serial.println("get fb failed");
+    //     } else {
+    //         lv_img_set_src(videoImage, &videoimg_dsc);
+    //     }
+    //     vTaskDelay(100);
+    // }
 }
 
 void startCameraTask()
@@ -836,6 +845,7 @@ void my_ui_init(void)
     buildPWMsgBox();
     updateFlashDate();
     initMutex();
+    initCameraUI();
 #if USE_AUDIO
     initUIspeech();
 #endif

@@ -1,12 +1,13 @@
 #include "module_mqtt.h"
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
+#include <cJSON.h>
 
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
-const char *mqtt_sub = "/smartHome/esp32_sub";
-const char *mqtt_pub = "/smartHome/esp32_pub";
+const char *mqtt_sub = "/smartHome/esp32_cam_pub";
+const char *mqtt_pub = "/smartHome/esp32_sub";
 const uint16_t mqtt_broker_port = 8883;
-const uint16_t mqtt_client_buff_size = 4096;
+const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "chen";
 const char *mqtt_password = "1002";
 String mqtt_client_id = "SmartHome_esp32_cam";
@@ -42,6 +43,8 @@ bool enable_mqtt = true;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
+extern void sendImgPieces(void);
+
 bool initMQTTConfig(void)
 {
     net.setCACert(ca_cert);
@@ -61,7 +64,8 @@ bool mqttconnect(void)
     Serial.println("Connecting to MQTT...");
     if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
         Serial.println("MQTT connected!");
-        mqttClient.publish(mqtt_pub, "ESP32 S3 connect mqtt!");
+        Serial.println(mqttClient.getBufferSize());
+        mqttClient.publish(mqtt_pub, "ESP32-CAM connect mqtt!");
         mqttClient.subscribe(mqtt_sub);
         return true;
     } else {
@@ -87,37 +91,46 @@ void mqttLoop(void)
 static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
     Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
-    Serial.print("Message:");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char)payload[i]);
+    // Serial.print("Message:");
+    // for (int i = 0; i < length; i++) {
+    //     Serial.print((char)payload[i]);
+    // }
+
+    String payloadString(payload, length); // 使用构造函数直接转换
+
+    cJSON *root = cJSON_Parse(payloadString.c_str());
+    if (root == NULL) {
+        Serial.println("Failed to parse JSON!");
+    } else {
+        cJSON *code = cJSON_GetObjectItem(root, "code");
+        cJSON *dates = cJSON_GetObjectItem(root, "dates");
+
+        if (code != NULL && dates != NULL) {
+            cJSON *getImage = cJSON_GetObjectItem(dates, "getImage");
+
+            if (getImage != NULL) {
+                Serial.printf("Code: %s\n", code->valuestring);
+                Serial.printf("getImage: %s\n", getImage->valuestring);
+                if (strcmp(getImage->valuestring, "true") == 0) {
+                    Serial.println("getImage: true");
+                    sendImgPieces();
+                }
+            }
+        }
     }
-    Serial.println("\n----------------END----------------");
-}
 
-void publishSensorData(const SensorData &data)
-{
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "code", "200");
-
-    cJSON *dates = cJSON_CreateObject();
-    char tempCharArray[32], humidityCharArray[32], mq2CharArray[32];
-    snprintf(tempCharArray, sizeof(tempCharArray), "%.0f", data.temp);
-    snprintf(humidityCharArray, sizeof(humidityCharArray), "%.0f", data.humidity);
-    snprintf(mq2CharArray, sizeof(mq2CharArray), "%.0f", data.mq);
-    cJSON_AddItemToObject(root, "dates", dates);
-    cJSON_AddStringToObject(dates, "temp", tempCharArray);
-    cJSON_AddStringToObject(dates, "humidity", humidityCharArray);
-    cJSON_AddStringToObject(dates, "mq", mq2CharArray);
-
-    char *jsonStr = cJSON_PrintUnformatted(root);
-
-    publishMQTT(jsonStr);
     cJSON_Delete(root);
+    Serial.println("\n----------------END----------------");
 }
 
 bool publishMQTT(const char payload[])
 {
     return mqttClient.publish(mqtt_pub, payload);
+}
+
+bool publishMQTT(const char payload[], unsigned int plength)
+{
+    return mqttClient.publish(mqtt_pub, payload, plength);
 }
 
 bool subscribeMQTT(const char topic[])
@@ -132,4 +145,19 @@ void mqtt_disconnect(void)
 bool getMqttStart()
 {
     return mqttClient.connected();
+}
+
+void mqtt_beginPublish(unsigned int plength, boolean retained)
+{
+    mqttClient.beginPublish(mqtt_pub, plength, retained);
+}
+
+void mqtt_print(const String &s)
+{
+    mqttClient.print(s);
+}
+
+void mqtt_endPublish()
+{
+    mqttClient.endPublish();
 }

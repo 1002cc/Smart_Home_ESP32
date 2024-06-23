@@ -15,6 +15,7 @@ void audioNext();
 void audioPlay();
 void audioPause();
 bool getaudioPlayStatus();
+void audioLoop();
 #endif
 
 #endif

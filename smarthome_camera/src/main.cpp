@@ -1,19 +1,26 @@
 #include "camera_pins.h"
 #include "esp_camera.h"
+#include "module_mqtt.h"
+#include "sntp.h" // 时间相关
+#include "time.h" // 时间相关
 #include <WiFi.h>
-
 const char *ssid = "317";
 const char *password = "317123456";
 
 void startCameraServer();
 void setupLedFlash(int pin);
+void sendImgPieces(void);
+// 时间NTP相关
+const char *g_ntp_server1 = "ntp.aliyun.com";
+const char *g_ntp_server2 = "stdtime.gov.hk";
+const long g_gmt_offset_sec = 3600;
+const int g_daylight_offset_sec = 3600;
+const char *g_time_zone = "CST-8"; // TimeZone rule for China Standard Time (UTC+8)
+struct tm g_time;
+int g_mqtt_time_count = 0;
 
-void setup()
+void initCamera()
 {
-    Serial.begin(115200);
-    Serial.setDebugOutput(true);
-    Serial.println();
-
     camera_config_t config;
     config.ledc_channel = LEDC_CHANNEL_0;
     config.ledc_timer = LEDC_TIMER_0;
@@ -57,6 +64,7 @@ void setup()
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
         Serial.printf("Camera init failed with error 0x%x", err);
+        ESP.restart();
         return;
     }
 
@@ -69,9 +77,114 @@ void setup()
     if (config.pixel_format == PIXFORMAT_JPEG) {
         s->set_framesize(s, FRAMESIZE_QVGA);
     }
-
     // s->set_vflip(s, 1);
     // s->set_hmirror(s, 1);
+}
+
+void printLocalTime(void)
+{
+    if (!getLocalTime(&g_time)) {
+        Serial.println("No time available (yet)");
+        return;
+    }
+    // Serial.println(&g_time, "%Y-%m-%d %H:%M:%S");
+}
+
+/*
+时间获取回调
+*/
+void timeAvailable(struct timeval *t)
+{
+    Serial.println("Got time adjustment from NTP!");
+    printLocalTime();
+}
+
+void initNtpTime()
+{
+    sntp_set_time_sync_notification_cb(timeAvailable); // 配置时间获取回调
+    configTzTime(g_time_zone, g_ntp_server1, g_ntp_server2);
+}
+
+void uploadImage()
+{
+    Serial.println("uploadImage via MQTT");
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (!fb) {
+        Serial.println("Camera capture failed");
+        return;
+    }
+
+    if (fb->format != PIXFORMAT_JPEG) {
+        Serial.println("Non-JPEG data not implemented");
+        esp_camera_fb_return(fb);
+        return;
+    }
+    Serial.println(fb->len);
+    if (!publishMQTT((const char *)fb->buf, fb->len)) {
+        Serial.println("[Failure] Uploading Image via MQTT");
+    }
+
+    esp_camera_fb_return(fb);
+}
+
+void sendImgPieces(void)
+{
+    camera_fb_t *fb = esp_camera_fb_get();
+    if (fb) {
+        String s_message; // 待发送消息
+
+        // 添加元信息(时间+长度)
+        Serial.printf("IMG:width: %d, height: %d, buf: 0x%x, len: %d\n", fb->width, fb->height, fb->buf, fb->len);
+        char header_msg[28];
+        // ","也要计入
+        sprintf(header_msg, "%03d,%03d,%08x,%9d,", fb->width, fb->height, fb->buf, fb->len);
+        Serial.print("header_msg:");
+        for (int i = 0; i < sizeof(header_msg); i++) {
+            s_message += header_msg[i];
+            Serial.printf("0x%02X ", header_msg[i]);
+        }
+        Serial.println();
+
+        char time_msg[15]; // 用于存储格式化后的时间字符串
+        // sprintf(time_msg,"%04X%04X%04X%04X%04X%04X",'a','b','c','d','e','f');
+        Serial.println(&g_time, "%Y-%m-%d %H:%M:%S");
+        strftime(time_msg, sizeof(time_msg), "%Y%m%d%H%M%S", &g_time);
+        // sprintf(time_msg, "%04X%04X%04X%04X%04X%04X", g_time.tm_year, g_time.tm_mon, g_time.tm_mday, g_time.tm_hour, g_time.tm_min, g_time.tm_sec);
+        Serial.print("time_msg:");
+        for (int i = 0; i < sizeof(time_msg); i++) {
+            s_message += time_msg[i];
+            Serial.printf("0x%02X ", time_msg[i]);
+        }
+        Serial.println();
+
+        // 分帧传送图像数据
+        char data[1];
+
+        for (int i = 0; i < fb->len; i++) {
+            sprintf(data, "%02X", *((fb->buf + i)));
+            s_message += data;
+        }
+
+        if (s_message.length() > 0) {
+            mqtt_beginPublish(s_message.length(), 0);
+            mqtt_print(s_message);
+            mqtt_endPublish();
+            s_message = "";
+        }
+        g_mqtt_time_count = 0;
+        esp_camera_fb_return(fb);
+
+        Serial.println("IMG sent!");
+    }
+}
+
+void setup()
+{
+    Serial.begin(115200);
+    Serial.setDebugOutput(true);
+    Serial.println();
+
+    initCamera();
 
     setupLedFlash(LED_GPIO_NUM);
 
@@ -85,6 +198,12 @@ void setup()
     Serial.println("");
     Serial.println("WiFi connected");
 
+    initNtpTime();
+
+    if (!initMQTTConfig()) {
+        Serial.println("MQTT init failed");
+        return;
+    }
     // startCameraServer();
 
     Serial.print("Camera Ready! Use 'http://");
@@ -94,5 +213,5 @@ void setup()
 
 void loop()
 {
-    delay(10000);
+    mqttLoop();
 }

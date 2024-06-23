@@ -1,17 +1,19 @@
 #include "module_mqtt.h"
 #include "confighelpr.h"
+#include "lvgl.h"
 #include "lvglconfig.h"
 #include <PubSubClient.h>
+#include <TJpg_Decoder.h>
 #include <WiFiClientSecure.h>
 
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
 const char *mqtt_sub = "/smartHome/esp32_sub";
 const char *mqtt_pub = "/smartHome/esp32_pub";
 const uint16_t mqtt_broker_port = 8883;
-const uint16_t mqtt_client_buff_size = 4096;
-const char *mqtt_username = "chen";
+const uint16_t mqtt_client_buff_size = 20 * 1024;
+const char *mqtt_username = "esp32";
 const char *mqtt_password = "1002";
-String mqtt_client_id = "esp32SmartHome";
+String mqtt_client_id = "esp32s3SmartHome";
 const int mqtt_keepalive = 60;
 const char *ca_cert = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -40,6 +42,8 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 
 WiFiClientSecure net;
 PubSubClient mqttClient;
+
+bool enable_mqtt;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
@@ -85,7 +89,6 @@ void mqttLoop(void)
         }
         mqttClient.loop();
     }
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
 }
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length)
@@ -95,6 +98,36 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
     for (int i = 0; i < length; i++) {
         Serial.print((char)payload[i]);
     }
+
+    // char hex_string[length * 2 + 1]; // 存储转换后的十六进制字符串
+    // for (size_t i = 0; i < length; i++) {
+    //     sprintf(&hex_string[i * 2], "%02X", payload[i]);
+    // }
+    // hex_string[length * 2] = '\0'; // 添加字符串终止符
+
+    // // 解析宽度、高度、缓冲区地址和长度（此部分需根据实际消息格式调整）
+    // // 注意：这里简化处理，实际应用中可能需要更复杂的解析逻辑
+    // // 假设hex_string已经包含了所有需要的信息，且格式正确
+    // int width, height, len;
+    // char buf[10]; // 假设buf足够长以存放地址表示
+    // sscanf(hex_string, "%d,%d,0x%s,%d,...", &width, &height, buf, &len);
+
+    // // 解析时间（同样简化处理，实际应根据真实格式调整）
+    // int year, month, day, hour, minute, second;
+    // sscanf(hex_string + 27, "%04x%02x%02x%02x%02x%02x", &year, &month, &day, &hour, &minute, &second);
+
+    // // 打印信息（调试用）
+    // Serial.printf("width: %d, height: %d, buf: 0x%s, len: %d\n", width, height, buf, len);
+    // Serial.printf("year: %d, month: %d, day: %d, hour: %d, minute: %d, second: %d\n", year, month, day, hour, minute, second);
+
+    // // 解析图像数据（直接从payload开始，跳过前面的头部信息）
+    // byte img[length - 43]; // 假定有效图像数据从payload的第43个字节开始
+    // memcpy(img, payload + 43, length - 43);
+
+    // lv_img_dsc_t img_dsc;
+    // lv_img_dsc_init(&img_dsc, NULL, NULL, len - 43, LV_IMG_CF_RAW);
+    // lv_img_set_src(image, &img_dsc);
+
     Serial.println("\n----------------END----------------");
 }
 
@@ -116,6 +149,21 @@ void publishSensorData(const SensorData &data)
     char *jsonStr = cJSON_PrintUnformatted(root);
 
     publishMQTT(jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishGetImage()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "code", "200");
+
+    cJSON *dates = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "dates", dates);
+    cJSON_AddStringToObject(dates, "getImage", "true");
+    char *jsonStr = cJSON_PrintUnformatted(root);
+
+    // publishMQTT(jsonStr);
+    mqttClient.publish("/smartHome/esp32_cam_pub", jsonStr);
     cJSON_Delete(root);
 }
 

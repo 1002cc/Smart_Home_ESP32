@@ -8,6 +8,8 @@
 
 const char *ssid = "317";
 const char *password = "317123456";
+bool hasNetwork;
+extern bool enable_mqtt;
 
 extern std::vector<String> foundWifiList;
 
@@ -16,6 +18,60 @@ void beginWIFITask(void *pvParameters);
 bool initWIFIConfig(void)
 {
     return wifiConnect();
+}
+
+void WiFiEvent(WiFiEvent_t event)
+{
+    Serial.printf("[WiFi-event] event: %d\n", event);
+
+    switch (event) {
+    case SYSTEM_EVENT_SCAN_DONE:
+        Serial.println("已完成对访问点的扫描");
+        break;
+    case SYSTEM_EVENT_STA_START:
+        Serial.println("WiFi client started");
+        break;
+    case SYSTEM_EVENT_STA_STOP:
+        Serial.println("WiFi clients stopped");
+        break;
+    case SYSTEM_EVENT_STA_CONNECTED:
+        lv_setWIFIState("已连接");
+        hasNetwork = isNetworkAvailable();
+        Serial.println("已连接到接入点");
+        break;
+    case SYSTEM_EVENT_STA_DISCONNECTED:
+        lv_setWIFIState("未连接");
+        Serial.println("与WiFi接入点断开连接");
+        break;
+    case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
+        Serial.println("接入点的身份验证模式已更改");
+        break;
+    case SYSTEM_EVENT_STA_GOT_IP:
+        Serial.print("Obtained IP address: ");
+        Serial.println(WiFi.localIP());
+        break;
+    case SYSTEM_EVENT_AP_START:
+        Serial.println("WiFi接入点已启动");
+        break;
+    case SYSTEM_EVENT_AP_STOP:
+        Serial.println("WiFi接入点已停止");
+        break;
+    case SYSTEM_EVENT_AP_STACONNECTED:
+        Serial.println("客户端已连接");
+        break;
+    case SYSTEM_EVENT_AP_STADISCONNECTED:
+        Serial.println("客户端已断开连接");
+        break;
+    case SYSTEM_EVENT_AP_STAIPASSIGNED:
+        Serial.println("已将IP地址分配给客户端");
+        break;
+    case SYSTEM_EVENT_AP_PROBEREQRECVED:
+        Serial.println("收到探测请求");
+        break;
+        break;
+    default:
+        break;
+    }
 }
 
 bool wifiConnect()
@@ -36,6 +92,7 @@ bool wifiConnect()
     }
 
     Serial.printf("ssid:%s Password:%s\n", ssid, password);
+    WiFi.onEvent(WiFiEvent);
     WiFi.begin(ssid, password);
 
     unsigned long startingTime = millis();
@@ -48,15 +105,10 @@ bool wifiConnect()
     }
     vTaskDelay(1000);
     if (WiFi.status() == WL_CONNECTED) {
-        Serial.printf("\r\n-- wifi connect success! --\r\n");
-        Serial.print("IP address: ");
-        Serial.println(WiFi.localIP());
         WSLED_Green();
-        lv_setWIFIState("已连接");
         lv_setTipinfo("WiFi连接成功");
         hasNetwork = isNetworkAvailable();
         if (hasNetwork) {
-            Serial.println("NetworkAvailable is true");
             lv_setTipinfo("正在连接服务器");
             if (!initMQTTConfig()) {
                 lv_setTipinfo("服务器连接失败");
@@ -70,9 +122,13 @@ bool wifiConnect()
                 enable_mqtt = true;
             }
         } else {
-            Serial.println("NetworkAvailable is false");
-            lv_setTipinfo("网络不可用,无法连接服务器");
+            Serial.println("Network unavailable");
+            lv_setTipinfo("网络不可用");
+            lv_setMQTTSwitchState(false);
+            lv_setMQTTState("未连接");
+            enable_mqtt = false;
         }
+
         vTaskDelay(1000);
         WSLED_OFF();
         return true;
@@ -81,7 +137,6 @@ bool wifiConnect()
         lv_setTipinfo("连接wifi失败,当前为离线模式,请在配置中连接wifi");
     }
     Serial.println("Connection to WiFi failed");
-    lv_setWIFIState("未连接");
     WSLED_OFF();
     return false;
 }
