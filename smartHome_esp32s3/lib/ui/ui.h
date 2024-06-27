@@ -180,15 +180,18 @@ extern lv_obj_t * ui_Label25;
 extern lv_obj_t * ui_Label26;
 extern lv_obj_t * ui_musicDropdown;
 extern lv_obj_t * ui_Label27;
+void ui_event_speakButton(lv_event_t * e);
+extern lv_obj_t * ui_speakButton;
+extern lv_obj_t * ui_Label28;
 // SCREEN: ui_monitorScreen
 void ui_monitorScreen_screen_init(void);
 void ui_event_monitorScreen(lv_event_t * e);
 extern lv_obj_t * ui_monitorScreen;
 void ui_event_Panel4(lv_event_t * e);
 extern lv_obj_t * ui_Panel4;
-void ui_event_connectButton(lv_event_t * e);
-extern lv_obj_t * ui_connectButton;
-extern lv_obj_t * ui_Label28;
+void ui_event_connectCameraButton(lv_event_t * e);
+extern lv_obj_t * ui_connectCameraButton;
+extern lv_obj_t * ui_cameraLabel;
 extern lv_obj_t * ui____initial_actions0;
 
 

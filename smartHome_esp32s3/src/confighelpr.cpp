@@ -128,7 +128,7 @@ String optionsGet(std::vector<String> musiclist)
 
 void printPSRAM(void)
 {
-    Serial.println("printPSRAM .....");
+    Serial.println("\n\nprintPSRAM .....");
     Serial.printf("Deafult free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
     Serial.printf("PSRAM free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
     Serial.printf("Flash size: %d bytes\n", ESP.getFlashChipSize());

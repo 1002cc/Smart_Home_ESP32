@@ -2,6 +2,7 @@
 #include "confighelpr.h"
 #include "lvgl.h"
 #include "lvglconfig.h"
+#include "module_service.h"
 #include <PubSubClient.h>
 #include <TJpg_Decoder.h>
 #include <WiFiClientSecure.h>
@@ -10,7 +11,7 @@ const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
 const char *mqtt_sub = "/smartHome/esp32_sub";
 const char *mqtt_pub = "/smartHome/esp32_pub";
 const uint16_t mqtt_broker_port = 8883;
-const uint16_t mqtt_client_buff_size = 20 * 1024;
+const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "esp32";
 const char *mqtt_password = "1002";
 String mqtt_client_id = "esp32s3SmartHome";
@@ -46,19 +47,44 @@ PubSubClient mqttClient;
 bool enable_mqtt;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
+bool firstConnectMQTT(void);
 
 bool initMQTTConfig(void)
 {
+    Serial.println("Init MQTT Config");
     net.setCACert(ca_cert);
-
     mqttClient.setClient(net);
     mqttClient.setServer(mqtt_url, mqtt_broker_port);
     mqttClient.setBufferSize(mqtt_client_buff_size);
     mqttClient.setCallback(mqtt_callback);
     mqttClient.setKeepAlive(mqtt_keepalive);
     mqtt_client_id += String(WiFi.macAddress());
+    return firstConnectMQTT();
+}
 
-    return mqttconnect();
+bool firstConnectMQTT(void)
+{
+    if (isNetworkAvailable()) {
+        lv_setTipinfo("正在连接服务器");
+        if (mqttconnect()) {
+            lv_setTipinfo("服务器连接成功");
+            lv_setMQTTSwitchState(true);
+            lv_setMQTTState("已连接");
+            enable_mqtt = true;
+        } else {
+            lv_setTipinfo("服务器连接失败");
+            lv_setMQTTSwitchState(false);
+            lv_setMQTTState("未连接");
+            enable_mqtt = false;
+        }
+    } else {
+        Serial.println("Network unavailable");
+        lv_setTipinfo("网络不可用");
+        lv_setMQTTSwitchState(false);
+        lv_setMQTTState("未连接");
+        enable_mqtt = false;
+    }
+    return enable_mqtt;
 }
 
 bool mqttconnect(void)
@@ -163,6 +189,20 @@ void publishGetImage()
     char *jsonStr = cJSON_PrintUnformatted(root);
 
     // publishMQTT(jsonStr);
+    mqttClient.publish("/smartHome/esp32_cam_pub", jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishStartVideo(bool isStartVideo)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "code", "200");
+
+    cJSON *dates = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "dates", dates);
+    cJSON_AddBoolToObject(dates, "startVideo", isStartVideo);
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    Serial.println(jsonStr);
     mqttClient.publish("/smartHome/esp32_cam_pub", jsonStr);
     cJSON_Delete(root);
 }

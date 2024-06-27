@@ -1,4 +1,5 @@
 #include "module_mqtt.h"
+#include "module_server.h"
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 #include <cJSON.h>
@@ -40,6 +41,7 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 WiFiClientSecure net;
 PubSubClient mqttClient;
 bool enable_mqtt = true;
+extern bool isStartCamera;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
@@ -85,16 +87,15 @@ void mqttLoop(void)
         }
         mqttClient.loop();
     }
-    vTaskDelay(3000 / portTICK_PERIOD_MS);
 }
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
     Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
-    // Serial.print("Message:");
-    // for (int i = 0; i < length; i++) {
-    //     Serial.print((char)payload[i]);
-    // }
+    Serial.print("Message:");
+    for (int i = 0; i < length; i++) {
+        Serial.print((char)payload[i]);
+    }
 
     String payloadString(payload, length); // 使用构造函数直接转换
 
@@ -103,17 +104,27 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         Serial.println("Failed to parse JSON!");
     } else {
         cJSON *code = cJSON_GetObjectItem(root, "code");
-        cJSON *dates = cJSON_GetObjectItem(root, "dates");
-
-        if (code != NULL && dates != NULL) {
-            cJSON *getImage = cJSON_GetObjectItem(dates, "getImage");
-
-            if (getImage != NULL) {
-                Serial.printf("Code: %s\n", code->valuestring);
-                Serial.printf("getImage: %s\n", getImage->valuestring);
-                if (strcmp(getImage->valuestring, "true") == 0) {
-                    Serial.println("getImage: true");
-                    sendImgPieces();
+        if (code != NULL) {
+            Serial.printf("Code: %s\n", code->valuestring);
+            cJSON *dates = cJSON_GetObjectItem(root, "dates");
+            if (dates != NULL) {
+                cJSON *getImage = cJSON_GetObjectItem(dates, "getImage");
+                if (getImage != NULL) {
+                    Serial.printf("getImage: %s\n", getImage->valuestring);
+                    if (strcmp(getImage->valuestring, "true") == 0) {
+                        Serial.println("getImage: true");
+                        sendImgPieces();
+                    }
+                }
+                cJSON *startVideo = cJSON_GetObjectItem(dates, "startVideo");
+                if (startVideo != NULL) {
+                    if (startVideo->valueint == 1) {
+                        isStartCamera = true;
+                    } else {
+                        isStartCamera = false;
+                    }
+                    Serial.printf("startVideo: %d  isStartCamera:%d\n", startVideo->valueint, isStartCamera);
+                    startcameraTask();
                 }
             }
         }

@@ -188,6 +188,9 @@ lv_obj_t * ui_Label25;
 lv_obj_t * ui_Label26;
 lv_obj_t * ui_musicDropdown;
 lv_obj_t * ui_Label27;
+void ui_event_speakButton(lv_event_t * e);
+lv_obj_t * ui_speakButton;
+lv_obj_t * ui_Label28;
 
 
 // SCREEN: ui_monitorScreen
@@ -196,9 +199,9 @@ void ui_event_monitorScreen(lv_event_t * e);
 lv_obj_t * ui_monitorScreen;
 void ui_event_Panel4(lv_event_t * e);
 lv_obj_t * ui_Panel4;
-void ui_event_connectButton(lv_event_t * e);
-lv_obj_t * ui_connectButton;
-lv_obj_t * ui_Label28;
+void ui_event_connectCameraButton(lv_event_t * e);
+lv_obj_t * ui_connectCameraButton;
+lv_obj_t * ui_cameraLabel;
 lv_obj_t * ui____initial_actions0;
 const lv_img_dsc_t * ui_imgset_l[2] = {&ui_img_l1_png, &ui_img_l2_png};
 const lv_img_dsc_t * ui_imgset_s[1] = {&ui_img_s1_png};
@@ -253,7 +256,7 @@ void ui_event_Button3(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        _ui_screen_change(&ui_monitorScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, &ui_monitorScreen_screen_init);
+        _ui_screen_change(&ui_monitorScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_monitorScreen_screen_init);
     }
 }
 void ui_event_Button2(lv_event_t * e)
@@ -261,7 +264,7 @@ void ui_event_Button2(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        _ui_screen_change(&ui_DateScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, &ui_DateScreen_screen_init);
+        _ui_screen_change(&ui_DateScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_DateScreen_screen_init);
     }
 }
 void ui_event_Button4(lv_event_t * e)
@@ -269,7 +272,7 @@ void ui_event_Button4(lv_event_t * e)
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        _ui_screen_change(&ui_speechScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, &ui_speechScreen_screen_init);
+        speakScreenCD(e);
     }
 }
 void ui_event_DateScreen(lv_event_t * e)
@@ -428,7 +431,7 @@ void ui_event_set1Screen(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
         lv_indev_wait_release(lv_indev_get_act());
-        _ui_screen_change(&ui_setchooseScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_setchooseScreen_screen_init);
+        chooseScreenFCD(e);
     }
 }
 void ui_event_Panel5(lv_event_t * e)
@@ -480,7 +483,7 @@ void ui_event_speechScreen(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
         lv_indev_wait_release(lv_indev_get_act());
-        _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_MainScreen_screen_init);
+        speakScreenFCD(e);
     }
 }
 void ui_event_Panel8(lv_event_t * e)
@@ -490,6 +493,14 @@ void ui_event_Panel8(lv_event_t * e)
     if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
         lv_indev_wait_release(lv_indev_get_act());
         _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_MainScreen_screen_init);
+    }
+}
+void ui_event_speakButton(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        speakScreenCD(e);
     }
 }
 void ui_event_monitorScreen(lv_event_t * e)
@@ -510,12 +521,15 @@ void ui_event_Panel4(lv_event_t * e)
         _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_MainScreen_screen_init);
     }
 }
-void ui_event_connectButton(lv_event_t * e)
+void ui_event_connectCameraButton(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
-        chooseBtEventCD(e);
+        cameraScreenCD(e);
+    }
+    if(event_code == LV_EVENT_LONG_PRESSED) {
+        cameraScreenCD(e);
     }
 }
 

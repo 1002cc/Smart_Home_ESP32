@@ -2,13 +2,23 @@
 #include "lvglconfig.h"
 #include "wificonfig.h"
 #include <HTTPClient.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 #include <cJSON.h>
+
+const char *ntpServer1 = "ntp.org";
+const char *ntpServer2 = "ntp.ntsc.ac.cn";
+const long gmtOffset_sec = 3600;
+const int daylightOffset_sec = 3600;
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org");
 
 String weatherApiUrl = "http://api.seniverse.com/v3/weather/now.json?key=Srhi2-y2LtemJAmOB&location=guangzhou&language=zh-Hans&unit=c";
 TaskHandle_t ntpxHandle = NULL;
 TimerHandle_t ntpTimer;
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
+    // getDateTime();
     if (ntpxHandle == NULL) {
         Serial.println("Re-syncing time with NTP server");
         xTaskCreate(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle);
@@ -32,7 +42,7 @@ void ntpTask(void *param)
         struct tm timeinfo;
         if (getLocalTime(&timeinfo, 10000)) {
             Serial.println("Time synchronized successfully");
-            ui_calender_update();
+            // ui_calender_update();
             vTaskDelete(ntpxHandle);
             ntpxHandle = NULL;
         } else {
@@ -59,7 +69,7 @@ bool isNetworkAvailable()
     WiFiClient client;
     const int timeoutMs = 2000;
     bool result = client.connect(remoteIp, 80, timeoutMs);
-
+    delay(10);
     if (result) {
         client.stop();
         return true;
@@ -148,6 +158,8 @@ void weatherQuery()
 
 void startNTPTask(void)
 {
+    setup_ntp_client();
+#if 1
     Serial.println("Starting NTP task");
     ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(300000), pdTRUE, (void *)0, ntpTimerCallback);
     if (ntpTimer == NULL) {
@@ -157,4 +169,57 @@ void startNTPTask(void)
         xTimerStart(ntpTimer, 0);
         ntpTimerCallback(NULL);
     }
+#else
+    getDateTime();
+    Serial.println("Update weather information");
+    weatherQuery();
+#endif
+}
+
+void setup_ntp_client()
+{
+    timeClient.begin();
+    // 设置时区
+    // GMT +1 = 3600
+    // GMT +8 = 28800
+    // GMT -1 = -3600
+    // GMT 0 = 0
+    timeClient.setTimeOffset(28800);
+}
+String getDateTime()
+{
+    // 请求网络时间
+    timeClient.update();
+
+    unsigned long epochTime = timeClient.getEpochTime();
+    Serial.print("Epoch Time: ");
+    Serial.println(epochTime);
+
+    String timeString = unixTimeToGMTString(epochTime);
+
+    // 打印结果
+    Serial.println(timeString);
+    return timeString;
+}
+
+String unixTimeToGMTString(time_t unixTime)
+{
+    char buffer[80];
+    struct tm timeinfo;
+    gmtime_r(&unixTime, &timeinfo);
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", &timeinfo);
+    Serial.println(buffer);
+    return String(buffer);
+}
+
+String getDateTime_one()
+{
+    time_t timer; // time_t就是long int 类型
+    struct tm *tblock;
+    timer = time(NULL);
+    tblock = localtime(&timer);
+    char buffer[80];
+    strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", tblock);
+    Serial.println(buffer);
+    return String(buffer);
 }

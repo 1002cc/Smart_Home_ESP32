@@ -4,6 +4,7 @@
 #include "module_devices.h"
 #include "module_mqtt.h"
 #include "module_service.h"
+#include "module_speak.h"
 #include "ui.h"
 #include "wificonfig.h"
 #include <ArduinoWebsockets.h>
@@ -11,6 +12,7 @@
 #include <TFT_eSPI.h>
 #include <TJpg_Decoder.h>
 #include <lvgl.h>
+
 #include <vector>
 
 static const uint16_t screenWidth = 320;
@@ -19,15 +21,39 @@ static lv_disp_draw_buf_t draw_buf;
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight);
 
 static int foundNetworks = 0;
+SemaphoreHandle_t lvglSemaphore = NULL;
+SemaphoreHandle_t xnetworkStatusSemaphore = NULL;
 
 // wifi
-String ssidName, ssidPW;
+extern wifi_buf_t wifi_buf;
+extern Network_Status_t networkStatus;
+extern TaskHandle_t ntScanTaskHandler, ntConnectTaskHandler;
 std::vector<String> foundWifiList;
 
 // web camera
-websockets::WebsocketsClient client;
+using namespace websockets;
+const char *websockets_server_host = "192.168.0.177";
+const uint16_t websockets_server_port = 8888;
+WebsocketsClient client;
+#define MAX_IMAGE_SIZE (320 * 240)
+uint16_t image_buffer[MAX_IMAGE_SIZE];
 
 extern bool enable_mqtt;
+bool isStartCamera = false;
+
+static lv_obj_t *chart;
+static lv_style_t main_black_style;
+static lv_timer_t *chartTimer;
+
+static const int chartSize = 200;
+static const int center_x = 140;
+static const int center_y = 140;
+static const float degree = 3.14159 / 180;
+static int radius = 130;
+static int angle = 0;
+static volatile float projectedRange = -1;
+
+extern SpeakState_t speakState;
 
 /********************************************************************
                          BUILD UI
@@ -50,6 +76,8 @@ static lv_obj_t *ntpTimeTextarea;
 static lv_obj_t *inputKeyboard;
 static lv_obj_t *videoImage;
 
+static TaskHandle_t cameraTaskHandle = NULL;
+
 void ui_timer_init(void);
 void ui_clock_update(lv_timer_t *timer);
 void my_ui_init(void);
@@ -59,6 +87,9 @@ static void showingFoundWiFiList();
 static void list_event_handler(lv_event_t *e);
 static void buildPWMsgBox();
 static void settext_input_event_cb(lv_event_t *e);
+bool startCameraServer();
+void closeCameraServer();
+static void drawing_screen(void);
 
 /********************************************************************
                          TFT INIT
@@ -99,6 +130,8 @@ void initLVGLConfig(void)
 
     tft.begin();
     tft.setRotation(3);
+    tft.setTextColor(0xFFFF, 0x0000);
+    tft.setSwapBytes(true);
     pinMode(TFT_BL, OUTPUT);
     digitalWrite(TFT_BL, 1);
     uint16_t calData[5] = {490, 3259, 422, 3210, 1};
@@ -131,11 +164,16 @@ void initLVGLConfig(void)
     ui_init();
     ui_timer_init();
     my_ui_init();
+
+    // LV_FONT_DECLARE(sFont_20)
     // lv_obj_set_style_text_font(ui_cityLabel, &sFont_20, 0);
 
     lv_obj_del(ui_weathericonImage2);
     lv_obj_del(ui_weathericonImage3);
     lv_obj_del(ui_weathericonImage4);
+
+    lvglSemaphore = xSemaphoreCreateMutex();
+    xnetworkStatusSemaphore = xSemaphoreCreateMutex();
 
     startLVGLTask();
     Serial.println("lvgl init successfully");
@@ -143,9 +181,15 @@ void initLVGLConfig(void)
 
 void lvgl_task(void *pvParameter)
 {
+    TickType_t xLastWakeTime;
+    const TickType_t xPeriod = pdMS_TO_TICKS(5);
+    xLastWakeTime = xTaskGetTickCount();
     while (1) {
+        vTaskDelayUntil(&xLastWakeTime, xPeriod);
+        xSemaphoreTake(lvglSemaphore, portMAX_DELAY);
         lv_timer_handler();
-        vTaskDelay(5);
+        xSemaphoreGive(lvglSemaphore);
+        //  vTaskDelay(5);
     }
     vTaskDelete(NULL);
 }
@@ -352,7 +396,7 @@ static void list_event_handler(lv_event_t *e)
     lv_obj_t *obj = lv_event_get_target(e);
     if (code == LV_EVENT_CLICKED) {
         wifi_buf.ssid = String(lv_list_get_btn_text(wfList, obj));
-        // Serial.println(ssidName);
+        Serial.println(wifi_buf.ssid);
         lv_label_set_text_fmt(mboxTitle, "Selected WiFi SSID: %s", wifi_buf.ssid);
         lv_obj_move_foreground(mboxConnect);
         lv_obj_clear_flag(mboxConnect, LV_OBJ_FLAG_HIDDEN);
@@ -453,9 +497,6 @@ void chooseBtEventCD(lv_event_t *e)
 
         } else if (btn == ui_timeuseButton) {
             Serial.println("ui_timeuseButton LV_EVENT_CLICKED");
-        } else if (btn == ui_connectButton) {
-            Serial.println("get photo");
-            publishGetImage();
         }
     } else if (code == LV_EVENT_VALUE_CHANGED) {
         if (btn == ui_wifiSwitch) {
@@ -481,8 +522,10 @@ void chooseBtEventCD(lv_event_t *e)
                     xSemaphoreGive(xnetworkStatusSemaphore);
                     vTaskDelete(ntScanTaskHandler);
                     ntScanTaskHandler = NULL;
-                    lv_timer_del(wifiListtimer);
-                    wifiListtimer = NULL;
+                    if (wifiListtimer != NULL) {
+                        lv_timer_del(wifiListtimer);
+                        wifiListtimer = NULL;
+                    }
                 }
                 if (getwifistate()) {
                     wifiDisconnect();
@@ -510,6 +553,21 @@ void chooseBtEventCD(lv_event_t *e)
             }
         }
     }
+}
+
+void chooseScreenFCD(lv_event_t *e)
+{
+    lv_list_add_text(wfList, "");
+
+    if (ntScanTaskHandler != NULL) {
+        vTaskDelete(ntScanTaskHandler);
+        ntScanTaskHandler = NULL;
+        if (wifiListtimer != NULL) {
+            lv_timer_del(wifiListtimer);
+            wifiListtimer = NULL;
+        }
+    }
+    lv_scr_load_anim(ui_setchooseScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
 }
 
 void initSetConfigUI()
@@ -671,10 +729,14 @@ static void timerForNetwork(lv_timer_t *timer1)
         xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
         networkStatus = NONE;
         xSemaphoreGive(xnetworkStatusSemaphore);
-        vTaskDelete(ntScanTaskHandler);
-        ntScanTaskHandler = NULL;
-        lv_timer_del(wifiListtimer);
-        wifiListtimer = NULL;
+        if (ntScanTaskHandler != NULL) {
+            vTaskDelete(ntScanTaskHandler);
+            ntScanTaskHandler = NULL;
+        }
+        if (wifiListtimer != NULL) {
+            lv_timer_del(wifiListtimer);
+            wifiListtimer = NULL;
+        }
     }
 
     switch (networkStatus) {
@@ -703,11 +765,6 @@ static void timerForNetwork(lv_timer_t *timer1)
     default:
         break;
     }
-}
-
-void initMutex()
-{
-    xnetworkStatusSemaphore = xSemaphoreCreateMutex();
 }
 
 /********************************************************************
@@ -768,18 +825,81 @@ void initUIspeech()
 /********************************************************************
                          CAMMER_UI
 ********************************************************************/
-
-void onMessageCallback(websockets::WebsocketsMessage message)
+void cameraScreenCD(lv_event_t *e)
 {
-
-    Serial.println(message.length());
-    Serial.println(message.c_str());
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *btn = lv_event_get_target(e);
+    Serial.println(code);
+    Serial.println(btn->state);
+    if (btn == ui_connectCameraButton) {
+        if (code == LV_EVENT_CLICKED) {
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                lv_label_set_text(ui_cameraLabel, "关闭");
+                Serial.println("connect cameraserver");
+                isStartCamera = true;
+                publishStartVideo(true);
+                startCameraTask();
+            } else {
+                lv_label_set_text(ui_cameraLabel, "连接");
+                Serial.println("disconnect cameraserver");
+                closeCameraServer();
+            }
+        } else if (code == LV_EVENT_LONG_PRESSED) {
+            Serial.println("return cameraserver");
+            closeCameraServer();
+            lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
+        }
+    }
 }
 
-void initCameraService()
+bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 {
-    client.onMessage(onMessageCallback);
-    client.connect("http://192.168.0.163:80");
+    // 写入到LVGL图像缓冲区
+    // for (uint16_t row = 0; row < h; ++row) {
+    //     for (uint16_t col = 0; col < w; ++col) {
+    //         uint32_t index = (row + y) * 240 + (col + x);
+    //         if (index < MAX_IMAGE_SIZE) {
+    //             image_buffer[index] = bitmap[col + row * w];
+    //         }
+    //     }
+    // }
+    if (y >= tft.height())
+        return 0;
+    for (uint16_t j = 0; j < h; j++) {
+        for (uint16_t i = 0; i < w; i++) {
+            image_buffer[(y + j) * screenWidth + (x + i)] = bitmap[j * w + i];
+        }
+    }
+    return 1; // 继续解码
+    // if (y >= tft.height())
+    //     return 0;
+    // tft.pushImage(x, y, w, h, bitmap);
+    // return 1;
+}
+bool startCameraServer()
+{
+    if (client.connect(websockets_server_host, websockets_server_port, "/")) {
+        Serial.println("Connected to WebSocket server");
+        return true;
+    } else {
+        Serial.println("WebSocket connect failed.");
+        return false;
+    }
+}
+
+void closeCameraServer()
+{
+    isStartCamera = false;
+    publishStartVideo(false);
+    tft.clearWriteError();
+    if (cameraTaskHandle != NULL) {
+        vTaskDelete(cameraTaskHandle);
+        cameraTaskHandle = NULL;
+    }
+
+    if (client.available()) {
+        client.close();
+    }
 }
 
 void initCameraUI()
@@ -787,35 +907,182 @@ void initCameraUI()
     videoImage = lv_img_create(ui_monitorScreen);
     lv_obj_set_pos(videoImage, 0, 0);
     lv_obj_set_size(videoImage, 320, 240);
-    // initCameraService();
+    lv_obj_move_foreground(ui_connectCameraButton);
+    TJpgDec.setJpgScale(1);
+    TJpgDec.setSwapBytes(true);
+    TJpgDec.setCallback(tft_output);
 }
 
 void videocameratask(void *pvParameter)
 {
+    if (!startCameraServer()) {
+        vTaskDelete(cameraTaskHandle);
+        cameraTaskHandle = NULL;
+        lv_label_set_text(ui_cameraLabel, "未连接");
+    }
+    Serial.println("start camera task");
+    while (1) {
+        if (client.poll()) {
+            WebsocketsMessage msg = client.readBlocking();
+            // uint32_t t = millis();
+            TJpgDec.drawJpg(0, 0, (const uint8_t *)msg.c_str(), msg.length());
+            static lv_img_dsc_t img_dsc;
+            img_dsc.header.always_zero = 0;
+            img_dsc.header.w = 320;
+            img_dsc.header.h = 240;
+            img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * sizeof(uint16_t);
+            img_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
+            img_dsc.data = (const uint8_t *)&image_buffer;
 
-    // while (1) {
-    //     Serial.println("start camera ....");
-    //     vTaskDelay(1000);
+            lv_img_set_src(videoImage, &img_dsc);
+            lv_obj_invalidate(videoImage);
 
-    //     if (client.available()) {
-    //         client.poll();
-    //     }
-
-    //     if (fb == NULL) {
-    //         vTaskDelay(100);
-    //         Serial.println("get fb failed");
-    //     } else {
-    //         lv_img_set_src(videoImage, &videoimg_dsc);
-    //     }
-    //     vTaskDelay(100);
-    // }
+            // t = millis() - t;
+            // Serial.print(t);
+            // Serial.println(" ms");
+        }
+        vTaskDelay(100);
+    }
+    vTaskDelete(NULL);
 }
 
 void startCameraTask()
 {
-    initCameraService();
-    Serial.println("start camera task");
-    xTaskCreatePinnedToCore(&videocameratask, "videocamera_task", 5 * 1024, NULL, 3, NULL, 0);
+    if (isStartCamera && cameraTaskHandle == NULL) {
+        isStartCamera = true;
+        xTaskCreatePinnedToCore(&videocameratask, "videocamera_task", 5 * 1024, NULL, 3, &cameraTaskHandle, 1);
+    } else if (!isStartCamera && cameraTaskHandle != NULL) {
+        isStartCamera = false;
+        client.close();
+        Serial.println("vTaskDelete cameraHandle");
+        vTaskDelete(cameraTaskHandle);
+        cameraTaskHandle = NULL;
+    }
+}
+
+/********************************************************************
+                         LVGL_SPEAK_UI
+********************************************************************/
+
+void speakScreenCD(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *btn = lv_event_get_target(e);
+    if (code == LV_EVENT_CLICKED) {
+        if (btn == ui_Button4) {
+            lv_scr_load_anim(ui_speechScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
+            initSpeakConfig();
+            // drawing_screen();
+        } else if (btn == ui_speakButton) {
+            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                lv_label_set_text(ui_cameraLabel, "录制...");
+                speakState = RECORDING;
+                Serial.println("录制中");
+
+            } else {
+                lv_label_set_text(ui_cameraLabel, "识别");
+                speakState = REQUESTING;
+                Serial.println("识别");
+            }
+            Serial.println("speakState = " + String(speakState));
+        }
+    }
+}
+
+void speakScreenFCD(lv_event_t *e)
+{
+    if (chart != NULL) {
+        lv_obj_del(chart);
+        chart = NULL;
+    }
+    if (chartTimer != NULL) {
+        lv_timer_del(chartTimer);
+        chartTimer = NULL;
+    }
+    lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
+}
+
+static void draw_event_cb(lv_event_t *e)
+{
+    lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
+    if (dsc->part == LV_PART_ITEMS) {
+        lv_obj_t *obj = lv_event_get_target(e);
+        lv_chart_series_t *ser = lv_chart_get_series_next(obj, NULL);
+        uint32_t cnt = lv_chart_get_point_count(obj);
+        dsc->rect_dsc->bg_opa = (LV_OPA_COVER * dsc->id) / (cnt - 1);
+
+        lv_coord_t *x_array = lv_chart_get_x_array(obj, ser);
+        lv_coord_t *y_array = lv_chart_get_y_array(obj, ser);
+
+        uint32_t start_point = lv_chart_get_x_start_point(obj, ser);
+        uint32_t p_act = (start_point + dsc->id) % cnt;
+        lv_opa_t x_opa = (x_array[p_act] * LV_OPA_50) / 320;
+        lv_opa_t y_opa = (y_array[p_act] * LV_OPA_50) / 320;
+
+        dsc->rect_dsc->bg_color = lv_color_mix(lv_color_hex(0xFFFFFF),
+                                               lv_palette_main(LV_PALETTE_GREY),
+                                               x_opa + y_opa);
+    }
+}
+
+static void drawRandomPoints()
+{
+    lv_chart_set_next_value2(chart, lv_chart_get_series_next(chart, NULL), lv_rand(0, chartSize), lv_rand(0, chartSize));
+}
+
+static void drawPoints()
+{
+    if (angle >= 360) {
+        angle = 0;
+    }
+
+    int x = center_x + radius * cos(-angle * degree);
+    int y = center_y + radius * sin(-angle * degree);
+
+    lv_chart_set_next_value2(chart, lv_chart_get_series_next(chart, NULL), lv_rand(x - 10, x + 10), lv_rand(y - 10, y + 10));
+    angle += 3;
+}
+
+static void add_data(lv_timer_t *timer)
+{
+    LV_UNUSED(timer);
+    if (projectedRange < 0) {
+        drawRandomPoints();
+    } else {
+        radius = map(projectedRange, 0, 5, 0, 130);
+        drawPoints();
+    }
+}
+
+static void drawing_screen(void)
+{
+    lv_style_init(&main_black_style);
+    lv_style_set_border_width(&main_black_style, 0);
+    lv_style_set_radius(&main_black_style, 20);
+    lv_style_set_bg_opa(&main_black_style, 0);
+    // lv_style_set_bg_color(&main_black_style, lv_color_hex(0x000000));
+    if (chart == NULL) {
+        chart = lv_chart_create(ui_s1);
+        lv_obj_add_style(chart, &main_black_style, 0);
+        lv_obj_set_size(chart, chartSize, chartSize);
+        lv_obj_center(chart);
+        lv_obj_add_event_cb(chart, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+        lv_obj_set_style_line_width(chart, 0, LV_PART_ITEMS);
+
+        lv_chart_set_type(chart, LV_CHART_TYPE_SCATTER);
+        lv_chart_set_div_line_count(chart, 0, 0);
+        lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_X, 0, chartSize);
+        lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, chartSize);
+        lv_chart_set_point_count(chart, 50);
+
+        lv_chart_series_t *ser = lv_chart_add_series(chart, lv_color_white(), LV_CHART_AXIS_PRIMARY_Y);
+        for (int i = 0; i < 50; i++) {
+            lv_chart_set_next_value2(chart, ser, lv_rand(0, chartSize), lv_rand(0, chartSize));
+        }
+        if (chartTimer == NULL) {
+            chartTimer = lv_timer_create(add_data, 3, chart);
+        }
+    }
 }
 
 /********************************************************************
@@ -843,8 +1110,6 @@ void my_ui_init(void)
 {
     initSetConfigUI();
     buildPWMsgBox();
-    updateFlashDate();
-    initMutex();
     initCameraUI();
 #if USE_AUDIO
     initUIspeech();

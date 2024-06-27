@@ -58,3 +58,23 @@ def chooseBtEventCD(event_struct):
 def switchEventCD(event_struct):
     return
 
+
+def cameraScreenCD(event_struct):
+    return
+
+
+def speechScreenCD(event_struct):
+    return
+
+
+def speakScreenCD(event_struct):
+    return
+
+
+def speakScreenFCD(event_struct):
+    return
+
+
+def chooseScreenFCD(event_struct):
+    return
+

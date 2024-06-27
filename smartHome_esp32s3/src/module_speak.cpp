@@ -2,27 +2,671 @@
 #include "confighelpr.h"
 #include "lvglconfig.h"
 #include "module_audio.h"
+#include "module_devices.h"
+#include "module_service.h"
 #include <ArduinoJson.h>
 #include <ArduinoWebsockets.h>
-using namespace websockets;
-bool startPlay = false;
-const char *tts_wed_api = TTS_WED_API;
-const char *stt_wed_api = STT_WED_API;
+#include <Base64_Arturo.h>
+#include <base64.h>
+#include <driver/i2s.h>
 
+bool startPlay = false;
+
+int16_t audioData[2560];
+int16_t *pcm_data; // 录音缓存区
+uint recordingSize = 0;
+
+// char* psramBuffer = (char*)ps_malloc(512000);
+String odl_answer;
+
+String answer_list[10];
+uint8_t answer_list_num = 0;
+bool answer_ste = 0;
+String stttext = "";
+
+// 火山引擎(豆包)
+const char *apiKey = "b50ace91-bf6d-4628-9096-14a4d2a21b80";
+const char *endpointId = "ep-20240626132230-wxkrz";
+const String doubao_system = "你是一个智能家居助手，回答问题比较简洁。"; // 定义豆包的人设
+String duobaoUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
+
+// MINIMAX模型
+const char *minmaxapiKey = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiLpmYjlhYnlro8iLCJVc2VyTmFtZSI6IumZiOWFieWujyIsIkFjY291bnQiOiIiLCJTdWJqZWN0SUQiOiIxNzkzMjYyMTIwMDA4MTcyNDYwIiwiUGhvbmUiOiIxODkyNjI0NzExMiIsIkdyb3VwSUQiOiIxNzkzMjYyMTE5OTk5NzgzODUyIiwiUGFnZU5hbWUiOiIiLCJNYWlsIjoiIiwiQ3JlYXRlVGltZSI6IjIwMjQtMDYtMjIgMTU6NDc6MTYiLCJpc3MiOiJtaW5pbWF4In0.XCozhyQkIr1r-_JXamid9sOa4A83v9dTcsyHj5COIi1bCgrzD4ANb-ZpNBIRs_qmvx5mUobo9Q3u890JzDllimit15QiXhDVv8kV71jJcoW-i0CfXC2N5HagOVgIGpKi3CZ12X1c3szjcSjjFAseq1djFuzRp6lCwxtVrqCSJz8Nwx2FO_Q0ZdWKxso73i6MfgfJAkfLHqc87SFwZXmvun08JVZrgwlDOF3QqvXce002Tpa6h9d6y1dG_cs-hXS4Br31h-3W7g_JAfywOz5yVSLaXi5ghnRRHqTXohSSzhuA9ZcS4h0LDI81425GVbTmKwapu9Op26YV69hK6IPyFg";
+String minimaxUrl = "https://api.minimax.chat/v1/text/chatcompletion_v2";
+
+using namespace websockets;
 WebsocketsClient webSocketClient_tts;
-WebsocketsClient webSocketClient_sst;
+WebsocketsClient webSocketClient_stt;
+
+SpeakState_t speakState = SPEAKNONE;
+static int useAIMode = 1;
+static TaskHandle_t speakTaskHandle = NULL;
+bool sttste = 0;
+
+void sendSTTData();
+String XF_wsUrl(const char *Secret, const char *Key, String request, String host);
+void speakTask(void *pvParameter);
+
+String postDouBaoAnswer(String *answerlist, int listnum);
+String getMiniMaxAnswer(String inputText);
+
+/********************************************************************
+                         max98357
+********************************************************************/
+#if USE_MAX98357
+
+bool initMax98357()
+{
+    i2s_config_t i2sOut_config = {
+        .mode = i2s_mode_t(I2S_MODE_MASTER | I2S_MODE_TX),
+        .sample_rate = SAMPLE_RATE,
+        .bits_per_sample = i2s_bits_per_sample_t(16),
+        .channel_format = I2S_CHANNEL_FMT_ONLY_RIGHT,
+        .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
+        .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
+        .dma_buf_count = 8,
+        .dma_buf_len = 1024};
+
+    esp_err_t err = i2s_driver_install(I2S_MAX_PORT, &i2sOut_config, 0, NULL);
+    if (err != ESP_OK) {
+        Serial.printf("I2S driver install failed (I2S_PORT_1): %d\n", err);
+        return false;
+    }
+
+    const i2s_pin_config_t i2sOut_pin_config = {
+        .bck_io_num = PIN_I2S_MAX98357_BCLK,
+        .ws_io_num = PIN_I2S_MAX98357_LRC,
+        .data_out_num = PIN_I2S_MAX98357_DOUT,
+        .data_in_num = -1};
+
+    err = i2s_set_pin(I2S_MAX_PORT, &i2sOut_pin_config);
+    if (err != ESP_OK) {
+        Serial.printf("I2S set pin failed (I2S_PORT_1): %d\n", err);
+        return false;
+    }
+    Serial.println("INMP411 init successfully");
+    return true;
+}
+
+#endif
+
+/********************************************************************
+                          inmp441
+********************************************************************/
+#if USE_INMP411
+bool initinmp441()
+{
+    const i2s_config_t i2s_config = {
+        .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
+        .sample_rate = SAMPLE_RATE,
+        .bits_per_sample = i2s_bits_per_sample_t(16),
+        .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+        .communication_format = i2s_comm_format_t(I2S_COMM_FORMAT_STAND_I2S),
+        .intr_alloc_flags = 0, // default interrupt priority
+        .dma_buf_count = 8,
+        .dma_buf_len = 1024,
+        .use_apll = false};
+
+    esp_err_t err = i2s_driver_install(I2S_NMP411_PORT, &i2s_config, 0, NULL);
+    if (err != ESP_OK) {
+        Serial.printf("I2S driver install failed (I2S_NMP411_PORT): %d\n", err);
+        return false;
+    }
+    const i2s_pin_config_t pin_config = {
+        .bck_io_num = PIN_I2S_INMP411_SCK,
+        .ws_io_num = PIN_I2S_INMP411_WS,
+        .data_out_num = I2S_PIN_NO_CHANGE,
+        .data_in_num = PIN_I2S_INMP411_SD};
+
+    err = i2s_set_pin(I2S_NMP411_PORT, &pin_config);
+    if (err != ESP_OK) {
+        Serial.printf("I2S set pin failed (I2S_NMP411_PORT): %d\n", err);
+        return false;
+    }
+    Serial.println("INMP411 init successfully");
+    return true;
+}
+
+#endif
+
+bool initI2SConfig()
+{
+    Serial.println("Setup I2S ...");
+    if (initMax98357() && initinmp441()) {
+        Serial.println("I2S init success");
+        return true;
+    } else {
+        Serial.println("I2S init failed");
+    }
+    return false;
+}
 
 void initSpeakConfig()
 {
+    esp_err_t err = i2s_start(I2S_NMP411_PORT);
+    if (err != ESP_OK) {
+        Serial.printf("I2S start failed (I2S_NMP411_PORT): %d\n", err);
+        return;
+    }
+
+    webSocketClient_tts.onMessage([&](WebsocketsMessage message) { // 讯飞TTS的 wx连接回调函数
+        Serial.print("Got Message: ");
+        DynamicJsonDocument responseJson(51200);
+        DeserializationError error = deserializeJson(responseJson, message.data());
+        const char *response = responseJson["data"]["audio"].as<String>().c_str();
+        int response_len = responseJson["data"]["audio"].as<String>().length();
+        // Serial.printf("lan: %d  \n", response_len);
+
+        // 分段获取PCM音频数据并输出到I2S上
+        for (int i = 0; i < response_len; i += CHUNK_SIZE) {
+            int remaining = min(CHUNK_SIZE, response_len);                                       // 计算剩余数据长度
+            char chunk[CHUNK_SIZE];                                                              // 创建一个缓冲区来存储读取的数据
+            int decoded_length = Base64_Arturo.decode(chunk, (char *)(response + i), remaining); // 从response中解码数据到chunk
+            size_t bytes_written = 0;
+            i2s_write(I2S_MAX_PORT, chunk, decoded_length, &bytes_written, portMAX_DELAY);
+        }
+
+        if (responseJson["data"]["status"].as<int>() == 2) { // 收到结束标志
+            Serial.println("Playing complete.");
+            delay(500);
+            i2s_zero_dma_buffer(I2S_MAX_PORT); // 清空I2S DMA缓冲区
+        }
+    });
+
+    webSocketClient_stt.onMessage([&](WebsocketsMessage message) { // STT ws连接的回调函数
+        Serial.print("Got Message: ");
+        Serial.println(message.data());
+        JsonDocument doc;
+        DeserializationError error = deserializeJson(doc, message.data());
+        if (error) {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
+            return;
+        }
+        JsonArray ws = doc["data"]["result"]["ws"];
+        for (JsonObject word : ws) {
+            int bg = word["bg"];
+            const char *w = word["cw"][0]["w"];
+            stttext += w;
+        }
+        if (doc["data"]["status"] == 2) { // 收到结束标志
+            speakState = REQUESTING;
+            sttste = 1;
+            Serial.print("stttext");
+            Serial.println(stttext);
+        }
+    });
+    Serial.println("initSpeakConfig done");
+    // startSpeakTask();
 }
 
-void speakTask(void *pvParameters)
+// 向讯飞STT发送音频数据
+void sendSTTData()
 {
-    while (1) {
-        webSocketClient_tts.poll();
-        webSocketClient_sst.poll();
-        audioLoop();
-        vTaskDelay(3);
+    uint8_t status = 0;
+    int dataSize = 1280 * 8;
+    int audioDataSize = recordingSize * 2;
+    uint lan = (audioDataSize) / dataSize;
+    uint lan_end = (audioDataSize) % dataSize;
+    if (lan_end > 0) {
+        lan++;
     }
-    vTaskDelete(NULL);
+
+    Serial.printf("byteDatasize: %d , lan: %d , lan_end: %d \n", audioDataSize, lan, lan_end);
+    String host_url = XF_wsUrl(TTS_SECRETKEY, TTS_APIKEY, "/v2/iat", "iat-api.xfyun.cn");
+    Serial.println("Connecting to server.");
+    bool connected = webSocketClient_stt.connect(host_url);
+    if (connected) {
+        Serial.println("Connected!");
+    } else {
+        Serial.println("Not Connected!");
+    }
+    // 分段向STT发送PCM音频数据
+    for (int i = 0; i < lan; i++) {
+
+        if (i == (lan - 1)) {
+            status = 2;
+        }
+        if (status == 0) {
+            String input = "{";
+            input += "\"common\":{ \"app_id\":\"6501ee63\" },";
+            input += "\"business\":{\"domain\": \"iat\", \"language\": \"zh_cn\", \"accent\": \"mandarin\", \"vinfo\":1,\"vad_eos\":10000},";
+            input += "\"data\":{\"status\": 0, \"format\": \"audio/L16;rate=16000\",\"encoding\": \"raw\",\"audio\":\"";
+            String base64audioString = base64::encode((uint8_t *)pcm_data, dataSize);
+            input += base64audioString;
+            input += "\"}}";
+            Serial.printf("input: %d , status: %d \n", i, status);
+            Serial.println(input);
+            webSocketClient_stt.send(input);
+            status = 1;
+        } else if (status == 1) {
+            String input = "{";
+            input += "\"data\":{\"status\": 1, \"format\": \"audio/L16;rate=16000\",\"encoding\": \"raw\",\"audio\":\"";
+            String base64audioString = base64::encode((uint8_t *)pcm_data + (i * dataSize), dataSize);
+            input += base64audioString;
+            input += "\"}}";
+            Serial.printf("input: %d , status: %d \n", i, status);
+            webSocketClient_stt.send(input);
+        } else if (status == 2) {
+            if (lan_end == 0) {
+                String input = "{";
+                input += "\"data\":{\"status\": 2, \"format\": \"audio/L16;rate=16000\",\"encoding\": \"raw\",\"audio\":\"";
+                String base64audioString = base64::encode((uint8_t *)pcm_data + (i * dataSize), dataSize);
+                input += base64audioString;
+                input += "\"}}";
+                Serial.printf("input: %d , status: %d \n", i, status);
+                webSocketClient_stt.send(input);
+            }
+            if (lan_end > 0) {
+                String input = "{";
+                input += "\"data\":{\"status\": 2, \"format\": \"audio/L16;rate=16000\",\"encoding\": \"raw\",\"audio\":\"";
+
+                String base64audioString = base64::encode((uint8_t *)pcm_data + (i * dataSize), lan_end);
+
+                input += base64audioString;
+                input += "\"}}";
+                Serial.printf("input: %d , status: %d \n", i, status);
+                webSocketClient_stt.send(input);
+            }
+        }
+        // delay(30);
+    }
+}
+
+String formatDateForURL(String dateString)
+{
+    dateString.replace(" ", "+");
+    dateString.replace(",", "%2C");
+    dateString.replace(":", "%3A");
+    return dateString;
+}
+
+// 构造讯飞ws连接url
+String XF_wsUrl(const char *Secret, const char *Key, String request, String host)
+{
+    String timeString = getDateTime_one();
+    String signature_origin = "host: " + host;
+    signature_origin += "\n";
+    signature_origin += "date: ";
+    signature_origin += timeString;
+    signature_origin += "\n";
+    signature_origin += "GET " + request + " HTTP/1.1";
+
+    unsigned char hmacResult[32];
+    mbedtls_md_context_t ctx;
+    mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 1); // 1 表示 HMAC
+    mbedtls_md_hmac_starts(&ctx, (const unsigned char *)Secret, strlen(Secret));
+    mbedtls_md_hmac_update(&ctx, (const unsigned char *)signature_origin.c_str(), signature_origin.length());
+    mbedtls_md_hmac_finish(&ctx, hmacResult);
+    mbedtls_md_free(&ctx);
+    String base64Result = base64::encode(hmacResult, 32);
+
+    String authorization_origin = "api_key=\"";
+    authorization_origin += Key;
+    authorization_origin += "\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"";
+    authorization_origin += base64Result;
+    authorization_origin += "\"";
+    String authorization = base64::encode(authorization_origin);
+
+    String url = "ws://" + host + request;
+    url += "?authorization=";
+    url += authorization;
+    url += "&date=";
+    url += formatDateForURL(timeString);
+    url += "&host=" + host;
+    Serial.println("\nurl encoded result:");
+    Serial.println(url);
+    return url;
+}
+
+// 向讯飞TTS发送请求
+void postTTS(String texttts)
+{
+    String TTSurl = XF_wsUrl(TTS_SECRETKEY, TTS_APIKEY, "/v2/tts", TTS_WED_API);
+    bool connected = webSocketClient_tts.connect(TTSurl);
+    if (connected) {
+        Serial.println("Connected!");
+    } else {
+        Serial.println("Not Connected!");
+    }
+
+    String TTStextbase64 = base64::encode(texttts);
+    DynamicJsonDocument requestJson(51200);
+    requestJson["common"]["app_id"] = TTS_APPID;
+    requestJson["business"]["aue"] = "raw";
+    requestJson["business"]["vcn"] = "xiaoyan";
+    requestJson["business"]["pitch"] = 50;
+    requestJson["business"]["speed"] = 50;
+    requestJson["business"]["tte"] = "UTF8";
+    requestJson["business"]["auf"] = "audio/L16;rate=16000";
+    requestJson["data"]["status"] = 2;
+    requestJson["data"]["text"] = TTStextbase64;
+
+    String payload;
+    serializeJson(requestJson, payload);
+    Serial.print("payload: ");
+    Serial.println(payload);
+    webSocketClient_tts.send(payload);
+}
+
+// 向豆包发送请求
+String postDouBaoAnswer(String *answerlist, int listnum)
+{
+    Serial.println("POSTtoDoubao..");
+    String answer;
+
+    HTTPClient http;
+    http.begin(duobaoUrl);
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("Authorization", "Bearer " + String(apiKey));
+
+    DynamicJsonDocument requestJson(5120);
+    requestJson["model"] = endpointId;
+    JsonArray list = requestJson.createNestedArray("messages");
+
+    JsonObject item = list.createNestedObject();
+    item["role"] = "system";
+    item["content"] = doubao_system;
+
+    for (int i = 0; i < listnum; i += 2) {
+        item = list.createNestedObject();
+        item["role"] = "user";
+        item["content"] = answerlist[i];
+        Serial.print("answer user: ");
+        Serial.println(answerlist[i]);
+        if (listnum > 1 and i != listnum - 1) {
+            if (answerlist[i + 1] != "") {
+                item = list.createNestedObject();
+                item["role"] = "assistant";
+                item["content"] = answerlist[i + 1];
+            }
+            Serial.print("answer assistant: ");
+            Serial.println(answerlist[i + 1]);
+        }
+    }
+
+    requestJson["stream"] = false;
+    String requestBody;
+    serializeJson(requestJson, requestBody);
+    Serial.print("payload: ");
+    Serial.println(requestBody);
+
+    int httpResponseCode = http.POST(requestBody);
+
+    if (httpResponseCode > 0) {
+        String response = http.getString();
+        Serial.println("HTTP Response Code: " + String(httpResponseCode));
+        Serial.println("Response: " + response);
+        DynamicJsonDocument doc(1024);
+
+        // 处理结果 非流试 \"stream\": false}";
+        deserializeJson(doc, response);
+        String content = doc["choices"][0]["message"]["content"];
+        Serial.println("Doubao Response:");
+        Serial.println(content);
+        answer = content;
+    } else {
+        Serial.println("Error on HTTP request");
+        answer = "Error";
+    }
+
+    http.end();
+    return answer;
+}
+
+String getMiniMaxAnswer(String inputText)
+{
+    HTTPClient http;
+    http.setTimeout(10000);
+    http.begin(minimaxUrl);
+    http.addHeader("Content-Type", "application/json");
+    String token_key = String("Bearer ") + minmaxapiKey;
+    http.addHeader("Authorization", token_key);
+    String payload = "{\"model\":\"abab5.5s-chat\",\"messages\":[{\"role\": \"system\",\"content\": \"你叫小欧,是我的的智能家居助手,要求下面的回答严格控制在256字符以内\"},{\"role\": \"user\",\"content\": \"" + inputText + "\"}]}";
+    int httpResponseCode = http.POST(payload);
+    if (httpResponseCode == 200) {
+        String response = http.getString();
+        http.end();
+        Serial.println(response);
+        DynamicJsonDocument jsonDoc(1024);
+        deserializeJson(jsonDoc, response);
+        String outputText = jsonDoc["choices"][0]["message"]["content"];
+        return outputText;
+        Serial.println(outputText);
+    } else {
+        http.end();
+        Serial.printf("Error %i \n", httpResponseCode);
+        return "Error";
+    }
+}
+
+void speakTask(void *pvParameter)
+{
+    Serial.println("start speakTask");
+    while (1) {
+        if (speakState == RECORDING) {
+            stttext = "";
+            Serial.println("Recording...");
+            size_t bytes_read = 0;
+            recordingSize = 0;
+            pcm_data = reinterpret_cast<int16_t *>(ps_malloc(BUFFER_SIZE * 2));
+            if (!pcm_data) {
+                Serial.println("Failed to allocate memory for pcm_data");
+            }
+            uint16_t x = 0, y = 0;
+            int min = millis();
+            while (speakState == REQUESTING) {
+                esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
+                memcpy(pcm_data + recordingSize, audioData, bytes_read);
+                recordingSize += bytes_read / 2;
+            }
+            sendSTTData(); // STT请求开始
+            free(pcm_data);
+        }
+
+        if (webSocketClient_stt.available()) {
+            webSocketClient_stt.poll();
+        }
+        if (webSocketClient_tts.available()) {
+            webSocketClient_tts.poll();
+        }
+
+        if (speakState == SPEAKING) { // 接收到STT数据，进行下一步处理
+            Serial.println(stttext);
+            delay(100);
+
+            stttext.replace("\n", "");
+            answer_list[answer_list_num] = stttext;
+            answer_list_num++;
+            if (answer_list_num > 9) {
+                for (int i = 0; i < 9; i++) {
+                    answer_list[i] = answer_list[i + 1];
+                }
+                answer_list[9] = "";
+                answer_list_num = 9;
+            }
+
+            for (int i = 0; i < answer_list_num + 1; i++) {
+                Serial.print("answer_list_num: ");
+                Serial.println(i);
+                Serial.print("answer_list: ");
+                Serial.println(answer_list[i]);
+            }
+
+            String answer = "";
+
+            if (useAIMode == 0) {
+                // 向豆包发送请求
+                while (answer == "" || answer == "Error") {
+                    answer = postDouBaoAnswer(answer_list, answer_list_num);
+                    if (answer == "Error") {
+                        Serial.println("doupao POST出错重新提交");
+                    }
+                }
+            } else {
+                // 向minmax发送请求
+                while (answer == "" || answer == "Error") {
+                    answer = getMiniMaxAnswer(stttext);
+                    if (answer == "Error") {
+                        Serial.println("doupao POST出错重新提交");
+                    }
+                }
+            }
+            // 保存最近的5次对话到列表中
+            answer.replace("\n", "");
+            answer_list[answer_list_num] = answer;
+            answer_list_num++;
+            if (answer_list_num > 9) {
+                for (int i = 0; i < 9; i++) {
+                    answer_list[i] = answer_list[i + 1];
+                }
+                answer_list[9] = "";
+                answer_list_num = 9;
+            }
+
+            if (!answer.isEmpty()) {
+                postTTS(answer);
+            } else {
+                Serial.println("回答内容为空，取消TTS发送。");
+            }
+            speakState = SPEAKNONE;
+        }
+        vTaskDelay(100);
+    }
+}
+
+void speakloop()
+{
+    if (digitalRead(BUTTON_PIN) == HIGH) {
+        delay(20);
+        if (digitalRead(BUTTON_PIN) == HIGH) {
+            stttext = "";
+            Serial.println("Recording...");
+
+            size_t bytes_read = 0;
+            recordingSize = 0;
+            pcm_data = reinterpret_cast<int16_t *>(ps_malloc(BUFFER_SIZE * 2));
+            if (!pcm_data) {
+                Serial.println("Failed to allocate memory for pcm_data");
+            }
+            uint16_t x = 0, y = 0;
+            while (digitalRead(BUTTON_PIN) == HIGH) { // 开始循环录音，将录制结果保存在pcm_data中
+                esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
+                memcpy(pcm_data + recordingSize, audioData, bytes_read);
+                recordingSize += bytes_read / 2;
+            }
+
+            Serial.printf("Total bytes read: %d\n", recordingSize);
+            Serial.println("Recording complete.");
+
+            sendSTTData(); // STT请求开始
+
+            free(pcm_data);
+        }
+    }
+
+    if (digitalRead(BUTTON_PIN1) == HIGH) {
+        delay(20);
+        if (digitalRead(BUTTON_PIN1) == HIGH) {
+            if (useAIMode == 0) {
+                useAIMode = 1;
+            } else {
+                useAIMode = 0;
+            }
+            Serial.print("useAIMode :");
+            Serial.println(useAIMode);
+        }
+    }
+
+    if (webSocketClient_stt.available()) {
+        webSocketClient_stt.poll();
+    }
+
+    if (webSocketClient_tts.available()) {
+        webSocketClient_tts.poll();
+    }
+    if (sttste) { // 接收到STT数据，进行下一步处理
+        Serial.println(stttext);
+
+        delay(100);
+
+        // 保存最近的5次对话到列表中
+        stttext.replace("\n", "");
+        answer_list[answer_list_num] = stttext;
+        answer_list_num++;
+        if (answer_list_num > 9) {
+            for (int i = 0; i < 9; i++) {
+                answer_list[i] = answer_list[i + 1];
+            }
+            answer_list[9] = "";
+            answer_list_num = 9;
+        }
+
+        for (int i = 0; i < answer_list_num + 1; i++) {
+            Serial.print("answer_list_num: ");
+            Serial.println(i);
+            Serial.print("answer_list: ");
+            Serial.println(answer_list[i]);
+        }
+
+        String answer = "";
+        if (useAIMode == 0) {
+            // 向豆包发送请求
+            while (answer == "" || answer == "Error") {
+                answer = postDouBaoAnswer(answer_list, answer_list_num);
+                if (answer == "Error") {
+                    Serial.println("doupao POST出错重新提交");
+                }
+            }
+        } else {
+            // 向minmax发送请求
+            while (answer == "" || answer == "Error") {
+                answer = getMiniMaxAnswer(stttext);
+                if (answer == "Error") {
+                    Serial.println("doupao POST出错重新提交");
+                }
+            }
+        }
+
+        // 保存最近的5次对话到列表中
+        answer.replace("\n", "");
+        answer_list[answer_list_num] = answer;
+        answer_list_num++;
+        if (answer_list_num > 9) {
+            for (int i = 0; i < 9; i++) {
+                answer_list[i] = answer_list[i + 1];
+            }
+            answer_list[9] = "";
+            answer_list_num = 9;
+        }
+
+        // 向TTS发送请求
+        if (answer != NULL) {
+            postTTS(answer);
+        } else {
+            Serial.println("回答内容为空，取消TTS发送。");
+        }
+
+        Serial.println();
+        sttste = 0;
+    }
+    delay(50);
+}
+
+void startSpeakTask()
+{
+    if (speakTaskHandle == NULL) {
+        Serial.println("start speakTask");
+        xTaskCreatePinnedToCore(&speakTask, "speak_task", 20 * 1024, NULL, 10, &speakTaskHandle, 0);
+    }
+}
+
+void stopSpeakTask()
+{
+    if (speakTaskHandle != NULL) {
+        vTaskDelete(speakTaskHandle);
+        speakTaskHandle = NULL;
+    }
 }

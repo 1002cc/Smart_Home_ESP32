@@ -1,15 +1,5 @@
 {
-    "folders": [
-        {
-            "path": "../../smartHome_esp32"
-        },
-        {
-            "path": ".."
-        },
-        {
-            "path": "../../smarthome_camera"
-        }
-    ],
+    "folders": [],
     "settings": {
         "files.associations": {
             "*.cjson": "jsonc",

@@ -214,11 +214,13 @@ void initDevices()
     Serial.println("Init Devices ...");
     initWSrgbled();
     rgbled_init();
+    pinMode(BUTTON_PIN, INPUT);
+    pinMode(BUTTON_PIN1, INPUT);
     Serial.println("Init Devices Done");
 }
 
 void startSensorTask(void)
 {
     Serial.println("Starting sensor task");
-    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 4 * 1024, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, NULL, 1);
 }

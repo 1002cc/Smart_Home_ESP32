@@ -41,8 +41,8 @@ void ui_set1Screen_screen_init(void)
     ui_Label1 = lv_label_create(ui_w1);
     lv_obj_set_width(ui_Label1, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label1, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label1, -113);
-    lv_obj_set_y(ui_Label1, -92);
+    lv_obj_set_x(ui_Label1, -108);
+    lv_obj_set_y(ui_Label1, -97);
     lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label1, "WIFI");
     lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -50,10 +50,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_style_text_font(ui_Label1, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_wifiSwitch = lv_switch_create(ui_w1);
-    lv_obj_set_width(ui_wifiSwitch, 70);
+    lv_obj_set_width(ui_wifiSwitch, 73);
     lv_obj_set_height(ui_wifiSwitch, 33);
-    lv_obj_set_x(ui_wifiSwitch, -114);
-    lv_obj_set_y(ui_wifiSwitch, -54);
+    lv_obj_set_x(ui_wifiSwitch, -109);
+    lv_obj_set_y(ui_wifiSwitch, -62);
     lv_obj_set_align(ui_wifiSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_wifiSwitch, LV_STATE_CHECKED);       /// States
 
@@ -61,8 +61,8 @@ void ui_set1Screen_screen_init(void)
     ui_wifiStateLabel = lv_label_create(ui_w1);
     lv_obj_set_width(ui_wifiStateLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_wifiStateLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_wifiStateLabel, -27);
-    lv_obj_set_y(ui_wifiStateLabel, -101);
+    lv_obj_set_x(ui_wifiStateLabel, -31);
+    lv_obj_set_y(ui_wifiStateLabel, -95);
     lv_obj_set_align(ui_wifiStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_wifiStateLabel, "已连接");
     lv_obj_set_style_text_color(ui_wifiStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -71,7 +71,7 @@ void ui_set1Screen_screen_init(void)
 
     ui_wifilistPanel = lv_obj_create(ui_w1);
     lv_obj_set_width(ui_wifilistPanel, 200);
-    lv_obj_set_height(ui_wifilistPanel, 185);
+    lv_obj_set_height(ui_wifilistPanel, 180);
     lv_obj_set_x(ui_wifilistPanel, 40);
     lv_obj_set_y(ui_wifilistPanel, 10);
     lv_obj_set_align(ui_wifilistPanel, LV_ALIGN_CENTER);
@@ -116,8 +116,8 @@ void ui_set1Screen_screen_init(void)
     ui_Label16 = lv_label_create(ui_w2);
     lv_obj_set_width(ui_Label16, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label16, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label16, -93);
-    lv_obj_set_y(ui_Label16, -96);
+    lv_obj_set_x(ui_Label16, -98);
+    lv_obj_set_y(ui_Label16, -95);
     lv_obj_set_align(ui_Label16, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label16, "MQTT服务器");
     lv_obj_set_style_text_color(ui_Label16, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -156,8 +156,8 @@ void ui_set1Screen_screen_init(void)
     ui_mqttStateLabel = lv_label_create(ui_w2);
     lv_obj_set_width(ui_mqttStateLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_mqttStateLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_mqttStateLabel, 84);
-    lv_obj_set_y(ui_mqttStateLabel, -92);
+    lv_obj_set_x(ui_mqttStateLabel, 63);
+    lv_obj_set_y(ui_mqttStateLabel, -93);
     lv_obj_set_align(ui_mqttStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_mqttStateLabel, "未连接");
     lv_obj_set_style_text_color(ui_mqttStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);

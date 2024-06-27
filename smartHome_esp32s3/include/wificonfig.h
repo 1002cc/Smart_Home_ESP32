@@ -15,11 +15,6 @@ typedef enum {
     NETWORK_CONNECT_FAILED
 } Network_Status_t;
 
-static wifi_buf_t wifi_buf;
-static Network_Status_t networkStatus = NONE;
-static TaskHandle_t ntScanTaskHandler, ntConnectTaskHandler;
-static SemaphoreHandle_t xnetworkStatusSemaphore = NULL;
-
 bool initWIFIConfig(void);
 bool getwifistate();
 void wifiDisconnect(void);

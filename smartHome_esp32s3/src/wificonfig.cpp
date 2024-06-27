@@ -11,6 +11,11 @@ const char *password = "317123456";
 bool hasNetwork;
 extern bool enable_mqtt;
 
+wifi_buf_t wifi_buf;
+Network_Status_t networkStatus = NONE;
+TaskHandle_t ntScanTaskHandler, ntConnectTaskHandler;
+extern SemaphoreHandle_t xnetworkStatusSemaphore;
+
 extern std::vector<String> foundWifiList;
 
 static void scanWIFITask(void *pvParameters);
@@ -36,7 +41,6 @@ void WiFiEvent(WiFiEvent_t event)
         break;
     case SYSTEM_EVENT_STA_CONNECTED:
         lv_setWIFIState("已连接");
-        hasNetwork = isNetworkAvailable();
         Serial.println("已连接到接入点");
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
@@ -76,8 +80,8 @@ void WiFiEvent(WiFiEvent_t event)
 
 bool wifiConnect()
 {
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_STA);
+    // WiFi.disconnect(true);
+    //  WiFi.mode(WIFI_STA);
     Serial.println("preferences read wifi info");
 
     String storedSSID = ReadData("ssid");
@@ -107,35 +111,15 @@ bool wifiConnect()
     if (WiFi.status() == WL_CONNECTED) {
         WSLED_Green();
         lv_setTipinfo("WiFi连接成功");
-        hasNetwork = isNetworkAvailable();
-        if (hasNetwork) {
-            lv_setTipinfo("正在连接服务器");
-            if (!initMQTTConfig()) {
-                lv_setTipinfo("服务器连接失败");
-                lv_setMQTTSwitchState(false);
-                lv_setMQTTState("未连接");
-                enable_mqtt = false;
-            } else {
-                lv_setTipinfo("服务器连接成功");
-                lv_setMQTTSwitchState(true);
-                lv_setMQTTState("已连接");
-                enable_mqtt = true;
-            }
-        } else {
-            Serial.println("Network unavailable");
-            lv_setTipinfo("网络不可用");
-            lv_setMQTTSwitchState(false);
-            lv_setMQTTState("未连接");
-            enable_mqtt = false;
-        }
-
         vTaskDelay(1000);
         WSLED_OFF();
         return true;
     } else {
         Serial.println("Connection to WiFi failed");
+        lv_setWIFIState("未连接");
         lv_setTipinfo("连接wifi失败,当前为离线模式,请在配置中连接wifi");
     }
+    vTaskDelay(1000);
     Serial.println("Connection to WiFi failed");
     WSLED_OFF();
     return false;
@@ -156,7 +140,9 @@ void wifiDisconnect(void)
 ********************************************************************/
 void wifiConnector(wifi_buf_t wifi_buf)
 {
-    xTaskCreate(beginWIFITask, "beginWIFITask", 2048, &wifi_buf, 1, &ntConnectTaskHandler);
+    Serial.println(wifi_buf.ssid);
+    Serial.println(wifi_buf.pass);
+    xTaskCreatePinnedToCore(beginWIFITask, "beginWIFITask", 2048, &wifi_buf, 10, &ntConnectTaskHandler, 0);
 }
 
 void beginWIFITask(void *pvParameters)
@@ -197,7 +183,7 @@ void beginWIFITask(void *pvParameters)
 
 void networkScanner()
 {
-    xTaskCreate(scanWIFITask, "ScanWIFITask", 4096, NULL, 1, &ntScanTaskHandler);
+    xTaskCreatePinnedToCore(scanWIFITask, "ScanWIFITask", 4096, NULL, 10, &ntScanTaskHandler, 0);
 }
 
 static void scanWIFITask(void *pvParameters)
