@@ -167,7 +167,7 @@ void publishSensorData(const SensorData &data)
     snprintf(tempCharArray, sizeof(tempCharArray), "%.0f", data.temp);
     snprintf(humidityCharArray, sizeof(humidityCharArray), "%.0f", data.humidity);
     snprintf(mq2CharArray, sizeof(mq2CharArray), "%.0f", data.mq);
-    cJSON_AddItemToObject(root, "dates", dates);
+    cJSON_AddItemToObject(root, "datas", dates);
     cJSON_AddStringToObject(dates, "temp", tempCharArray);
     cJSON_AddStringToObject(dates, "humidity", humidityCharArray);
     cJSON_AddStringToObject(dates, "mq", mq2CharArray);
@@ -184,7 +184,7 @@ void publishGetImage()
     cJSON_AddStringToObject(root, "code", "200");
 
     cJSON *dates = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "dates", dates);
+    cJSON_AddItemToObject(root, "datas", dates);
     cJSON_AddStringToObject(dates, "getImage", "true");
     char *jsonStr = cJSON_PrintUnformatted(root);
 
@@ -199,7 +199,7 @@ void publishStartVideo(bool isStartVideo)
     cJSON_AddStringToObject(root, "code", "200");
 
     cJSON *dates = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "dates", dates);
+    cJSON_AddItemToObject(root, "datas", dates);
     cJSON_AddBoolToObject(dates, "startVideo", isStartVideo);
     char *jsonStr = cJSON_PrintUnformatted(root);
     Serial.println(jsonStr);

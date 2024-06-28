@@ -106,9 +106,9 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         cJSON *code = cJSON_GetObjectItem(root, "code");
         if (code != NULL) {
             Serial.printf("Code: %s\n", code->valuestring);
-            cJSON *dates = cJSON_GetObjectItem(root, "dates");
-            if (dates != NULL) {
-                cJSON *getImage = cJSON_GetObjectItem(dates, "getImage");
+            cJSON *datas = cJSON_GetObjectItem(root, "datas");
+            if (datas != NULL) {
+                cJSON *getImage = cJSON_GetObjectItem(datas, "getImage");
                 if (getImage != NULL) {
                     Serial.printf("getImage: %s\n", getImage->valuestring);
                     if (strcmp(getImage->valuestring, "true") == 0) {
@@ -116,7 +116,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                         sendImgPieces();
                     }
                 }
-                cJSON *startVideo = cJSON_GetObjectItem(dates, "startVideo");
+                cJSON *startVideo = cJSON_GetObjectItem(datas, "startVideo");
                 if (startVideo != NULL) {
                     if (startVideo->valueint == 1) {
                         isStartCamera = true;

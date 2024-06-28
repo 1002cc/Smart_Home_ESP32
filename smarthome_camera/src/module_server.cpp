@@ -14,7 +14,8 @@ struct tm g_time;
 
 const char *websockets_server_host = "192.168.0.177";
 const uint16_t websockets_server_port = 8888;
-websockets::WebsocketsClient client;
+using namespace websockets;
+WebsocketsClient client;
 
 TaskHandle_t cameraHandle = NULL;
 bool isStartCamera = false;
@@ -50,8 +51,17 @@ void initNtpTime()
                          CAMERA WEDSERVER
 ********************************************************************/
 
+void webSocketEvent(WebsocketsEvent event, WSInterfaceString data)
+{
+    if (event == WebsocketsEvent::ConnectionOpened) {
+        Serial.println("Connection Opened");
+        Serial.println(data);
+    }
+}
+
 void initwedServer()
 {
+    client.onEvent(webSocketEvent);
     while (!client.connect(websockets_server_host, websockets_server_port, "/")) {
         delay(500);
         Serial.print(".");
