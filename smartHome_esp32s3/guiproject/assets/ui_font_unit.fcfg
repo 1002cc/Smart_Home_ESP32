@@ -10,7 +10,7 @@
   "ranges": [
     "0x20-0x7f"
   ],
-  "symbols": "温度湿度浓度传感器数据气体浓度灯配置设置网络时间监控音乐",
+  "symbols": "温度湿度浓度传感器数据气体浓度灯配置设置网络时间监控音乐语",
   "customparams": "--no-compress --no-prefilter",
   "uploaded": false
 }

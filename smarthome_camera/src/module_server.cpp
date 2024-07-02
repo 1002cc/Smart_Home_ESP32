@@ -13,7 +13,7 @@ const char *g_time_zone = "CST-8"; // TimeZone rule for China Standard Time (UTC
 struct tm g_time;
 
 const char *websockets_server_host = "192.168.0.177";
-const uint16_t websockets_server_port = 8888;
+const uint16_t websockets_server_port = 3000;
 using namespace websockets;
 WebsocketsClient client;
 

@@ -4,6 +4,15 @@
         "*.wxss": "css",
         "*.wxs": "javascript",
         "string": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "ff.h": "c",
+        "ffconf.h": "c",
+        "lfs.h": "c",
+        "lv_fs_if.h": "c",
+        "lvgl.h": "c",
+        "lv_conf_internal.h": "c",
+        "lodepng.h": "c",
+        "lv_png.h": "c",
+        "ui.h": "c"
     }
 }

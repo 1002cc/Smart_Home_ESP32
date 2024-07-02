@@ -10,14 +10,10 @@
 #include <base64.h>
 #include <driver/i2s.h>
 
-bool startPlay = false;
-
-int16_t audioData[2560];
+// int16_t audioData[2560];
+int16_t *audioData;
 int16_t *pcm_data; // 录音缓存区
 uint recordingSize = 0;
-
-// char* psramBuffer = (char*)ps_malloc(512000);
-String odl_answer;
 
 String answer_list[10];
 uint8_t answer_list_num = 0;
@@ -38,10 +34,11 @@ using namespace websockets;
 WebsocketsClient webSocketClient_tts;
 WebsocketsClient webSocketClient_stt;
 
-SpeakState_t speakState = SPEAKNONE;
-static int useAIMode = 1;
+SpeakState_t speakState = NO_DIALOGUE;
+String ai_speak = "xiaoyan";
+int useAIMode = 0;
+
 static TaskHandle_t speakTaskHandle = NULL;
-bool sttste = 0;
 
 void sendSTTData();
 String XF_wsUrl(const char *Secret, const char *Key, String request, String host);
@@ -143,6 +140,8 @@ bool initI2SConfig()
 
 void initSpeakConfig()
 {
+    audioData = (int16_t *)ps_malloc(2560 * sizeof(int16_t));
+
     esp_err_t err = i2s_start(I2S_NMP411_PORT);
     if (err != ESP_OK) {
         Serial.printf("I2S start failed (I2S_NMP411_PORT): %d\n", err);
@@ -150,7 +149,8 @@ void initSpeakConfig()
     }
 
     webSocketClient_tts.onMessage([&](WebsocketsMessage message) { // 讯飞TTS的 wx连接回调函数
-        Serial.print("Got Message: ");
+        // Serial.print("Got Message: ");
+        speakState = ANSWERING;
         DynamicJsonDocument responseJson(51200);
         DeserializationError error = deserializeJson(responseJson, message.data());
         const char *response = responseJson["data"]["audio"].as<String>().c_str();
@@ -170,6 +170,8 @@ void initSpeakConfig()
             Serial.println("Playing complete.");
             delay(500);
             i2s_zero_dma_buffer(I2S_MAX_PORT); // 清空I2S DMA缓冲区
+            lv_setSpeechinfo(" ");
+            speakState = NO_DIALOGUE;
         }
     });
 
@@ -190,14 +192,13 @@ void initSpeakConfig()
             stttext += w;
         }
         if (doc["data"]["status"] == 2) { // 收到结束标志
-            speakState = REQUESTING;
-            sttste = 1;
-            Serial.print("stttext");
+            speakState = WAITING;
+            Serial.print("stttext: ");
             Serial.println(stttext);
         }
     });
     Serial.println("initSpeakConfig done");
-    // startSpeakTask();
+    startSpeakTask();
 }
 
 // 向讯飞STT发送音频数据
@@ -220,6 +221,7 @@ void sendSTTData()
         Serial.println("Connected!");
     } else {
         Serial.println("Not Connected!");
+        lv_setSpeechinfo("服务器连接失败");
     }
     // 分段向STT发送PCM音频数据
     for (int i = 0; i < lan; i++) {
@@ -269,7 +271,7 @@ void sendSTTData()
                 webSocketClient_stt.send(input);
             }
         }
-        // delay(30);
+        delay(30);
     }
 }
 
@@ -330,13 +332,14 @@ void postTTS(String texttts)
         Serial.println("Connected!");
     } else {
         Serial.println("Not Connected!");
+        lv_setSpeechinfo("服务器连接失败");
     }
 
     String TTStextbase64 = base64::encode(texttts);
     DynamicJsonDocument requestJson(51200);
     requestJson["common"]["app_id"] = TTS_APPID;
     requestJson["business"]["aue"] = "raw";
-    requestJson["business"]["vcn"] = "xiaoyan";
+    requestJson["business"]["vcn"] = ai_speak.c_str();
     requestJson["business"]["pitch"] = 50;
     requestJson["business"]["speed"] = 50;
     requestJson["business"]["tte"] = "UTF8";
@@ -399,9 +402,8 @@ String postDouBaoAnswer(String *answerlist, int listnum)
         String response = http.getString();
         Serial.println("HTTP Response Code: " + String(httpResponseCode));
         Serial.println("Response: " + response);
-        DynamicJsonDocument doc(1024);
 
-        // 处理结果 非流试 \"stream\": false}";
+        DynamicJsonDocument doc(1024);
         deserializeJson(doc, response);
         String content = doc["choices"][0]["message"]["content"];
         Serial.println("Doubao Response:");
@@ -446,23 +448,31 @@ void speakTask(void *pvParameter)
 {
     Serial.println("start speakTask");
     while (1) {
-        if (speakState == RECORDING) {
+        if (speakState == RECORDING || digitalRead(BUTTON_PIN) == HIGH) {
             stttext = "";
             Serial.println("Recording...");
+            lv_setSpeechinfo("正在录音");
             size_t bytes_read = 0;
             recordingSize = 0;
             pcm_data = reinterpret_cast<int16_t *>(ps_malloc(BUFFER_SIZE * 2));
             if (!pcm_data) {
                 Serial.println("Failed to allocate memory for pcm_data");
             }
-            uint16_t x = 0, y = 0;
+
             int min = millis();
-            while (speakState == REQUESTING) {
+            while ((speakState != RECORDED)) {
                 esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
                 memcpy(pcm_data + recordingSize, audioData, bytes_read);
                 recordingSize += bytes_read / 2;
+                if ((digitalRead(BUTTON_PIN) == HIGH) || (millis() - min < 6000)) {
+                    speakState = RECORDED;
+                }
             }
-            sendSTTData(); // STT请求开始
+            lv_setSpeechinfo("正在思考");
+            Serial.printf("Total bytes read: %d\n", recordingSize);
+            Serial.println("Recording complete.");
+
+            sendSTTData();
             free(pcm_data);
         }
 
@@ -473,7 +483,7 @@ void speakTask(void *pvParameter)
             webSocketClient_tts.poll();
         }
 
-        if (speakState == SPEAKING) { // 接收到STT数据，进行下一步处理
+        if (speakState == WAITING) {
             Serial.println(stttext);
             delay(100);
 
@@ -497,23 +507,18 @@ void speakTask(void *pvParameter)
 
             String answer = "";
 
-            if (useAIMode == 0) {
-                // 向豆包发送请求
-                while (answer == "" || answer == "Error") {
+            while (answer == "" || answer == "Error") {
+                if (useAIMode) {
                     answer = postDouBaoAnswer(answer_list, answer_list_num);
-                    if (answer == "Error") {
-                        Serial.println("doupao POST出错重新提交");
-                    }
-                }
-            } else {
-                // 向minmax发送请求
-                while (answer == "" || answer == "Error") {
+                } else {
                     answer = getMiniMaxAnswer(stttext);
-                    if (answer == "Error") {
-                        Serial.println("doupao POST出错重新提交");
-                    }
+                }
+                Serial.printf("anwer : %s mdoe: %d", answer, useAIMode);
+                if (answer == "Error") {
+                    Serial.println("doupao POST出错重新提交");
                 }
             }
+
             // 保存最近的5次对话到列表中
             answer.replace("\n", "");
             answer_list[answer_list_num] = answer;
@@ -531,135 +536,17 @@ void speakTask(void *pvParameter)
             } else {
                 Serial.println("回答内容为空，取消TTS发送。");
             }
-            speakState = SPEAKNONE;
+            lv_setSpeechinfo(" ");
+            speakState = NO_DIALOGUE;
         }
         vTaskDelay(100);
     }
 }
 
-void speakloop()
-{
-    if (digitalRead(BUTTON_PIN) == HIGH) {
-        delay(20);
-        if (digitalRead(BUTTON_PIN) == HIGH) {
-            stttext = "";
-            Serial.println("Recording...");
-
-            size_t bytes_read = 0;
-            recordingSize = 0;
-            pcm_data = reinterpret_cast<int16_t *>(ps_malloc(BUFFER_SIZE * 2));
-            if (!pcm_data) {
-                Serial.println("Failed to allocate memory for pcm_data");
-            }
-            uint16_t x = 0, y = 0;
-            while (digitalRead(BUTTON_PIN) == HIGH) { // 开始循环录音，将录制结果保存在pcm_data中
-                esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
-                memcpy(pcm_data + recordingSize, audioData, bytes_read);
-                recordingSize += bytes_read / 2;
-            }
-
-            Serial.printf("Total bytes read: %d\n", recordingSize);
-            Serial.println("Recording complete.");
-
-            sendSTTData(); // STT请求开始
-
-            free(pcm_data);
-        }
-    }
-
-    if (digitalRead(BUTTON_PIN1) == HIGH) {
-        delay(20);
-        if (digitalRead(BUTTON_PIN1) == HIGH) {
-            if (useAIMode == 0) {
-                useAIMode = 1;
-            } else {
-                useAIMode = 0;
-            }
-            Serial.print("useAIMode :");
-            Serial.println(useAIMode);
-        }
-    }
-
-    if (webSocketClient_stt.available()) {
-        webSocketClient_stt.poll();
-    }
-
-    if (webSocketClient_tts.available()) {
-        webSocketClient_tts.poll();
-    }
-    if (sttste) { // 接收到STT数据，进行下一步处理
-        Serial.println(stttext);
-
-        delay(100);
-
-        // 保存最近的5次对话到列表中
-        stttext.replace("\n", "");
-        answer_list[answer_list_num] = stttext;
-        answer_list_num++;
-        if (answer_list_num > 9) {
-            for (int i = 0; i < 9; i++) {
-                answer_list[i] = answer_list[i + 1];
-            }
-            answer_list[9] = "";
-            answer_list_num = 9;
-        }
-
-        for (int i = 0; i < answer_list_num + 1; i++) {
-            Serial.print("answer_list_num: ");
-            Serial.println(i);
-            Serial.print("answer_list: ");
-            Serial.println(answer_list[i]);
-        }
-
-        String answer = "";
-        if (useAIMode == 0) {
-            // 向豆包发送请求
-            while (answer == "" || answer == "Error") {
-                answer = postDouBaoAnswer(answer_list, answer_list_num);
-                if (answer == "Error") {
-                    Serial.println("doupao POST出错重新提交");
-                }
-            }
-        } else {
-            // 向minmax发送请求
-            while (answer == "" || answer == "Error") {
-                answer = getMiniMaxAnswer(stttext);
-                if (answer == "Error") {
-                    Serial.println("doupao POST出错重新提交");
-                }
-            }
-        }
-
-        // 保存最近的5次对话到列表中
-        answer.replace("\n", "");
-        answer_list[answer_list_num] = answer;
-        answer_list_num++;
-        if (answer_list_num > 9) {
-            for (int i = 0; i < 9; i++) {
-                answer_list[i] = answer_list[i + 1];
-            }
-            answer_list[9] = "";
-            answer_list_num = 9;
-        }
-
-        // 向TTS发送请求
-        if (answer != NULL) {
-            postTTS(answer);
-        } else {
-            Serial.println("回答内容为空，取消TTS发送。");
-        }
-
-        Serial.println();
-        sttste = 0;
-    }
-    delay(50);
-}
-
 void startSpeakTask()
 {
     if (speakTaskHandle == NULL) {
-        Serial.println("start speakTask");
-        xTaskCreatePinnedToCore(&speakTask, "speak_task", 20 * 1024, NULL, 10, &speakTaskHandle, 0);
+        xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 10, &speakTaskHandle, 0);
     }
 }
 

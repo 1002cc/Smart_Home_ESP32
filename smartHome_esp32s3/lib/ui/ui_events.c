@@ -9,3 +9,8 @@ void setChooseScreenCD(lv_event_t * e)
 {
 	// Your code here
 }
+
+void lampButtonCB(lv_event_t * e)
+{
+	// Your code here
+}

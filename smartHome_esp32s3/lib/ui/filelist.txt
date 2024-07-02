@@ -26,9 +26,10 @@ images/ui_img_data_png.c
 images/ui_img_y1_png.c
 images/ui_img_l2_png.c
 images/ui_img_l1_png.c
-images/ui_img_wifi_png.c
-images/ui_img_t0_png.c
+images/ui_img_a1_png.c
 images/ui_img_t2_png.c
+images/ui_img_t0_png.c
+images/ui_img_wifi_png.c
 fonts/ui_font_dan.c
 fonts/ui_font_misc.c
 fonts/ui_font_smartsystem.c

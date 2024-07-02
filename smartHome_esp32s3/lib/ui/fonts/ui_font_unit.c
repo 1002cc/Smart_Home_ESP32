@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 18 px
  * Bpp: 4
- * Opts: --bpp 4 --size 18 --font E:/Smart_Home/ESP32/smartHome_esp32/guiproject/assets/SourceHanSansCN-Normal-2.otf -o E:/Smart_Home/ESP32/smartHome_esp32/guiproject/assets\ui_font_unit.c --format lvgl -r 0x20-0x7f --symbols 温度湿度浓度传感器数据气体浓度灯配置设置网络时间监控音乐 --no-compress --no-prefilter
+ * Opts: --bpp 4 --size 18 --font E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets/SourceHanSansCN-Normal-2.otf -o E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets\ui_font_unit.c --format lvgl -r 0x20-0x7f --symbols 温度湿度浓度传感器数据气体浓度灯配置设置网络时间监控音乐语 --no-compress --no-prefilter
  ******************************************************************************/
 
 #include "../ui.h"
@@ -1297,6 +1297,25 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0x0, 0x0, 0x0, 0x30, 0x0, 0x0, 0x0, 0x4,
     0x0,
 
+    /* U+8BED "语" */
+    0x1, 0x0, 0x0, 0x22, 0x22, 0x22, 0x22, 0x22,
+    0x0, 0xab, 0x0, 0x2e, 0xee, 0xff, 0xee, 0xee,
+    0xd0, 0x0, 0xbc, 0x0, 0x0, 0xa, 0x80, 0x0,
+    0x0, 0x0, 0x0, 0xb4, 0x0, 0x11, 0xd6, 0x11,
+    0x11, 0x0, 0x0, 0x0, 0x0, 0x8f, 0xff, 0xff,
+    0xff, 0xb0, 0x4, 0x44, 0x30, 0x0, 0x5, 0xe0,
+    0x0, 0x79, 0x0, 0xde, 0xfc, 0x0, 0x0, 0x9a,
+    0x0, 0x9, 0x80, 0x0, 0x5, 0xc0, 0x44, 0x4d,
+    0x94, 0x44, 0xc9, 0x42, 0x0, 0x5c, 0xb, 0xcc,
+    0xcc, 0xcc, 0xcc, 0xcc, 0x70, 0x5, 0xc0, 0x0,
+    0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x5c, 0x0,
+    0x4f, 0xff, 0xff, 0xff, 0xf5, 0x0, 0x5, 0xc0,
+    0x4, 0xd1, 0x11, 0x11, 0x1d, 0x50, 0x0, 0x5c,
+    0x8, 0x9d, 0x0, 0x0, 0x0, 0xd5, 0x0, 0x5,
+    0xed, 0xc7, 0xd0, 0x0, 0x0, 0xd, 0x50, 0x0,
+    0xaf, 0x70, 0x4e, 0x33, 0x33, 0x33, 0xe5, 0x0,
+    0x7, 0x30, 0x4, 0xfd, 0xdd, 0xdd, 0xde, 0x40,
+
     /* U+914D "配" */
     0x11, 0x11, 0x11, 0x11, 0x0, 0x0, 0x0, 0x0,
     0xd, 0xff, 0xff, 0xff, 0xf1, 0xff, 0xff, 0xff,
@@ -1476,8 +1495,9 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 7732, .adv_w = 288, .box_w = 16, .box_h = 16, .ofs_x = 1, .ofs_y = -1},
     {.bitmap_index = 7860, .adv_w = 288, .box_w = 17, .box_h = 17, .ofs_x = 1, .ofs_y = -2},
     {.bitmap_index = 8005, .adv_w = 288, .box_w = 17, .box_h = 16, .ofs_x = 1, .ofs_y = -1},
-    {.bitmap_index = 8141, .adv_w = 288, .box_w = 16, .box_h = 16, .ofs_x = 1, .ofs_y = -1},
-    {.bitmap_index = 8269, .adv_w = 288, .box_w = 16, .box_h = 16, .ofs_x = 1, .ofs_y = -1}
+    {.bitmap_index = 8141, .adv_w = 288, .box_w = 17, .box_h = 16, .ofs_x = 1, .ofs_y = -1},
+    {.bitmap_index = 8277, .adv_w = 288, .box_w = 16, .box_h = 16, .ofs_x = 1, .ofs_y = -1},
+    {.bitmap_index = 8405, .adv_w = 288, .box_w = 16, .box_h = 16, .ofs_x = 1, .ofs_y = -1}
 };
 
 /*---------------------
@@ -1487,7 +1507,7 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
 static const uint16_t unicode_list_1[] = {
     0x0, 0xd0, 0x103, 0x818, 0x1056, 0x12cf, 0x151e, 0x1557,
     0x1720, 0x17a6, 0x1dc4, 0x1f03, 0x1fd9, 0x202f, 0x221f, 0x2881,
-    0x308c, 0x3101, 0x311e, 0x3d6e, 0x42fd, 0x47a4, 0x49a3
+    0x308c, 0x3101, 0x311e, 0x3d6e, 0x3d9d, 0x42fd, 0x47a4, 0x49a3
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
@@ -1499,7 +1519,7 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
     },
     {
         .range_start = 20048, .range_length = 18852, .glyph_id_start = 96,
-        .unicode_list = unicode_list_1, .glyph_id_ofs_list = NULL, .list_length = 23, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .unicode_list = unicode_list_1, .glyph_id_ofs_list = NULL, .list_length = 24, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 
@@ -1525,7 +1545,7 @@ static const uint8_t kern_left_class_mapping[] =
     42, 43, 44, 45, 2, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /*Map glyph_ids to kern right classes*/
@@ -1545,7 +1565,7 @@ static const uint8_t kern_right_class_mapping[] =
     35, 36, 37, 38, 0, 0, 3, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /*Kern values between classes*/

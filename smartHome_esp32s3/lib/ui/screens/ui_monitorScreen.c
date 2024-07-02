@@ -41,6 +41,17 @@ void ui_monitorScreen_screen_init(void)
     lv_label_set_text(ui_cameraLabel, "连接");
     lv_obj_set_style_text_font(ui_cameraLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_cameraStateLabel = lv_label_create(ui_monitorScreen);
+    lv_obj_set_width(ui_cameraStateLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_cameraStateLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_cameraStateLabel, -114);
+    lv_obj_set_y(ui_cameraStateLabel, -93);
+    lv_obj_set_align(ui_cameraStateLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_cameraStateLabel, "未连接");
+    lv_obj_set_style_text_color(ui_cameraStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_cameraStateLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_cameraStateLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     lv_obj_add_event_cb(ui_Panel4, ui_event_Panel4, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_connectCameraButton, ui_event_connectCameraButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_monitorScreen, ui_event_monitorScreen, LV_EVENT_ALL, NULL);

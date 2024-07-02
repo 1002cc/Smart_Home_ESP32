@@ -110,7 +110,7 @@ void initmq2()
     MQ2.setA(987.99);
     MQ2.setB(-2.162);
     MQ2.init();
-    Serial.print("Calibrating please wait.");
+    Serial.print("Calibrating please wait.\n");
     float calcR0 = 0;
     for (int i = 1; i <= 10; i++) {
         MQ2.update(); // Update data, the arduino will read the voltage from the analog pin
@@ -122,13 +122,9 @@ void initmq2()
 
     if (isinf(calcR0)) {
         Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply");
-        while (1)
-            ;
     }
     if (calcR0 == 0) {
         Serial.println("Warning: Conection issue found, R0 is zero (Analog pin shorts to ground) please check your wiring and supply");
-        while (1)
-            ;
     }
 }
 float readmq2()
@@ -161,8 +157,6 @@ float dhtReadHumidity()
 
 void sensor_task(void *pvParameter)
 {
-    initDHT();
-    initmq2();
     float temperature, humidity, mq2sensorValue;
     char temp_char[12];
     while (1) {
@@ -222,5 +216,7 @@ void initDevices()
 void startSensorTask(void)
 {
     Serial.println("Starting sensor task");
+    initDHT();
+    initmq2();
     xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, NULL, 1);
 }

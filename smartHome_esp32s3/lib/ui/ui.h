@@ -81,9 +81,6 @@ void ui_event_MQArc(lv_event_t * e);
 extern lv_obj_t * ui_MQArc;
 void ui_event_Panel3(lv_event_t * e);
 extern lv_obj_t * ui_Panel3;
-extern lv_obj_t * ui_Button12;
-extern lv_obj_t * ui_Image14;
-extern lv_obj_t * ui_Label19;
 // SCREEN: ui_lampScreen
 void ui_lampScreen_screen_init(void);
 void ui_event_lampScreen(lv_event_t * e);
@@ -110,21 +107,27 @@ extern lv_obj_t * ui_Panel1;
 void ui_setchooseScreen_screen_init(void);
 void ui_event_setchooseScreen(lv_event_t * e);
 extern lv_obj_t * ui_setchooseScreen;
-void ui_event_wifiSetButton(lv_event_t * e);
-extern lv_obj_t * ui_wifiSetButton;
-extern lv_obj_t * ui_Label12;
-extern lv_obj_t * ui_Image9;
 void ui_event_Panel6(lv_event_t * e);
 extern lv_obj_t * ui_Panel6;
-void ui_event_networkSetButton(lv_event_t * e);
-extern lv_obj_t * ui_networkSetButton;
-extern lv_obj_t * ui_Label14;
-extern lv_obj_t * ui_Image10;
+extern lv_obj_t * ui_Label20;
+extern lv_obj_t * ui_Container2;
+void ui_event_speechSetButton(lv_event_t * e);
+extern lv_obj_t * ui_speechSetButton;
+extern lv_obj_t * ui_Label30;
+extern lv_obj_t * ui_Image12;
 void ui_event_timeSetButton(lv_event_t * e);
 extern lv_obj_t * ui_timeSetButton;
 extern lv_obj_t * ui_Label15;
 extern lv_obj_t * ui_Image11;
-extern lv_obj_t * ui_Label20;
+void ui_event_networkSetButton(lv_event_t * e);
+extern lv_obj_t * ui_networkSetButton;
+extern lv_obj_t * ui_Label14;
+extern lv_obj_t * ui_Image10;
+void ui_event_wifiSetButton(lv_event_t * e);
+extern lv_obj_t * ui_wifiSetButton;
+extern lv_obj_t * ui_Label12;
+extern lv_obj_t * ui_Image9;
+extern lv_obj_t * ui_Panel9;
 // SCREEN: ui_set1Screen
 void ui_set1Screen_screen_init(void);
 void ui_event_set1Screen(lv_event_t * e);
@@ -137,6 +140,7 @@ extern lv_obj_t * ui_Label1;
 extern lv_obj_t * ui_wifiSwitch;
 extern lv_obj_t * ui_wifiStateLabel;
 extern lv_obj_t * ui_wifilistPanel;
+extern lv_obj_t * ui_ipLabel;
 extern lv_obj_t * ui_w2;
 extern lv_obj_t * ui_Label13;
 extern lv_obj_t * ui_Label10;
@@ -154,6 +158,12 @@ extern lv_obj_t * ui_Label23;
 void ui_event_timeuseButton(lv_event_t * e);
 extern lv_obj_t * ui_timeuseButton;
 extern lv_obj_t * ui_Label24;
+extern lv_obj_t * ui_W4;
+extern lv_obj_t * ui_Label19;
+extern lv_obj_t * ui_Label32;
+extern lv_obj_t * ui_speechDropdown;
+extern lv_obj_t * ui_Label33;
+extern lv_obj_t * ui_aimodeDropdown;
 // SCREEN: ui_set2Screen
 void ui_set2Screen_screen_init(void);
 void ui_event_set2Screen(lv_event_t * e);
@@ -168,6 +178,11 @@ void ui_event_Panel8(lv_event_t * e);
 extern lv_obj_t * ui_Panel8;
 extern lv_obj_t * ui_TabView4;
 extern lv_obj_t * ui_s1;
+void ui_event_speakButton(lv_event_t * e);
+extern lv_obj_t * ui_speakButton;
+extern lv_obj_t * ui_Label28;
+extern lv_obj_t * ui_speechStateLabel;
+extern lv_obj_t * ui_expressionChart;
 extern lv_obj_t * ui_s2;
 extern lv_obj_t * ui_prevButton;
 extern lv_obj_t * ui_prevLabel;
@@ -180,9 +195,6 @@ extern lv_obj_t * ui_Label25;
 extern lv_obj_t * ui_Label26;
 extern lv_obj_t * ui_musicDropdown;
 extern lv_obj_t * ui_Label27;
-void ui_event_speakButton(lv_event_t * e);
-extern lv_obj_t * ui_speakButton;
-extern lv_obj_t * ui_Label28;
 // SCREEN: ui_monitorScreen
 void ui_monitorScreen_screen_init(void);
 void ui_event_monitorScreen(lv_event_t * e);
@@ -192,6 +204,7 @@ extern lv_obj_t * ui_Panel4;
 void ui_event_connectCameraButton(lv_event_t * e);
 extern lv_obj_t * ui_connectCameraButton;
 extern lv_obj_t * ui_cameraLabel;
+extern lv_obj_t * ui_cameraStateLabel;
 extern lv_obj_t * ui____initial_actions0;
 
 
@@ -207,9 +220,10 @@ LV_IMG_DECLARE(ui_img_data_png);    // assets/data.png
 LV_IMG_DECLARE(ui_img_y1_png);    // assets/y1.png
 LV_IMG_DECLARE(ui_img_l2_png);    // assets/l2.png
 LV_IMG_DECLARE(ui_img_l1_png);    // assets/l1.png
-LV_IMG_DECLARE(ui_img_wifi_png);    // assets/wifi.png
-LV_IMG_DECLARE(ui_img_t0_png);    // assets/t0.png
+LV_IMG_DECLARE(ui_img_a1_png);    // assets/a1.png
 LV_IMG_DECLARE(ui_img_t2_png);    // assets/t2.png
+LV_IMG_DECLARE(ui_img_t0_png);    // assets/t0.png
+LV_IMG_DECLARE(ui_img_wifi_png);    // assets/wifi.png
 
 
 

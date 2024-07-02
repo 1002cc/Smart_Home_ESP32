@@ -36,6 +36,57 @@ void ui_speechScreen_screen_init(void)
 
     ui_s1 = lv_tabview_add_tab(ui_TabView4, "speech");
 
+    ui_speakButton = lv_btn_create(ui_s1);
+    lv_obj_set_width(ui_speakButton, 56);
+    lv_obj_set_height(ui_speakButton, 30);
+    lv_obj_set_x(ui_speakButton, 116);
+    lv_obj_set_y(ui_speakButton, -90);
+    lv_obj_set_align(ui_speakButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_speakButton, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_speakButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label28 = lv_label_create(ui_speakButton);
+    lv_obj_set_width(ui_Label28, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label28, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label28, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label28, "录音");
+    lv_obj_set_style_text_font(ui_Label28, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_speechStateLabel = lv_label_create(ui_s1);
+    lv_obj_set_width(ui_speechStateLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_speechStateLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_speechStateLabel, -116);
+    lv_obj_set_y(ui_speechStateLabel, -97);
+    lv_obj_set_align(ui_speechStateLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_speechStateLabel, "");
+    lv_obj_set_style_text_color(ui_speechStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_speechStateLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_speechStateLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_expressionChart = lv_chart_create(ui_s1);
+    lv_obj_set_width(ui_expressionChart, 260);
+    lv_obj_set_height(ui_expressionChart, 140);
+    lv_obj_set_align(ui_expressionChart, LV_ALIGN_CENTER);
+    lv_chart_set_type(ui_expressionChart, LV_CHART_TYPE_BAR);
+    lv_chart_set_point_count(ui_expressionChart, 5);
+    lv_chart_set_range(ui_expressionChart, LV_CHART_AXIS_PRIMARY_Y, 0, 50);
+    lv_chart_set_range(ui_expressionChart, LV_CHART_AXIS_SECONDARY_Y, 0, 50);
+    lv_chart_set_axis_tick(ui_expressionChart, LV_CHART_AXIS_PRIMARY_X, 10, 5, 5, 0, false, 50);
+    lv_chart_set_axis_tick(ui_expressionChart, LV_CHART_AXIS_PRIMARY_Y, 10, 5, 5, 0, false, 50);
+    lv_chart_set_axis_tick(ui_expressionChart, LV_CHART_AXIS_SECONDARY_Y, 0, 5, 0, 2, false, 0);
+    lv_chart_series_t * ui_expressionChart_series_1 = lv_chart_add_series(ui_expressionChart, lv_color_hex(0x876FC9),
+                                                                          LV_CHART_AXIS_SECONDARY_Y);
+    static lv_coord_t ui_expressionChart_series_1_array[] = { 20, 40, 50, 40, 20 };
+    lv_chart_set_ext_y_array(ui_expressionChart, ui_expressionChart_series_1, ui_expressionChart_series_1_array);
+    lv_obj_set_style_bg_color(ui_expressionChart, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_expressionChart, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_color(ui_expressionChart, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_opa(ui_expressionChart, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_color(ui_expressionChart, lv_color_hex(0x4040FF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_line_opa(ui_expressionChart, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
+
     ui_s2 = lv_tabview_add_tab(ui_TabView4, "music");
 
     ui_prevButton = lv_btn_create(ui_s2);
@@ -139,22 +190,6 @@ void ui_speechScreen_screen_init(void)
     lv_obj_set_style_text_color(ui_Label27, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label27, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label27, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_speakButton = lv_btn_create(ui_speechScreen);
-    lv_obj_set_width(ui_speakButton, 56);
-    lv_obj_set_height(ui_speakButton, 30);
-    lv_obj_set_x(ui_speakButton, 116);
-    lv_obj_set_y(ui_speakButton, -90);
-    lv_obj_set_align(ui_speakButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_speakButton, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_speakButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-
-    ui_Label28 = lv_label_create(ui_speakButton);
-    lv_obj_set_width(ui_Label28, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label28, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label28, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label28, "录音");
-    lv_obj_set_style_text_font(ui_Label28, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_Panel8, ui_event_Panel8, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_speakButton, ui_event_speakButton, LV_EVENT_ALL, NULL);

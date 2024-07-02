@@ -52,6 +52,8 @@ void WiFiEvent(WiFiEvent_t event)
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
         Serial.print("Obtained IP address: ");
+        String str = String("IP:" + WiFi.localIP().toString());
+        lv_setIPinfo(str.c_str());
         Serial.println(WiFi.localIP());
         break;
     case SYSTEM_EVENT_AP_START:

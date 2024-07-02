@@ -2,10 +2,11 @@
 #define _MODULE_SPEAK_H_
 
 typedef enum {
-    SPEAKNONE,
+    NO_DIALOGUE,
     RECORDING,
-    REQUESTING,
-    SPEAKING
+    RECORDED,
+    WAITING,
+    ANSWERING
 } SpeakState_t;
 
 bool initI2SConfig();

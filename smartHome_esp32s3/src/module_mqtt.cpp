@@ -10,6 +10,9 @@
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
 const char *mqtt_sub = "/smartHome/esp32_sub";
 const char *mqtt_pub = "/smartHome/esp32_pub";
+const char *mqtt_app_pub = "/smartHome/esp32_app_pub";
+const char *mqtt_qt_pub = "/smartHome/esp32_qt_pub";
+const char *mqtt_cam_pub = "/smartHome/esp32_cam_pub";
 const uint16_t mqtt_broker_port = 8883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "esp32";
@@ -174,7 +177,8 @@ void publishSensorData(const SensorData &data)
 
     char *jsonStr = cJSON_PrintUnformatted(root);
 
-    publishMQTT(jsonStr);
+    mqttClient.publish(mqtt_pub, jsonStr);
+    mqttClient.publish(mqtt_qt_pub, jsonStr);
     cJSON_Delete(root);
 }
 
@@ -189,7 +193,7 @@ void publishGetImage()
     char *jsonStr = cJSON_PrintUnformatted(root);
 
     // publishMQTT(jsonStr);
-    mqttClient.publish("/smartHome/esp32_cam_pub", jsonStr);
+    mqttClient.publish(mqtt_cam_pub, jsonStr);
     cJSON_Delete(root);
 }
 
@@ -203,7 +207,7 @@ void publishStartVideo(bool isStartVideo)
     cJSON_AddBoolToObject(dates, "startVideo", isStartVideo);
     char *jsonStr = cJSON_PrintUnformatted(root);
     Serial.println(jsonStr);
-    mqttClient.publish("/smartHome/esp32_cam_pub", jsonStr);
+    mqttClient.publish(mqtt_cam_pub, jsonStr);
     cJSON_Delete(root);
 }
 

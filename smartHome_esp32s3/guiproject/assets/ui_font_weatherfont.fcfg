@@ -10,7 +10,7 @@
   "ranges": [
     "0x20-0x7f"
   ],
-  "symbols": "多云晴小大雨雪阴风已未室外温度天气°C城市订阅主题发布应用中阵",
+  "symbols": "多云晴小大雨雪阴风已未室外温度天气°C城市订阅主题发布应用中阵雷",
   "customparams": "--no-compress --no-prefilter",
   "uploaded": false
 }

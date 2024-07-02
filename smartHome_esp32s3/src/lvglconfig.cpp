@@ -12,8 +12,9 @@
 #include <TFT_eSPI.h>
 #include <TJpg_Decoder.h>
 #include <lvgl.h>
-
 #include <vector>
+
+#include "lv_fs_if.h"
 
 static const uint16_t screenWidth = 320;
 static const uint16_t screenHeight = 240;
@@ -33,28 +34,30 @@ std::vector<String> foundWifiList;
 // web camera
 using namespace websockets;
 const char *websockets_server_host = "192.168.0.177";
-const uint16_t websockets_server_port = 8888;
+const uint16_t websockets_server_port = 3000;
 WebsocketsClient client;
 #define MAX_IMAGE_SIZE (320 * 240)
-uint16_t image_buffer[MAX_IMAGE_SIZE];
+// uint16_t image_buffer[MAX_IMAGE_SIZE];
+uint16_t *image_buffer;
 
 extern bool enable_mqtt;
 bool isStartCamera = false;
 
-static lv_obj_t *chart;
+// static lv_obj_t *expressionChart = NULL;
 static lv_style_t main_black_style;
-static lv_timer_t *chartTimer;
+static lv_timer_t *chartTimer = NULL;
 
 static const int chartSize = 200;
-static const int center_x = 140;
-static const int center_y = 140;
-static const float degree = 3.14159 / 180;
-static int radius = 130;
-static int angle = 0;
-static volatile float projectedRange = -1;
+lv_coord_t pos_array[5][5] = {
+    {10, 10, 10, 10, 10},
+    {10, 20, 30, 20, 10},
+    {50, 40, 10, 40, 50},
+    {20, 40, 50, 40, 20},
+    {50, 40, 30, 40, 50}};
 
 extern SpeakState_t speakState;
-
+extern String ai_speak;
+extern int useAIMode;
 /********************************************************************
                          BUILD UI
 ********************************************************************/
@@ -128,22 +131,21 @@ void initLVGLConfig(void)
 {
     lv_init();
 
+    // lv_fs_if_init();
+    // lv_png_init();
+
     tft.begin();
     tft.setRotation(3);
     tft.setTextColor(0xFFFF, 0x0000);
     tft.setSwapBytes(true);
-    pinMode(TFT_BL, OUTPUT);
-    digitalWrite(TFT_BL, 1);
     uint16_t calData[5] = {490, 3259, 422, 3210, 1};
     tft.setTouch(calData);
-    // static lv_color_t draw_buf1[screenWidth * screenHeight / 2];
-    // static lv_color_t draw_buf2[screenWidth * screenHeight / 2];
 
-    lv_color_t *draw_buf1 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    lv_color_t *draw_buf2 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    lv_color_t *draw_buf1 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM);
+    lv_color_t *draw_buf2 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM);
 
     lv_disp_draw_buf_init(&draw_buf, draw_buf1, draw_buf2, screenWidth * screenHeight);
-    // lv_disp_draw_buf_init(&draw_buf, draw_buf1, draw_buf2, screenWidth * screenHeight / 10);
+
     /*Initialize the display*/
     static lv_disp_drv_t disp_drv;
     lv_disp_drv_init(&disp_drv);
@@ -165,8 +167,9 @@ void initLVGLConfig(void)
     ui_timer_init();
     my_ui_init();
 
-    // LV_FONT_DECLARE(sFont_20)
-    // lv_obj_set_style_text_font(ui_cityLabel, &sFont_20, 0);
+    // lv_img_set_src(ui_Image4, "F:/lvglimage/t2.png");
+    //   LV_FONT_DECLARE(sFont_20)
+    //   lv_obj_set_style_text_font(ui_cityLabel, &sFont_20, 0);
 
     lv_obj_del(ui_weathericonImage2);
     lv_obj_del(ui_weathericonImage3);
@@ -181,15 +184,15 @@ void initLVGLConfig(void)
 
 void lvgl_task(void *pvParameter)
 {
-    TickType_t xLastWakeTime;
-    const TickType_t xPeriod = pdMS_TO_TICKS(5);
-    xLastWakeTime = xTaskGetTickCount();
+    // TickType_t xLastWakeTime;
+    // const TickType_t xPeriod = pdMS_TO_TICKS(5);
+    // xLastWakeTime = xTaskGetTickCount();
     while (1) {
-        vTaskDelayUntil(&xLastWakeTime, xPeriod);
-        xSemaphoreTake(lvglSemaphore, portMAX_DELAY);
+        // vTaskDelayUntil(&xLastWakeTime, xPeriod);
+        //  xSemaphoreTake(lvglSemaphore, portMAX_DELAY);
         lv_timer_handler();
-        xSemaphoreGive(lvglSemaphore);
-        //  vTaskDelay(5);
+        // xSemaphoreGive(lvglSemaphore);
+        vTaskDelay(5);
     }
     vTaskDelete(NULL);
 }
@@ -377,6 +380,16 @@ void lv_setCameraImage(const void *path)
     lv_img_set_src(videoImage, path);
 }
 
+void lv_setSpeechinfo(const char *text)
+{
+    lv_label_set_text(ui_speechStateLabel, text);
+}
+
+void lv_setIPinfo(const char *text)
+{
+    lv_label_set_text(ui_ipLabel, text);
+}
+
 /********************************************************************
                          LVGL_SET_UI
 ********************************************************************/
@@ -447,6 +460,8 @@ void setChooseScreenCD(lv_event_t *e)
         lv_tabview_set_act(ui_chooseTabView, 1, LV_ANIM_OFF);
     } else if (setbt == ui_timeSetButton) {
         lv_tabview_set_act(ui_chooseTabView, 2, LV_ANIM_OFF);
+    } else if (setbt == ui_speechSetButton) {
+        lv_tabview_set_act(ui_chooseTabView, 3, LV_ANIM_OFF);
     }
 }
 
@@ -570,6 +585,24 @@ void chooseScreenFCD(lv_event_t *e)
     lv_scr_load_anim(ui_setchooseScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
 }
 
+void SpeechSetDCD(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *btn = lv_event_get_target(e);
+    char tmp_buf[32];
+    lv_dropdown_get_selected_str(btn, tmp_buf, sizeof(tmp_buf));
+    Serial.println(tmp_buf);
+    if (btn == ui_speechDropdown) {
+        Serial.printf("speech dropdown number : %d\n", lv_dropdown_get_selected(btn));
+        StoreintData("speech_id", lv_dropdown_get_selected(btn));
+        ai_speak = tmp_buf;
+    } else if (btn == ui_aimodeDropdown) {
+        Serial.printf("ai mdoe dropdown number : %d\n", lv_dropdown_get_selected(btn));
+        useAIMode = lv_dropdown_get_selected(btn);
+        StoreintData("speech_ai_mode", lv_dropdown_get_selected(btn));
+    }
+}
+
 void initSetConfigUI()
 {
     inputKeyboard = lv_keyboard_create(ui_set1Screen);
@@ -629,6 +662,9 @@ void initSetConfigUI()
 
     lv_obj_add_event_cb(ui_wifiSwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_mqttSwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
+
+    lv_obj_add_event_cb(ui_speechDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_aimodeDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
 }
 
 static void buildPWMsgBox()
@@ -852,17 +888,18 @@ void cameraScreenCD(lv_event_t *e)
     }
 }
 
+void monitorScreenFCD(lv_event_t *e)
+{
+    Serial.println("return cameraserver");
+    lv_obj_clear_state(ui_connectCameraButton, LV_STATE_CHECKED);
+    lv_label_set_text(ui_cameraLabel, "连接");
+    lv_label_set_text(ui_cameraStateLabel, "未连接");
+    closeCameraServer();
+    lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
+}
+
 bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 {
-    // 写入到LVGL图像缓冲区
-    // for (uint16_t row = 0; row < h; ++row) {
-    //     for (uint16_t col = 0; col < w; ++col) {
-    //         uint32_t index = (row + y) * 240 + (col + x);
-    //         if (index < MAX_IMAGE_SIZE) {
-    //             image_buffer[index] = bitmap[col + row * w];
-    //         }
-    //     }
-    // }
     if (y >= tft.height())
         return 0;
     for (uint16_t j = 0; j < h; j++) {
@@ -870,27 +907,41 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
             image_buffer[(y + j) * screenWidth + (x + i)] = bitmap[j * w + i];
         }
     }
-    return 1; // 继续解码
+
     // if (y >= tft.height())
-    //     return 0;
-    // tft.pushImage(x, y, w, h, bitmap);
-    // return 1;
+    //     return false; // 返回 false 表示失败
+    // for (uint16_t j = 0; j < h; j++) {
+    //     for (uint16_t i = 0; i < w; i++) {
+    //         uint16_t pixel = bitmap[j * w + i];
+    //         uint16_t swapped_pixel = (pixel >> 8) | (pixel << 8);
+    //         image_buffer[(y + j) * screenWidth + (x + i)] = swapped_pixel;
+    //     }
+    // }
+
+    return 1;
 }
 bool startCameraServer()
 {
+    lv_label_set_text(ui_cameraStateLabel, "正在连接");
     if (client.connect(websockets_server_host, websockets_server_port, "/")) {
         Serial.println("Connected to WebSocket server");
+        lv_label_set_text(ui_cameraStateLabel, "已连接");
         return true;
     } else {
         Serial.println("WebSocket connect failed.");
+        lv_label_set_text(ui_cameraStateLabel, "连接失败");
         return false;
     }
 }
 
 void closeCameraServer()
 {
+    lv_label_set_text(ui_cameraStateLabel, "未连接");
+    if (isStartCamera) {
+        publishStartVideo(false);
+    }
     isStartCamera = false;
-    publishStartVideo(false);
+
     tft.clearWriteError();
     if (cameraTaskHandle != NULL) {
         vTaskDelete(cameraTaskHandle);
@@ -908,8 +959,11 @@ void initCameraUI()
     lv_obj_set_pos(videoImage, 0, 0);
     lv_obj_set_size(videoImage, 320, 240);
     lv_obj_move_foreground(ui_connectCameraButton);
+    lv_obj_move_foreground(ui_cameraStateLabel);
+    image_buffer = (uint16_t *)ps_malloc(320 * 240 * sizeof(uint16_t));
     TJpgDec.setJpgScale(1);
-    TJpgDec.setSwapBytes(true);
+    TJpgDec.setSwapBytes(false);
+    // TJpgDec.setSwapBytes(true);
     TJpgDec.setCallback(tft_output);
 }
 
@@ -918,28 +972,25 @@ void videocameratask(void *pvParameter)
     if (!startCameraServer()) {
         vTaskDelete(cameraTaskHandle);
         cameraTaskHandle = NULL;
-        lv_label_set_text(ui_cameraLabel, "未连接");
+        lv_label_set_text(ui_cameraLabel, "连接");
+        lv_label_set_text(ui_cameraStateLabel, "未连接");
     }
+
     Serial.println("start camera task");
+    static lv_img_dsc_t img_dsc;
+    img_dsc.header.always_zero = 0;
+    img_dsc.header.w = 320;
+    img_dsc.header.h = 240;
+    img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * sizeof(uint16_t);
+    img_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
     while (1) {
         if (client.poll()) {
             WebsocketsMessage msg = client.readBlocking();
-            // uint32_t t = millis();
             TJpgDec.drawJpg(0, 0, (const uint8_t *)msg.c_str(), msg.length());
-            static lv_img_dsc_t img_dsc;
-            img_dsc.header.always_zero = 0;
-            img_dsc.header.w = 320;
-            img_dsc.header.h = 240;
-            img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * sizeof(uint16_t);
-            img_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
-            img_dsc.data = (const uint8_t *)&image_buffer;
 
+            img_dsc.data = (const uint8_t *)image_buffer;
             lv_img_set_src(videoImage, &img_dsc);
             lv_obj_invalidate(videoImage);
-
-            // t = millis() - t;
-            // Serial.print(t);
-            // Serial.println(" ms");
         }
         vTaskDelay(100);
     }
@@ -949,10 +1000,8 @@ void videocameratask(void *pvParameter)
 void startCameraTask()
 {
     if (isStartCamera && cameraTaskHandle == NULL) {
-        isStartCamera = true;
         xTaskCreatePinnedToCore(&videocameratask, "videocamera_task", 5 * 1024, NULL, 3, &cameraTaskHandle, 1);
     } else if (!isStartCamera && cameraTaskHandle != NULL) {
-        isStartCamera = false;
         client.close();
         Serial.println("vTaskDelete cameraHandle");
         vTaskDelete(cameraTaskHandle);
@@ -971,17 +1020,15 @@ void speakScreenCD(lv_event_t *e)
     if (code == LV_EVENT_CLICKED) {
         if (btn == ui_Button4) {
             lv_scr_load_anim(ui_speechScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
-            initSpeakConfig();
-            // drawing_screen();
+            drawing_screen();
         } else if (btn == ui_speakButton) {
             if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
                 lv_label_set_text(ui_cameraLabel, "录制...");
                 speakState = RECORDING;
                 Serial.println("录制中");
-
             } else {
                 lv_label_set_text(ui_cameraLabel, "识别");
-                speakState = REQUESTING;
+                speakState = RECORDED;
                 Serial.println("识别");
             }
             Serial.println("speakState = " + String(speakState));
@@ -991,97 +1038,27 @@ void speakScreenCD(lv_event_t *e)
 
 void speakScreenFCD(lv_event_t *e)
 {
-    if (chart != NULL) {
-        lv_obj_del(chart);
-        chart = NULL;
-    }
     if (chartTimer != NULL) {
         lv_timer_del(chartTimer);
         chartTimer = NULL;
     }
+
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
 }
 
-static void draw_event_cb(lv_event_t *e)
-{
-    lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
-    if (dsc->part == LV_PART_ITEMS) {
-        lv_obj_t *obj = lv_event_get_target(e);
-        lv_chart_series_t *ser = lv_chart_get_series_next(obj, NULL);
-        uint32_t cnt = lv_chart_get_point_count(obj);
-        dsc->rect_dsc->bg_opa = (LV_OPA_COVER * dsc->id) / (cnt - 1);
-
-        lv_coord_t *x_array = lv_chart_get_x_array(obj, ser);
-        lv_coord_t *y_array = lv_chart_get_y_array(obj, ser);
-
-        uint32_t start_point = lv_chart_get_x_start_point(obj, ser);
-        uint32_t p_act = (start_point + dsc->id) % cnt;
-        lv_opa_t x_opa = (x_array[p_act] * LV_OPA_50) / 320;
-        lv_opa_t y_opa = (y_array[p_act] * LV_OPA_50) / 320;
-
-        dsc->rect_dsc->bg_color = lv_color_mix(lv_color_hex(0xFFFFFF),
-                                               lv_palette_main(LV_PALETTE_GREY),
-                                               x_opa + y_opa);
-    }
-}
-
-static void drawRandomPoints()
-{
-    lv_chart_set_next_value2(chart, lv_chart_get_series_next(chart, NULL), lv_rand(0, chartSize), lv_rand(0, chartSize));
-}
-
-static void drawPoints()
-{
-    if (angle >= 360) {
-        angle = 0;
-    }
-
-    int x = center_x + radius * cos(-angle * degree);
-    int y = center_y + radius * sin(-angle * degree);
-
-    lv_chart_set_next_value2(chart, lv_chart_get_series_next(chart, NULL), lv_rand(x - 10, x + 10), lv_rand(y - 10, y + 10));
-    angle += 3;
-}
-
-static void add_data(lv_timer_t *timer)
+static void update_particle_effect(lv_timer_t *timer)
 {
     LV_UNUSED(timer);
-    if (projectedRange < 0) {
-        drawRandomPoints();
-    } else {
-        radius = map(projectedRange, 0, 5, 0, 130);
-        drawPoints();
-    }
+    // Serial.println("updata particle");
+    lv_chart_set_ext_y_array(ui_expressionChart, lv_chart_get_series_next(ui_expressionChart, NULL), pos_array[speakState]);
+    lv_chart_refresh(ui_expressionChart);
 }
 
 static void drawing_screen(void)
 {
-    lv_style_init(&main_black_style);
-    lv_style_set_border_width(&main_black_style, 0);
-    lv_style_set_radius(&main_black_style, 20);
-    lv_style_set_bg_opa(&main_black_style, 0);
-    // lv_style_set_bg_color(&main_black_style, lv_color_hex(0x000000));
-    if (chart == NULL) {
-        chart = lv_chart_create(ui_s1);
-        lv_obj_add_style(chart, &main_black_style, 0);
-        lv_obj_set_size(chart, chartSize, chartSize);
-        lv_obj_center(chart);
-        lv_obj_add_event_cb(chart, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
-        lv_obj_set_style_line_width(chart, 0, LV_PART_ITEMS);
-
-        lv_chart_set_type(chart, LV_CHART_TYPE_SCATTER);
-        lv_chart_set_div_line_count(chart, 0, 0);
-        lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_X, 0, chartSize);
-        lv_chart_set_range(chart, LV_CHART_AXIS_PRIMARY_Y, 0, chartSize);
-        lv_chart_set_point_count(chart, 50);
-
-        lv_chart_series_t *ser = lv_chart_add_series(chart, lv_color_white(), LV_CHART_AXIS_PRIMARY_Y);
-        for (int i = 0; i < 50; i++) {
-            lv_chart_set_next_value2(chart, ser, lv_rand(0, chartSize), lv_rand(0, chartSize));
-        }
-        if (chartTimer == NULL) {
-            chartTimer = lv_timer_create(add_data, 3, chart);
-        }
+    if (chartTimer == NULL) {
+        chartTimer = lv_timer_create(update_particle_effect, 1000, NULL);
+        update_particle_effect(chartTimer);
     }
 }
 
@@ -1111,6 +1088,20 @@ void my_ui_init(void)
     initSetConfigUI();
     buildPWMsgBox();
     initCameraUI();
+
+    int speech_id = ReadintData("speech_id");
+    if (speech_id != 1000) {
+        lv_dropdown_set_selected(ui_speechDropdown, speech_id);
+    }
+    int speech_ai_mode = ReadintData("speech_ai_mode");
+    if (speech_ai_mode != 1000) {
+        lv_dropdown_set_selected(ui_aimodeDropdown, speech_ai_mode);
+    }
+
+    lv_style_init(&main_black_style);
+    lv_style_set_border_width(&main_black_style, 0);
+    lv_style_set_radius(&main_black_style, 20);
+    lv_style_set_bg_opa(&main_black_style, 0);
 #if USE_AUDIO
     initUIspeech();
 #endif

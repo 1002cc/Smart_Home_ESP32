@@ -78,3 +78,7 @@ def speakScreenFCD(event_struct):
 def chooseScreenFCD(event_struct):
     return
 
+
+def monitorScreenFCD(event_struct):
+    return
+

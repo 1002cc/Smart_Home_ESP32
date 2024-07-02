@@ -81,6 +81,16 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_style_border_color(ui_wifilistPanel, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_wifilistPanel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_ipLabel = lv_label_create(ui_w1);
+    lv_obj_set_width(ui_ipLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ipLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ipLabel, 49);
+    lv_obj_set_y(ui_ipLabel, -96);
+    lv_obj_set_align(ui_ipLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ipLabel, "IP:");
+    lv_obj_set_style_text_color(ui_ipLabel, lv_color_hex(0xE8E8E8), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ipLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ui_w2 = lv_tabview_add_tab(ui_chooseTabView, "m");
 
     ui_Label13 = lv_label_create(ui_w2);
@@ -216,6 +226,63 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_style_text_color(ui_Label24, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label24, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label24, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_W4 = lv_tabview_add_tab(ui_chooseTabView, "S");
+
+    ui_Label19 = lv_label_create(ui_W4);
+    lv_obj_set_width(ui_Label19, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label19, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label19, -5);
+    lv_obj_set_y(ui_Label19, -87);
+    lv_obj_set_align(ui_Label19, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label19, "语音配置");
+    lv_obj_set_style_text_color(ui_Label19, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label19, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label19, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label32 = lv_label_create(ui_W4);
+    lv_obj_set_width(ui_Label32, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label32, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label32, -110);
+    lv_obj_set_y(ui_Label32, -36);
+    lv_obj_set_align(ui_Label32, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label32, "发音人");
+    lv_obj_set_style_text_color(ui_Label32, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label32, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label32, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_speechDropdown = lv_dropdown_create(ui_W4);
+    lv_dropdown_set_options(ui_speechDropdown, "xiaoyan\naisjiuxu\naisxping\naisjinger\naisbabyxu");
+    lv_obj_set_width(ui_speechDropdown, 150);
+    lv_obj_set_height(ui_speechDropdown, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_speechDropdown, 28);
+    lv_obj_set_y(ui_speechDropdown, -36);
+    lv_obj_set_align(ui_speechDropdown, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_speechDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+
+
+
+    ui_Label33 = lv_label_create(ui_W4);
+    lv_obj_set_width(ui_Label33, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label33, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label33, -108);
+    lv_obj_set_y(ui_Label33, 17);
+    lv_obj_set_align(ui_Label33, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label33, "AI模型");
+    lv_obj_set_style_text_color(ui_Label33, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label33, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label33, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_aimodeDropdown = lv_dropdown_create(ui_W4);
+    lv_dropdown_set_options(ui_aimodeDropdown, "DOUBAO\nMINIMAX");
+    lv_obj_set_width(ui_aimodeDropdown, 150);
+    lv_obj_set_height(ui_aimodeDropdown, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_aimodeDropdown, 28);
+    lv_obj_set_y(ui_aimodeDropdown, 19);
+    lv_obj_set_align(ui_aimodeDropdown, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_aimodeDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+
+
 
     lv_obj_add_event_cb(ui_Panel5, ui_event_Panel5, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_mqttuseButton, ui_event_mqttuseButton, LV_EVENT_ALL, NULL);

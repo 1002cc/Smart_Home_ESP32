@@ -116,8 +116,8 @@ void ui_MainScreen_screen_init(void)
     ui_Button6 = lv_btn_create(ui_Container1);
     lv_obj_set_width(ui_Button6, 130);
     lv_obj_set_height(ui_Button6, 73);
-    lv_obj_set_x(ui_Button6, 75);
-    lv_obj_set_y(ui_Button6, 40);
+    lv_obj_set_x(ui_Button6, 230);
+    lv_obj_set_y(ui_Button6, -45);
     lv_obj_set_align(ui_Button6, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button6, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button6, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -240,8 +240,8 @@ void ui_MainScreen_screen_init(void)
     ui_Button4 = lv_btn_create(ui_Container1);
     lv_obj_set_width(ui_Button4, 130);
     lv_obj_set_height(ui_Button4, 73);
-    lv_obj_set_x(ui_Button4, 230);
-    lv_obj_set_y(ui_Button4, -45);
+    lv_obj_set_x(ui_Button4, 75);
+    lv_obj_set_y(ui_Button4, 40);
     lv_obj_set_align(ui_Button4, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button4, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button4, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -265,7 +265,7 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_x(ui_Label29, 30);
     lv_obj_set_y(ui_Label29, 0);
     lv_obj_set_align(ui_Label29, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label29, "音乐");
+    lv_label_set_text(ui_Label29, "语音");
     lv_obj_set_style_text_font(ui_Label29, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Panel2 = lv_obj_create(ui_Container1);

@@ -32,7 +32,7 @@ String stations[] = {
 
 void audio_init()
 {
-    audio.setPinout(PIN_I2S_MAX98357_BCLK, PIN_I2S_MAX98357_LRC, PIN_I2S_MAX98357_DOUT);
+    audio.setPinout(PIN_I2S_MAX98357_BCLK, PIN_I2S_MAX98357_LRC, PIN_I2S_MAX98357_DOUT, I2S_MAX_PORT);
 
     if (!readfsDirlist(stations_list)) {
         stations_list.clear();
@@ -151,4 +151,5 @@ void startAudioTack()
     audio_init();
     xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, NULL, 2, NULL, 0);
 }
+
 #endif

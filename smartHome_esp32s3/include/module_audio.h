@@ -18,6 +18,4 @@ bool getaudioPlayStatus();
 void audioLoop();
 #endif
 
-void initSpeakConfig();
-
 #endif
