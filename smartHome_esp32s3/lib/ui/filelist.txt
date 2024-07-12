@@ -7,7 +7,6 @@ screens/ui_lampScreen.c
 screens/ui_Calendar.c
 screens/ui_setchooseScreen.c
 screens/ui_set1Screen.c
-screens/ui_set2Screen.c
 screens/ui_speechScreen.c
 screens/ui_monitorScreen.c
 ui.c
@@ -28,8 +27,9 @@ images/ui_img_l2_png.c
 images/ui_img_l1_png.c
 images/ui_img_a1_png.c
 images/ui_img_t2_png.c
-images/ui_img_t0_png.c
+images/ui_img_w1_png.c
 images/ui_img_wifi_png.c
+images/ui_img_c1_png.c
 fonts/ui_font_dan.c
 fonts/ui_font_misc.c
 fonts/ui_font_smartsystem.c

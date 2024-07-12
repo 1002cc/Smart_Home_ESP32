@@ -54,6 +54,7 @@ lv_obj_t * ui_Image6;
 lv_obj_t * ui_Label29;
 lv_obj_t * ui_Panel2;
 lv_obj_t * ui_cityLabel;
+lv_obj_t * ui_statusbarLabel;
 
 
 // SCREEN: ui_DateScreen
@@ -130,6 +131,10 @@ lv_obj_t * ui_wifiSetButton;
 lv_obj_t * ui_Label12;
 lv_obj_t * ui_Image9;
 lv_obj_t * ui_Panel9;
+void ui_event_monitorSetButton(lv_event_t * e);
+lv_obj_t * ui_monitorSetButton;
+lv_obj_t * ui_Label34;
+lv_obj_t * ui_Image13;
 
 
 // SCREEN: ui_set1Screen
@@ -168,14 +173,13 @@ lv_obj_t * ui_Label32;
 lv_obj_t * ui_speechDropdown;
 lv_obj_t * ui_Label33;
 lv_obj_t * ui_aimodeDropdown;
-
-
-// SCREEN: ui_set2Screen
-void ui_set2Screen_screen_init(void);
-void ui_event_set2Screen(lv_event_t * e);
-lv_obj_t * ui_set2Screen;
-void ui_event_Panel7(lv_event_t * e);
-lv_obj_t * ui_Panel7;
+lv_obj_t * ui_W5;
+lv_obj_t * ui_Label66;
+lv_obj_t * ui_Label67;
+void ui_event_cameraButton(lv_event_t * e);
+lv_obj_t * ui_cameraButton;
+lv_obj_t * ui_cameraipLabel;
+lv_obj_t * ui_Label35;
 
 
 // SCREEN: ui_speechScreen
@@ -216,11 +220,13 @@ lv_obj_t * ui_connectCameraButton;
 lv_obj_t * ui_cameraLabel;
 lv_obj_t * ui_cameraStateLabel;
 lv_obj_t * ui____initial_actions0;
+const lv_img_dsc_t * ui_imgset_a[1] = {&ui_img_a1_png};
+const lv_img_dsc_t * ui_imgset_c[1] = {&ui_img_c1_png};
 const lv_img_dsc_t * ui_imgset_l[2] = {&ui_img_l1_png, &ui_img_l2_png};
 const lv_img_dsc_t * ui_imgset_s[1] = {&ui_img_s1_png};
-const lv_img_dsc_t * ui_imgset_t[2] = {&ui_img_t0_png, &ui_img_t2_png};
+const lv_img_dsc_t * ui_imgset_t[1] = {&ui_img_t2_png};
+const lv_img_dsc_t * ui_imgset_w[1] = {&ui_img_w1_png};
 const lv_img_dsc_t * ui_imgset_y[1] = {&ui_img_y1_png};
-const lv_img_dsc_t * ui_imgset_a[1] = {&ui_img_a1_png};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -451,6 +457,18 @@ void ui_event_wifiSetButton(lv_event_t * e)
         setChooseScreenCD(e);
     }
 }
+void ui_event_monitorSetButton(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_MainScreen_screen_init);
+    }
+    if(event_code == LV_EVENT_CLICKED) {
+        setChooseScreenCD(e);
+    }
+}
 void ui_event_set1Screen(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -485,22 +503,12 @@ void ui_event_timeuseButton(lv_event_t * e)
         chooseBtEventCD(e);
     }
 }
-void ui_event_set2Screen(lv_event_t * e)
+void ui_event_cameraButton(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
-        lv_indev_wait_release(lv_indev_get_act());
-        _ui_screen_change(&ui_setchooseScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_setchooseScreen_screen_init);
-    }
-}
-void ui_event_Panel7(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_GESTURE &&  lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
-        lv_indev_wait_release(lv_indev_get_act());
-        _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, &ui_MainScreen_screen_init);
+    if(event_code == LV_EVENT_CLICKED) {
+        chooseBtEventCD(e);
     }
 }
 void ui_event_speechScreen(lv_event_t * e)
@@ -576,7 +584,6 @@ void ui_init(void)
     ui_Calendar_screen_init();
     ui_setchooseScreen_screen_init();
     ui_set1Screen_screen_init();
-    ui_set2Screen_screen_init();
     ui_speechScreen_screen_init();
     ui_monitorScreen_screen_init();
     ui____initial_actions0 = lv_obj_create(NULL);

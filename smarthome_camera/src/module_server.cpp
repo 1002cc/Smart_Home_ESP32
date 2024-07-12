@@ -12,7 +12,8 @@ const int g_daylight_offset_sec = 3600;
 const char *g_time_zone = "CST-8"; // TimeZone rule for China Standard Time (UTC+8)
 struct tm g_time;
 
-const char *websockets_server_host = "192.168.0.177";
+String websockets_server_host = "172.20.10.4";
+String serverip;
 const uint16_t websockets_server_port = 3000;
 using namespace websockets;
 WebsocketsClient client;
@@ -62,7 +63,11 @@ void webSocketEvent(WebsocketsEvent event, WSInterfaceString data)
 void initwedServer()
 {
     client.onEvent(webSocketEvent);
-    while (!client.connect(websockets_server_host, websockets_server_port, "/")) {
+    if (!serverip.isEmpty()) {
+        websockets_server_host = serverip;
+    }
+
+    while (!client.connect(websockets_server_host.c_str(), websockets_server_port, "/")) {
         delay(500);
         Serial.print(".");
     }
@@ -79,7 +84,7 @@ void cameraserver_task(void *pvParameter)
             camera_fb_t *fb = esp_camera_fb_get();
             if (!fb) {
                 Serial.println("Camera capture failed");
-                return;
+                break;
             }
             // Serial.println(fb->len);
             //  发送图片

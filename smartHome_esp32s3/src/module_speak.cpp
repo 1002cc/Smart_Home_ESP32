@@ -1,4 +1,5 @@
 #include "module_speak.h"
+#include "Audio.h"
 #include "confighelpr.h"
 #include "lvglconfig.h"
 #include "module_audio.h"
@@ -33,6 +34,10 @@ String minimaxUrl = "https://api.minimax.chat/v1/text/chatcompletion_v2";
 using namespace websockets;
 WebsocketsClient webSocketClient_tts;
 WebsocketsClient webSocketClient_stt;
+
+#if USE_AUDIO
+extern Audio audio;
+#endif
 
 SpeakState_t speakState = NO_DIALOGUE;
 String ai_speak = "xiaoyan";
@@ -129,7 +134,12 @@ bool initinmp441()
 bool initI2SConfig()
 {
     Serial.println("Setup I2S ...");
-    if (initMax98357() && initinmp441()) {
+#if USE_AUDIO
+    if (initinmp441())
+#else
+    if (initMax98357() && initinmp441())
+#endif
+    {
         Serial.println("I2S init success");
         return true;
     } else {
@@ -163,13 +173,22 @@ void initSpeakConfig()
             char chunk[CHUNK_SIZE];                                                              // 创建一个缓冲区来存储读取的数据
             int decoded_length = Base64_Arturo.decode(chunk, (char *)(response + i), remaining); // 从response中解码数据到chunk
             size_t bytes_written = 0;
+#if USE_AUDIO
+
+            audio.playtospeech(chunk, decoded_length, &bytes_written);
+#else
             i2s_write(I2S_MAX_PORT, chunk, decoded_length, &bytes_written, portMAX_DELAY);
+#endif
         }
 
         if (responseJson["data"]["status"].as<int>() == 2) { // 收到结束标志
             Serial.println("Playing complete.");
             delay(500);
+#if USE_AUDIO
+            audio.cleartospeech();
+#else
             i2s_zero_dma_buffer(I2S_MAX_PORT); // 清空I2S DMA缓冲区
+#endif
             lv_setSpeechinfo(" ");
             speakState = NO_DIALOGUE;
         }
@@ -448,7 +467,7 @@ void speakTask(void *pvParameter)
 {
     Serial.println("start speakTask");
     while (1) {
-        if (speakState == RECORDING || digitalRead(BUTTON_PIN) == HIGH) {
+        if (speakState == RECORDING) {
             stttext = "";
             Serial.println("Recording...");
             lv_setSpeechinfo("正在录音");
@@ -464,7 +483,7 @@ void speakTask(void *pvParameter)
                 esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
                 memcpy(pcm_data + recordingSize, audioData, bytes_read);
                 recordingSize += bytes_read / 2;
-                if ((digitalRead(BUTTON_PIN) == HIGH) || (millis() - min < 6000)) {
+                if (!(millis() - min < 6000)) {
                     speakState = RECORDED;
                 }
             }
@@ -534,7 +553,7 @@ void speakTask(void *pvParameter)
             if (!answer.isEmpty()) {
                 postTTS(answer);
             } else {
-                Serial.println("回答内容为空，取消TTS发送。");
+                Serial.println("回答内容为空,取消TTS发送。");
             }
             lv_setSpeechinfo(" ");
             speakState = NO_DIALOGUE;

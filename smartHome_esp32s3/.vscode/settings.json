@@ -13,6 +13,9 @@
         "lv_conf_internal.h": "c",
         "lodepng.h": "c",
         "lv_png.h": "c",
-        "ui.h": "c"
+        "ui.h": "c",
+        "lv_btn.h": "c",
+        "lv_list.h": "c",
+        "lv_disp.h": "c"
     }
 }

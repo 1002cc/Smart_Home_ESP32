@@ -1,7 +1,7 @@
 #include "module_camera.h"
 #include "Arduino.h"
-#include "camera_pins.h"
 #include "esp_camera.h"
+#include "module_devices.h"
 #include "module_mqtt.h"
 #include <Arduino.h>
 

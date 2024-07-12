@@ -5,7 +5,6 @@
 
 #if USE_AUDIO
 #include "Audio.h"
-#include <Preferences.h>
 #endif
 
 #if USE_AUDIO
@@ -14,7 +13,6 @@ Audio audio;
 uint8_t max_stations = 0;
 uint8_t cur_station = 0;
 uint8_t cur_volume = 0;
-extern Preferences preferences;
 
 String stations[] = {
     "0n-80s.radionetz.de:8000/0n-70s.mp3",

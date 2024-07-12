@@ -60,6 +60,7 @@ extern lv_obj_t * ui_Image6;
 extern lv_obj_t * ui_Label29;
 extern lv_obj_t * ui_Panel2;
 extern lv_obj_t * ui_cityLabel;
+extern lv_obj_t * ui_statusbarLabel;
 // SCREEN: ui_DateScreen
 void ui_DateScreen_screen_init(void);
 void ui_event_DateScreen(lv_event_t * e);
@@ -128,6 +129,10 @@ extern lv_obj_t * ui_wifiSetButton;
 extern lv_obj_t * ui_Label12;
 extern lv_obj_t * ui_Image9;
 extern lv_obj_t * ui_Panel9;
+void ui_event_monitorSetButton(lv_event_t * e);
+extern lv_obj_t * ui_monitorSetButton;
+extern lv_obj_t * ui_Label34;
+extern lv_obj_t * ui_Image13;
 // SCREEN: ui_set1Screen
 void ui_set1Screen_screen_init(void);
 void ui_event_set1Screen(lv_event_t * e);
@@ -164,12 +169,13 @@ extern lv_obj_t * ui_Label32;
 extern lv_obj_t * ui_speechDropdown;
 extern lv_obj_t * ui_Label33;
 extern lv_obj_t * ui_aimodeDropdown;
-// SCREEN: ui_set2Screen
-void ui_set2Screen_screen_init(void);
-void ui_event_set2Screen(lv_event_t * e);
-extern lv_obj_t * ui_set2Screen;
-void ui_event_Panel7(lv_event_t * e);
-extern lv_obj_t * ui_Panel7;
+extern lv_obj_t * ui_W5;
+extern lv_obj_t * ui_Label66;
+extern lv_obj_t * ui_Label67;
+void ui_event_cameraButton(lv_event_t * e);
+extern lv_obj_t * ui_cameraButton;
+extern lv_obj_t * ui_cameraipLabel;
+extern lv_obj_t * ui_Label35;
 // SCREEN: ui_speechScreen
 void ui_speechScreen_screen_init(void);
 void ui_event_speechScreen(lv_event_t * e);
@@ -222,8 +228,9 @@ LV_IMG_DECLARE(ui_img_l2_png);    // assets/l2.png
 LV_IMG_DECLARE(ui_img_l1_png);    // assets/l1.png
 LV_IMG_DECLARE(ui_img_a1_png);    // assets/a1.png
 LV_IMG_DECLARE(ui_img_t2_png);    // assets/t2.png
-LV_IMG_DECLARE(ui_img_t0_png);    // assets/t0.png
+LV_IMG_DECLARE(ui_img_w1_png);    // assets/w1.png
 LV_IMG_DECLARE(ui_img_wifi_png);    // assets/wifi.png
+LV_IMG_DECLARE(ui_img_c1_png);    // assets/c1.png
 
 
 

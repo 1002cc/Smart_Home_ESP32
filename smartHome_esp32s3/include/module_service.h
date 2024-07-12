@@ -14,9 +14,7 @@ void ntpTimerCallback(TimerHandle_t xTimer);
 bool isNetworkAvailable();
 void updateCityID(String cityIDStr);
 void parse_json(const char *json_string);
-
-void setup_ntp_client();
-String getDateTime();
+void updateTimer();
 String unixTimeToGMTString(time_t unixTime);
 String getDateTime_one();
 

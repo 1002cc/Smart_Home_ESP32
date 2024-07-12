@@ -6,24 +6,23 @@
 #include <WiFiUdp.h>
 #include <cJSON.h>
 
-const char *ntpServer1 = "ntp.org";
-const char *ntpServer2 = "ntp.ntsc.ac.cn";
+const char *ntpServer1 = "ntp1.aliyun.com";
+String ntpServer2 = "ntp2.aliyun.com";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "pool.ntp.org");
+int updatetimentp = 360;
 
 String weatherApiUrl = "http://api.seniverse.com/v3/weather/now.json?key=Srhi2-y2LtemJAmOB&location=guangzhou&language=zh-Hans&unit=c";
 TaskHandle_t ntpxHandle = NULL;
 TimerHandle_t ntpTimer;
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
-    // getDateTime();
-    if (ntpxHandle == NULL) {
-        Serial.println("Re-syncing time with NTP server");
-        xTaskCreate(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle);
-    }
-
+    // if (ntpxHandle != NULL) {
+    //     vTaskDelete(ntpxHandle);
+    //     ntpxHandle = NULL;
+    // }
+    Serial.println("Re-syncing time with NTP server");
+    xTaskCreatePinnedToCore(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle, 1);
     Serial.println("Update weather information");
     weatherQuery();
 }
@@ -34,27 +33,25 @@ void ntpTask(void *param)
 
     while (true) {
         if (!getwifistate()) {
-            vTaskDelete(ntpxHandle);
-            ntpxHandle = NULL;
+            break;
         }
-        configTime(60 * 60 * 8, 0, "ntp1.aliyun.com", "ntp2.aliyun.com", "cn.pool.ntp.org");
+        configTime(60 * 60 * 8, 0, ntpServer1, ntpServer2.c_str(), "cn.pool.ntp.org");
 
         struct tm timeinfo;
         if (getLocalTime(&timeinfo, 10000)) {
             Serial.println("Time synchronized successfully");
-            // ui_calender_update();
-            vTaskDelete(ntpxHandle);
-            ntpxHandle = NULL;
+            ui_calender_update();
+            break;
         } else {
             Serial.println("Failed to synchronize time. Retrying...");
             timenumber += 10;
             if (timenumber > 120) {
-                vTaskDelete(ntpxHandle);
-                ntpxHandle = NULL;
+                break;
             }
         }
         vTaskDelay(timenumber * 1000 / portTICK_PERIOD_MS);
     }
+    Serial.println("delete ntptask");
     vTaskDelete(NULL);
 }
 
@@ -156,12 +153,17 @@ void weatherQuery()
     http.end();
 }
 
+void updateTimer()
+{
+    xTimerStop(ntpTimer, 0);
+    xTimerChangePeriod(ntpTimer, updatetimentp * 1000, 0);
+    xTimerReset(ntpTimer, 0);
+}
+
 void startNTPTask(void)
 {
-    setup_ntp_client();
-#if 1
     Serial.println("Starting NTP task");
-    ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(300000), pdTRUE, (void *)0, ntpTimerCallback);
+    ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(updatetimentp * 1000), pdTRUE, (void *)0, ntpTimerCallback);
     if (ntpTimer == NULL) {
         Serial.println("Error xTimerCreate");
     } else {
@@ -169,37 +171,6 @@ void startNTPTask(void)
         xTimerStart(ntpTimer, 0);
         ntpTimerCallback(NULL);
     }
-#else
-    getDateTime();
-    Serial.println("Update weather information");
-    weatherQuery();
-#endif
-}
-
-void setup_ntp_client()
-{
-    timeClient.begin();
-    // 设置时区
-    // GMT +1 = 3600
-    // GMT +8 = 28800
-    // GMT -1 = -3600
-    // GMT 0 = 0
-    timeClient.setTimeOffset(28800);
-}
-String getDateTime()
-{
-    // 请求网络时间
-    timeClient.update();
-
-    unsigned long epochTime = timeClient.getEpochTime();
-    Serial.print("Epoch Time: ");
-    Serial.println(epochTime);
-
-    String timeString = unixTimeToGMTString(epochTime);
-
-    // 打印结果
-    Serial.println(timeString);
-    return timeString;
 }
 
 String unixTimeToGMTString(time_t unixTime)

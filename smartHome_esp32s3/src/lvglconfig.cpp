@@ -33,17 +33,15 @@ std::vector<String> foundWifiList;
 
 // web camera
 using namespace websockets;
-const char *websockets_server_host = "192.168.0.177";
-const uint16_t websockets_server_port = 3000;
+String websockets_server_host = "172.20.10.4";
+uint16_t websockets_server_port = 3000;
 WebsocketsClient client;
-#define MAX_IMAGE_SIZE (320 * 240)
-// uint16_t image_buffer[MAX_IMAGE_SIZE];
 uint16_t *image_buffer;
+static lv_img_dsc_t img_dsc;
 
 extern bool enable_mqtt;
 bool isStartCamera = false;
 
-// static lv_obj_t *expressionChart = NULL;
 static lv_style_t main_black_style;
 static lv_timer_t *chartTimer = NULL;
 
@@ -58,11 +56,15 @@ lv_coord_t pos_array[5][5] = {
 extern SpeakState_t speakState;
 extern String ai_speak;
 extern int useAIMode;
+
+extern String ntpServer2;
+extern int updatetimentp;
 /********************************************************************
                          BUILD UI
 ********************************************************************/
 
 static lv_obj_t *wfList;
+// static lv_obj_t *wfListtitle;
 static lv_obj_t *mboxConnect;
 static lv_obj_t *mboxTitle;
 static lv_obj_t *mboxPassword;
@@ -78,8 +80,12 @@ static lv_obj_t *ntpTextarea;
 static lv_obj_t *ntpTimeTextarea;
 static lv_obj_t *inputKeyboard;
 static lv_obj_t *videoImage;
+static lv_obj_t *ipTextarea;
+static lv_obj_t *portTextarea;
 
 static TaskHandle_t cameraTaskHandle = NULL;
+
+lampButtonData mqttSwitchState = {false, false, false, false};
 
 void ui_timer_init(void);
 void ui_clock_update(lv_timer_t *timer);
@@ -209,14 +215,16 @@ void lampButtonCB(lv_event_t *e)
 {
     lv_obj_t *sw = lv_event_get_target(e);
     bool is_on = lv_obj_has_state(sw, LV_STATE_CHECKED);
-    Serial.println(is_on);
+    // Serial.println(is_on);
     if (sw == ui_lampButton1) {
+        mqttSwitchState.lampButton1 = is_on;
         if (is_on) {
             redled_on();
         } else {
             redled_off();
         }
     } else if (sw == ui_lampButton2) {
+        mqttSwitchState.lampButton2 = is_on;
         if (is_on) {
             greenled_on();
         } else {
@@ -224,17 +232,55 @@ void lampButtonCB(lv_event_t *e)
         }
 
     } else if (sw == ui_lampButton3) {
+        mqttSwitchState.lampButton3 = is_on;
         if (is_on) {
             blueled_on();
         } else {
             blueled_off();
         }
     } else if (sw == ui_lampButton4) {
+        mqttSwitchState.lampButton4 = is_on;
         if (is_on) {
             blueled_on();
         } else {
             blueled_off();
         }
+    }
+    pulishSwitchDatas(mqttSwitchState);
+}
+
+void updateSwitchState(lampButtonData uSwitchState)
+{
+    if (uSwitchState.lampButton1) {
+        lv_obj_add_state(ui_lampButton1, LV_EVENT_CLICKED);
+        redled_on();
+    } else {
+        lv_obj_clear_flag(ui_lampButton1, LV_EVENT_CLICKED);
+        redled_off();
+    }
+
+    if (uSwitchState.lampButton2) {
+        lv_obj_add_state(ui_lampButton2, LV_EVENT_CLICKED);
+        greenled_on();
+    } else {
+        lv_obj_clear_flag(ui_lampButton2, LV_EVENT_CLICKED);
+        greenled_off();
+    }
+
+    if (uSwitchState.lampButton3) {
+        lv_obj_add_state(ui_lampButton3, LV_EVENT_CLICKED);
+        blueled_on();
+    } else {
+        lv_obj_clear_flag(ui_lampButton3, LV_EVENT_CLICKED);
+        blueled_off();
+    }
+
+    if (uSwitchState.lampButton4) {
+        lv_obj_add_state(ui_lampButton4, LV_EVENT_CLICKED);
+        blueled_on();
+    } else {
+        lv_obj_clear_flag(ui_lampButton4, LV_EVENT_CLICKED);
+        blueled_off();
     }
 }
 
@@ -390,6 +436,21 @@ void lv_setIPinfo(const char *text)
     lv_label_set_text(ui_ipLabel, text);
 }
 
+void lv_setstatusbarLabel(int status)
+{
+    if (status == 0) {
+        lv_label_set_text(ui_statusbarLabel, "");
+    } else if (status == 1) {
+        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_WIFI);
+    } else if (status == 2) {
+        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_DRIVE);
+    } else if (status == 3) {
+        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_WIFI LV_SYMBOL_DRIVE);
+    } else if (status == 4) {
+        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_WARNING);
+    }
+}
+
 /********************************************************************
                          LVGL_SET_UI
 ********************************************************************/
@@ -462,6 +523,8 @@ void setChooseScreenCD(lv_event_t *e)
         lv_tabview_set_act(ui_chooseTabView, 2, LV_ANIM_OFF);
     } else if (setbt == ui_speechSetButton) {
         lv_tabview_set_act(ui_chooseTabView, 3, LV_ANIM_OFF);
+    } else if (setbt == ui_monitorSetButton) {
+        lv_tabview_set_act(ui_chooseTabView, 4, LV_ANIM_OFF);
     }
 }
 
@@ -476,7 +539,7 @@ void chooseBtEventCD(lv_event_t *e)
             wifi_buf.pass = String(lv_textarea_get_text(mboxPassword));
             lv_textarea_set_text(mboxPassword, "");
             // 开一个任务连接wifi
-            wifiConnector(wifi_buf);
+            wifiConnector();
             lv_obj_move_background(mboxConnect);
             lv_obj_add_flag(mboxConnect, LV_OBJ_FLAG_HIDDEN);
             lv_obj_add_flag(inputKeyboard, LV_OBJ_FLAG_HIDDEN);
@@ -512,6 +575,31 @@ void chooseBtEventCD(lv_event_t *e)
 
         } else if (btn == ui_timeuseButton) {
             Serial.println("ui_timeuseButton LV_EVENT_CLICKED");
+            String ntpstr = lv_textarea_get_text(ntpTextarea);
+            String updatetimestr = lv_textarea_get_text(ntpTimeTextarea);
+            if (!ntpstr.isEmpty()) {
+                StoreData("timeurl", ntpstr.c_str());
+                ntpServer2 = ntpstr;
+            }
+            if (!updatetimestr.isEmpty()) {
+                StoreData("updatetime", updatetimestr.c_str());
+                updatetimentp = updatetimestr.toInt();
+                updateTimer();
+            }
+        } else if (btn == ui_cameraButton) {
+            Serial.println("ui_cameraButton LV_EVENT_CLICKED");
+            String ipstr = lv_textarea_get_text(ipTextarea);
+            String portstr = lv_textarea_get_text(portTextarea);
+            if (!ipstr.isEmpty()) {
+                StoreData("cameraip", ipstr.c_str());
+                websockets_server_host = ipstr;
+            }
+            if (portstr.isEmpty()) {
+                portstr = "100001";
+            }
+            StoreData("cameraport", portstr.c_str());
+            websockets_server_port = portstr.toInt();
+            lv_scr_load_anim(ui_monitorScreen, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
         }
     } else if (code == LV_EVENT_VALUE_CHANGED) {
         if (btn == ui_wifiSwitch) {
@@ -521,15 +609,17 @@ void chooseBtEventCD(lv_event_t *e)
                     networkStatus = NETWORK_SEARCHING;
                     xSemaphoreGive(xnetworkStatusSemaphore);
                     networkScanner();
-                    wifiConnector(wifi_buf);
+                    wifi_buf.ssid = ReadData("ssid");
+                    wifi_buf.pass = ReadData("password");
+                    wifiConnector();
                     if (wifiListtimer == NULL) {
                         wifiListtimer = lv_timer_create(timerForNetwork, 1000, wfList);
                         lv_list_add_text(wfList, "WiFi:Looking for Networks");
                     }
                 }
             } else {
-                lv_obj_clean(wfList);
                 lv_list_add_text(wfList, "");
+                lv_obj_clean(wfList);
 
                 if (ntScanTaskHandler != NULL) {
                     xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
@@ -537,11 +627,17 @@ void chooseBtEventCD(lv_event_t *e)
                     xSemaphoreGive(xnetworkStatusSemaphore);
                     vTaskDelete(ntScanTaskHandler);
                     ntScanTaskHandler = NULL;
-                    if (wifiListtimer != NULL) {
-                        lv_timer_del(wifiListtimer);
-                        wifiListtimer = NULL;
-                    }
                 }
+
+                if (ntConnectTaskHandler != NULL) {
+                    vTaskDelete(ntConnectTaskHandler);
+                }
+
+                if (wifiListtimer != NULL) {
+                    lv_timer_del(wifiListtimer);
+                    wifiListtimer = NULL;
+                }
+
                 if (getwifistate()) {
                     wifiDisconnect();
                     lv_label_set_text(ui_wifiStateLabel, "未连接");
@@ -559,6 +655,11 @@ void chooseBtEventCD(lv_event_t *e)
                     if (getMqttStart()) {
                         lv_setMQTTState("未连接");
                         mqtt_disconnect();
+                        if (getwifistate()) {
+                            lv_setstatusbarLabel(1);
+                        } else {
+                            lv_setstatusbarLabel(0);
+                        }
                     }
                     Serial.println("ui_mqttSwitch NO LV_STATE_CHECKED");
                 }
@@ -649,22 +750,45 @@ void initSetConfigUI()
     ntpTimeTextarea = lv_textarea_create(ui_w3);
     lv_obj_set_size(ntpTimeTextarea, 200, 35);
     lv_obj_align_to(ntpTimeTextarea, ui_Label23, LV_ALIGN_LEFT_MID, 80, 0);
-    lv_textarea_set_placeholder_text(ntpTimeTextarea, "360000(ms)");
+    lv_textarea_set_placeholder_text(ntpTimeTextarea, "360(s)");
     lv_obj_set_style_text_color(ntpTimeTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ntpTimeTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
     lv_textarea_set_one_line(ntpTimeTextarea, true);
+
+    ipTextarea = lv_textarea_create(ui_W5);
+    lv_obj_set_size(ipTextarea, 200, 35);
+    lv_obj_align_to(ipTextarea, ui_Label66, LV_ALIGN_LEFT_MID, 40, 0);
+    lv_textarea_set_placeholder_text(ipTextarea, websockets_server_host.c_str());
+    lv_obj_set_style_text_color(ipTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ipTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(ipTextarea, true);
+
+    portTextarea = lv_textarea_create(ui_W5);
+    lv_obj_set_size(portTextarea, 200, 35);
+    lv_obj_align_to(portTextarea, ui_Label67, LV_ALIGN_LEFT_MID, 60, 0);
+    lv_textarea_set_placeholder_text(portTextarea, "3000");
+    lv_obj_set_style_text_color(portTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(portTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(portTextarea, true);
 
     lv_obj_add_event_cb(subTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
     lv_obj_add_event_cb(pubTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
     lv_obj_add_event_cb(weatherTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
     lv_obj_add_event_cb(ntpTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
     lv_obj_add_event_cb(ntpTimeTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+    lv_obj_add_event_cb(ipTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+    lv_obj_add_event_cb(portTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
 
     lv_obj_add_event_cb(ui_wifiSwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_mqttSwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
 
     lv_obj_add_event_cb(ui_speechDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_add_event_cb(ui_aimodeDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
+
+    lv_style_init(&main_black_style);
+    lv_style_set_border_width(&main_black_style, 0);
+    lv_style_set_radius(&main_black_style, 20);
+    lv_style_set_bg_opa(&main_black_style, 0);
 }
 
 static void buildPWMsgBox()
@@ -747,13 +871,19 @@ static void showingFoundWiFiList()
         Serial.println((*item).c_str());
         lv_obj_t *wifibtnc = lv_list_add_btn(wfList, LV_SYMBOL_WIFI, (*item).c_str());
         lv_obj_add_event_cb(wifibtnc, list_event_handler, LV_EVENT_CLICKED, NULL);
+        if (getwifistate()) {
+            // Serial.println(getwifissid().c_str());
+            if (*item == getwifissid()) {
+                lv_obj_set_style_bg_color(wifibtnc, lv_color_hex(0x2095f6), LV_PART_MAIN);
+            }
+        }
+
         delay(1);
         num++;
         if (num >= 15) {
             break;
         }
     }
-
     foundNetworks = foundWifiList.size();
 }
 
@@ -777,27 +907,36 @@ static void timerForNetwork(lv_timer_t *timer1)
 
     switch (networkStatus) {
     case NETWORK_SEARCHING:
+        if (ntScanTaskHandler == NULL) {
+            networkScanner();
+        }
         break;
-    case NETWORK_SEARCHED:
+    case NETWORK_SEARCHED: {
         xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
         networkStatus = NETWORK_SEARCHING;
         xSemaphoreGive(xnetworkStatusSemaphore);
         showingFoundWiFiList();
         break;
-    case NETWORK_CONNECTED:
+    }
+    case NETWORK_CONNECTED: {
         lv_setWIFIState("已连接");
         xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
         networkStatus = NETWORK_SEARCHING;
         xSemaphoreGive(xnetworkStatusSemaphore);
         showingFoundWiFiList();
         break;
-    case NETWORK_CONNECT_FAILED:
+    }
+    case NETWORK_CONNECT_FAILED: {
         xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
         networkStatus = NETWORK_SEARCHING;
         xSemaphoreGive(xnetworkStatusSemaphore);
+        if (ntConnectTaskHandler != NULL) {
+            vTaskDelete(ntConnectTaskHandler);
+        }
         lv_setWIFIState("连接失败");
         popupMsgBox("Oops!", "连接失败,请检查密码");
         break;
+    }
     default:
         break;
     }
@@ -923,15 +1062,16 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 bool startCameraServer()
 {
     lv_label_set_text(ui_cameraStateLabel, "正在连接");
-    if (client.connect(websockets_server_host, websockets_server_port, "/")) {
-        Serial.println("Connected to WebSocket server");
-        lv_label_set_text(ui_cameraStateLabel, "已连接");
-        return true;
+    if ((websockets_server_port == 100001) && (client.connect(websockets_server_host))) {
+    } else if ((client.connect(websockets_server_host, websockets_server_port, "/"))) {
     } else {
         Serial.println("WebSocket connect failed.");
         lv_label_set_text(ui_cameraStateLabel, "连接失败");
         return false;
     }
+    Serial.println("Connected to WebSocket server");
+    lv_label_set_text(ui_cameraStateLabel, "已连接");
+    return true;
 }
 
 void closeCameraServer()
@@ -942,13 +1082,12 @@ void closeCameraServer()
     }
     isStartCamera = false;
 
-    tft.clearWriteError();
     if (cameraTaskHandle != NULL) {
         vTaskDelete(cameraTaskHandle);
         cameraTaskHandle = NULL;
     }
 
-    if (client.available()) {
+    if (client.poll()) {
         client.close();
     }
 }
@@ -960,29 +1099,32 @@ void initCameraUI()
     lv_obj_set_size(videoImage, 320, 240);
     lv_obj_move_foreground(ui_connectCameraButton);
     lv_obj_move_foreground(ui_cameraStateLabel);
-    image_buffer = (uint16_t *)ps_malloc(320 * 240 * sizeof(uint16_t));
+
     TJpgDec.setJpgScale(1);
     TJpgDec.setSwapBytes(false);
     // TJpgDec.setSwapBytes(true);
     TJpgDec.setCallback(tft_output);
-}
 
-void videocameratask(void *pvParameter)
-{
-    if (!startCameraServer()) {
-        vTaskDelete(cameraTaskHandle);
-        cameraTaskHandle = NULL;
-        lv_label_set_text(ui_cameraLabel, "连接");
-        lv_label_set_text(ui_cameraStateLabel, "未连接");
-    }
-
-    Serial.println("start camera task");
-    static lv_img_dsc_t img_dsc;
     img_dsc.header.always_zero = 0;
     img_dsc.header.w = 320;
     img_dsc.header.h = 240;
     img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * sizeof(uint16_t);
     img_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
+
+    image_buffer = (uint16_t *)ps_malloc(320 * 240 * sizeof(uint16_t));
+}
+
+void videocameratask(void *pvParameter)
+{
+    if (!startCameraServer()) {
+        lv_label_set_text(ui_cameraLabel, "连接");
+        lv_label_set_text(ui_cameraStateLabel, "未连接");
+        vTaskDelete(cameraTaskHandle);
+        cameraTaskHandle = NULL;
+        return;
+    }
+
+    Serial.println("start camera task");
     while (1) {
         if (client.poll()) {
             WebsocketsMessage msg = client.readBlocking();
@@ -1065,8 +1207,7 @@ static void drawing_screen(void)
 /********************************************************************
                          LVGL_DATA_UPDATE
 ********************************************************************/
-
-void updateFlashDate()
+void initDataUI()
 {
     String cityIDStr = ReadData("cityid");
     if (cityIDStr == "null") {
@@ -1078,6 +1219,49 @@ void updateFlashDate()
         lv_textarea_set_placeholder_text(weatherTextarea, cityIDStr.c_str());
         updateCityID(cityIDStr);
     }
+
+    String timeurl = ReadData("timeurl");
+    if (timeurl != "null") {
+        lv_textarea_set_placeholder_text(ntpTextarea, timeurl.c_str());
+        ntpServer2 = timeurl;
+    }
+
+    String updatetime = ReadData("updatetime");
+    if (updatetime != "null") {
+        lv_textarea_set_placeholder_text(ntpTimeTextarea, updatetime.c_str());
+        updatetimentp = updatetime.toInt();
+    }
+
+    int speech_id = ReadintData("speech_id");
+    if (speech_id != 1000) {
+        lv_dropdown_set_selected(ui_speechDropdown, speech_id);
+        char tmp_buf[32];
+        lv_dropdown_get_selected_str(ui_speechDropdown, tmp_buf, sizeof(tmp_buf));
+        ai_speak = tmp_buf;
+    }
+    int speech_ai_mode = ReadintData("speech_ai_mode");
+    if (speech_ai_mode != 1000) {
+        lv_dropdown_set_selected(ui_aimodeDropdown, speech_ai_mode);
+        useAIMode = speech_ai_mode;
+    }
+
+    String camera_ip = ReadData("cameraip");
+    if (camera_ip != "null") {
+        lv_textarea_set_placeholder_text(ipTextarea, camera_ip.c_str());
+        websockets_server_host = camera_ip;
+    } else {
+        lv_textarea_set_placeholder_text(ipTextarea, websockets_server_host.c_str());
+        StoreData("cameraip", websockets_server_host.c_str());
+    }
+    String camera_port = ReadData("cameraport");
+    if (camera_port != "null") {
+        lv_textarea_set_placeholder_text(portTextarea, camera_port.c_str());
+        websockets_server_port = camera_port.toInt();
+
+    } else {
+        lv_textarea_set_placeholder_text(portTextarea, String(websockets_server_port).c_str());
+        StoreData("cameraport", String(websockets_server_port).c_str());
+    }
 }
 
 /********************************************************************
@@ -1088,20 +1272,8 @@ void my_ui_init(void)
     initSetConfigUI();
     buildPWMsgBox();
     initCameraUI();
+    initDataUI();
 
-    int speech_id = ReadintData("speech_id");
-    if (speech_id != 1000) {
-        lv_dropdown_set_selected(ui_speechDropdown, speech_id);
-    }
-    int speech_ai_mode = ReadintData("speech_ai_mode");
-    if (speech_ai_mode != 1000) {
-        lv_dropdown_set_selected(ui_aimodeDropdown, speech_ai_mode);
-    }
-
-    lv_style_init(&main_black_style);
-    lv_style_set_border_width(&main_black_style, 0);
-    lv_style_set_radius(&main_black_style, 20);
-    lv_style_set_bg_opa(&main_black_style, 0);
 #if USE_AUDIO
     initUIspeech();
 #endif

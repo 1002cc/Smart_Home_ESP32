@@ -110,7 +110,7 @@ void initmq2()
     MQ2.setA(987.99);
     MQ2.setB(-2.162);
     MQ2.init();
-    Serial.print("Calibrating please wait.\n");
+    Serial.println("Calibrating please wait.");
     float calcR0 = 0;
     for (int i = 1; i <= 10; i++) {
         MQ2.update(); // Update data, the arduino will read the voltage from the analog pin
@@ -118,7 +118,7 @@ void initmq2()
         Serial.print(".");
     }
     MQ2.setR0(calcR0 / 10);
-    Serial.println("  done!.");
+    Serial.println(" done!");
 
     if (isinf(calcR0)) {
         Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply");
@@ -159,6 +159,7 @@ void sensor_task(void *pvParameter)
 {
     float temperature, humidity, mq2sensorValue;
     char temp_char[12];
+    int count = 0;
     while (1) {
         temperature = dhtReadTemperature();
         humidity = dhtReadHumidity();
@@ -167,13 +168,17 @@ void sensor_task(void *pvParameter)
         if (isnan(temperature) || isnan(humidity) || isnan(mq2sensorValue)) {
             Serial.println("Failed to read from DHT sensor!");
         } else {
-            Serial.print("Temperature: ");
-            Serial.print(temperature);
-            Serial.print(" °C, Humidity:");
-            Serial.print(humidity);
-            Serial.print("% ");
-            Serial.print(" mq2: ");
-            Serial.println(mq2sensorValue);
+            count++;
+            if (count >= 30) {
+                count = 0;
+                Serial.print("Temperature: ");
+                Serial.print(temperature);
+                Serial.print(" °C, Humidity:");
+                Serial.print(humidity);
+                Serial.print("% ");
+                Serial.print(" mq2: ");
+                Serial.println(mq2sensorValue);
+            }
 
             lv_arc_set_value(ui_TemperatureArc, (int16_t)temperature);
             lv_arc_set_value(ui_HumidityArc, (int16_t)humidity);

@@ -24,15 +24,14 @@ void setup()
     initI2SConfig();
     initSpeakConfig();
     startSensorTask();
-    printPSRAM();
 #if USE_AUDIO
     startAudioTack();
 #endif
+    printPSRAM();
 }
 
 void loop()
 {
     mqttLoop();
     vTaskDelay(100);
-    // speakloop();
 }

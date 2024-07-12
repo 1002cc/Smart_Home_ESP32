@@ -28,7 +28,6 @@ bool initWIFIConfig(void)
 void WiFiEvent(WiFiEvent_t event)
 {
     Serial.printf("[WiFi-event] event: %d\n", event);
-
     switch (event) {
     case SYSTEM_EVENT_SCAN_DONE:
         Serial.println("已完成对访问点的扫描");
@@ -42,20 +41,23 @@ void WiFiEvent(WiFiEvent_t event)
     case SYSTEM_EVENT_STA_CONNECTED:
         lv_setWIFIState("已连接");
         Serial.println("已连接到接入点");
+        lv_setstatusbarLabel(1);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         lv_setWIFIState("未连接");
         Serial.println("与WiFi接入点断开连接");
+        lv_setstatusbarLabel(0);
         break;
     case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
         Serial.println("接入点的身份验证模式已更改");
         break;
-    case SYSTEM_EVENT_STA_GOT_IP:
+    case SYSTEM_EVENT_STA_GOT_IP: {
         Serial.print("Obtained IP address: ");
         String str = String("IP:" + WiFi.localIP().toString());
         lv_setIPinfo(str.c_str());
         Serial.println(WiFi.localIP());
         break;
+    }
     case SYSTEM_EVENT_AP_START:
         Serial.println("WiFi接入点已启动");
         break;
@@ -74,7 +76,6 @@ void WiFiEvent(WiFiEvent_t event)
     case SYSTEM_EVENT_AP_PROBEREQRECVED:
         Serial.println("收到探测请求");
         break;
-        break;
     default:
         break;
     }
@@ -82,8 +83,8 @@ void WiFiEvent(WiFiEvent_t event)
 
 bool wifiConnect()
 {
-    // WiFi.disconnect(true);
-    //  WiFi.mode(WIFI_STA);
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_STA);
     Serial.println("preferences read wifi info");
 
     String storedSSID = ReadData("ssid");
@@ -92,13 +93,14 @@ bool wifiConnect()
     Serial.println("Connecting to ");
     lv_setTipinfo("正在连接WiFi...");
     if (storedSSID != "null" && storedPassword != "null") {
-        Serial.printf("use flash wifi info : ssid:%s Password:%s\n", storedSSID, storedPassword);
+        Serial.printf("use flash wifi info : \nssid:%s \nPassword:%s\n", storedSSID, storedPassword);
         ssid = storedSSID.c_str();
         password = storedPassword.c_str();
     }
 
-    Serial.printf("ssid:%s Password:%s\n", ssid, password);
+    Serial.printf("wifi connect:\nssid:%s \nPassword:%s\n", ssid, password);
     WiFi.onEvent(WiFiEvent);
+    WiFi.setAutoReconnect(false);
     WiFi.begin(ssid, password);
 
     unsigned long startingTime = millis();
@@ -132,6 +134,11 @@ bool getwifistate()
     return WiFi.status() == WL_CONNECTED;
 }
 
+String getwifissid()
+{
+    return WiFi.SSID();
+}
+
 void wifiDisconnect(void)
 {
     WiFi.disconnect(true);
@@ -140,24 +147,30 @@ void wifiDisconnect(void)
 /********************************************************************
                          WIFI_UI_CONNECT
 ********************************************************************/
-void wifiConnector(wifi_buf_t wifi_buf)
+void wifiConnector()
 {
-    Serial.println(wifi_buf.ssid);
-    Serial.println(wifi_buf.pass);
-    xTaskCreatePinnedToCore(beginWIFITask, "beginWIFITask", 2048, &wifi_buf, 10, &ntConnectTaskHandler, 0);
+    if (ntConnectTaskHandler == NULL) {
+        xTaskCreatePinnedToCore(beginWIFITask, "beginWIFITask", 3096, NULL, 10, &ntConnectTaskHandler, 0);
+    }
 }
 
 void beginWIFITask(void *pvParameters)
 {
-    wifi_buf_t *pInfo = (wifi_buf_t *)pvParameters;
-    unsigned long startingTime = millis();
+    Serial.println("wifiConnector");
+    WiFi.disconnect(true);
     WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
+    WiFi.setAutoReconnect(false);
     vTaskDelay(100);
+    Serial.println(wifi_buf.ssid);
+    Serial.println(wifi_buf.pass);
 
-    Serial.println(pInfo->ssid);
-    WiFi.begin(pInfo->ssid.c_str(), pInfo->pass.c_str());
+    WiFi.begin(wifi_buf.ssid.c_str(), wifi_buf.pass.c_str());
+    unsigned long startingTime = millis();
+    int ledstatus = 0;
     while (WiFi.status() != WL_CONNECTED && (millis() - startingTime) < NETWORK_TIMEOUT) {
+        ledstatus ? WSLED_Red() : WSLED_OFF();
+        ledstatus = !ledstatus;
+        Serial.print(".");
         vTaskDelay(250);
     }
 
@@ -165,21 +178,23 @@ void beginWIFITask(void *pvParameters)
         xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
         networkStatus = NETWORK_CONNECTED;
         xSemaphoreGive(xnetworkStatusSemaphore);
-        StoreData("ssid", pInfo->ssid.c_str());
-        StoreData("password", pInfo->pass.c_str());
+        StoreData("ssid", wifi_buf.ssid.c_str());
+        StoreData("password", wifi_buf.pass.c_str());
         Serial.printf("\r\n-- wifi connect success! --\r\n");
         Serial.print("IP address: ");
         Serial.println(WiFi.localIP());
         lv_setWIFIState("已连接");
         hasNetwork = isNetworkAvailable();
+        ntpTimerCallback(NULL);
+
     } else {
         xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
         networkStatus = NETWORK_CONNECT_FAILED;
-        xSemaphoreGive(xnetworkStatusSemaphore); // 释放信号量
+        xSemaphoreGive(xnetworkStatusSemaphore);
         Serial.println("Connection to WiFi failed");
-        lv_setWIFIState("未连接");
+        lv_setWIFIState("连接失败");
     }
-
+    Serial.println("delete wifiConnecttask");
     vTaskDelete(NULL);
 }
 

@@ -27,8 +27,8 @@ void ui_MainScreen_screen_init(void)
     ui_Label2 = lv_label_create(ui_MainScreen);
     lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label2, -72);
-    lv_obj_set_y(ui_Label2, -95);
+    lv_obj_set_x(ui_Label2, -76);
+    lv_obj_set_y(ui_Label2, -90);
     lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label2, "智能家居");
     lv_obj_set_style_text_color(ui_Label2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -51,7 +51,7 @@ void ui_MainScreen_screen_init(void)
     lv_img_set_src(ui_weathericonImage, &ui_img_31831977);
     lv_obj_set_width(ui_weathericonImage, LV_SIZE_CONTENT);   /// 60
     lv_obj_set_height(ui_weathericonImage, LV_SIZE_CONTENT);    /// 85
-    lv_obj_set_x(ui_weathericonImage, 79);
+    lv_obj_set_x(ui_weathericonImage, 77);
     lv_obj_set_y(ui_weathericonImage, -101);
     lv_obj_set_align(ui_weathericonImage, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_weathericonImage, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
@@ -148,7 +148,7 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_width(ui_Button5, 130);
     lv_obj_set_height(ui_Button5, 73);
     lv_obj_set_x(ui_Button5, 75);
-    lv_obj_set_y(ui_Button5, -44);
+    lv_obj_set_y(ui_Button5, -45);
     lv_obj_set_align(ui_Button5, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -290,6 +290,16 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_style_text_color(ui_cityLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_cityLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_cityLabel, &ui_font_UniversalFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_statusbarLabel = lv_label_create(ui_MainScreen);
+    lv_obj_set_width(ui_statusbarLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_statusbarLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_statusbarLabel, -97);
+    lv_obj_set_y(ui_statusbarLabel, -108);
+    lv_obj_set_align(ui_statusbarLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_statusbarLabel, "");
+    lv_obj_set_style_text_color(ui_statusbarLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_statusbarLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_timeLabel, ui_event_timeLabel, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button6, ui_event_Button6, LV_EVENT_ALL, NULL);

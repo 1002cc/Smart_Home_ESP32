@@ -284,9 +284,63 @@ void ui_set1Screen_screen_init(void)
 
 
 
+    ui_W5 = lv_tabview_add_tab(ui_chooseTabView, "c");
+
+    ui_Label66 = lv_label_create(ui_W5);
+    lv_obj_set_width(ui_Label66, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label66, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label66, -116);
+    lv_obj_set_y(ui_Label66, -45);
+    lv_obj_set_align(ui_Label66, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label66, "IP:");
+    lv_obj_set_style_text_color(ui_Label66, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label66, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label66, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label67 = lv_label_create(ui_W5);
+    lv_obj_set_width(ui_Label67, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label67, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label67, -126);
+    lv_obj_set_y(ui_Label67, 0);
+    lv_obj_set_align(ui_Label67, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label67, "端口:");
+    lv_obj_set_style_text_color(ui_Label67, lv_color_hex(0xFBFBFB), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label67, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label67, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_cameraButton = lv_btn_create(ui_W5);
+    lv_obj_set_width(ui_cameraButton, 46);
+    lv_obj_set_height(ui_cameraButton, 28);
+    lv_obj_set_x(ui_cameraButton, 103);
+    lv_obj_set_y(ui_cameraButton, 46);
+    lv_obj_set_align(ui_cameraButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_cameraButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_cameraButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_cameraipLabel = lv_label_create(ui_cameraButton);
+    lv_obj_set_width(ui_cameraipLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_cameraipLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_cameraipLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_cameraipLabel, "应用");
+    lv_obj_set_style_text_color(ui_cameraipLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_cameraipLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_cameraipLabel, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label35 = lv_label_create(ui_W5);
+    lv_obj_set_width(ui_Label35, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label35, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label35, 1);
+    lv_obj_set_y(ui_Label35, -89);
+    lv_obj_set_align(ui_Label35, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label35, "监控设置");
+    lv_obj_set_style_text_color(ui_Label35, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label35, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label35, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     lv_obj_add_event_cb(ui_Panel5, ui_event_Panel5, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_mqttuseButton, ui_event_mqttuseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_timeuseButton, ui_event_timeuseButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_cameraButton, ui_event_cameraButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_set1Screen, ui_event_set1Screen, LV_EVENT_ALL, NULL);
 
 }

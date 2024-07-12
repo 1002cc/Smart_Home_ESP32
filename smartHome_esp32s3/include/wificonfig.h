@@ -17,7 +17,8 @@ typedef enum {
 
 bool initWIFIConfig(void);
 bool getwifistate();
+String getwifissid();
 void wifiDisconnect(void);
-void wifiConnector(wifi_buf_t wifi_buf);
+void wifiConnector();
 void networkScanner();
 #endif

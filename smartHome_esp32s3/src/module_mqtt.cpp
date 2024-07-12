@@ -73,11 +73,17 @@ bool firstConnectMQTT(void)
             lv_setTipinfo("服务器连接成功");
             lv_setMQTTSwitchState(true);
             lv_setMQTTState("已连接");
+            lv_setstatusbarLabel(3);
             enable_mqtt = true;
         } else {
             lv_setTipinfo("服务器连接失败");
             lv_setMQTTSwitchState(false);
             lv_setMQTTState("未连接");
+            if (WiFi.status() == WL_CONNECTED) {
+                lv_setstatusbarLabel(1);
+            } else {
+                lv_setstatusbarLabel(0);
+            }
             enable_mqtt = false;
         }
     } else {
@@ -115,6 +121,7 @@ void mqttLoop(void)
             lv_setMQTTState("未连接");
             Serial.println("MQTT disconnected, reconnecting...");
             mqttconnect();
+            vTaskDelay(1000);
         }
         mqttClient.loop();
     }
@@ -124,38 +131,11 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
     Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
     Serial.print("Message:");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char)payload[i]);
-    }
-
-    // char hex_string[length * 2 + 1]; // 存储转换后的十六进制字符串
-    // for (size_t i = 0; i < length; i++) {
-    //     sprintf(&hex_string[i * 2], "%02X", payload[i]);
+    // for (int i = 0; i < length; i++) {
+    //     Serial.print((char)payload[i]);
     // }
-    // hex_string[length * 2] = '\0'; // 添加字符串终止符
 
-    // // 解析宽度、高度、缓冲区地址和长度（此部分需根据实际消息格式调整）
-    // // 注意：这里简化处理，实际应用中可能需要更复杂的解析逻辑
-    // // 假设hex_string已经包含了所有需要的信息，且格式正确
-    // int width, height, len;
-    // char buf[10]; // 假设buf足够长以存放地址表示
-    // sscanf(hex_string, "%d,%d,0x%s,%d,...", &width, &height, buf, &len);
-
-    // // 解析时间（同样简化处理，实际应根据真实格式调整）
-    // int year, month, day, hour, minute, second;
-    // sscanf(hex_string + 27, "%04x%02x%02x%02x%02x%02x", &year, &month, &day, &hour, &minute, &second);
-
-    // // 打印信息（调试用）
-    // Serial.printf("width: %d, height: %d, buf: 0x%s, len: %d\n", width, height, buf, len);
-    // Serial.printf("year: %d, month: %d, day: %d, hour: %d, minute: %d, second: %d\n", year, month, day, hour, minute, second);
-
-    // // 解析图像数据（直接从payload开始，跳过前面的头部信息）
-    // byte img[length - 43]; // 假定有效图像数据从payload的第43个字节开始
-    // memcpy(img, payload + 43, length - 43);
-
-    // lv_img_dsc_t img_dsc;
-    // lv_img_dsc_init(&img_dsc, NULL, NULL, len - 43, LV_IMG_CF_RAW);
-    // lv_img_set_src(image, &img_dsc);
+    // Serial.println(String(payload));
 
     Serial.println("\n----------------END----------------");
 }
@@ -165,19 +145,47 @@ void publishSensorData(const SensorData &data)
     cJSON *root = cJSON_CreateObject();
     cJSON_AddStringToObject(root, "code", "200");
 
-    cJSON *dates = cJSON_CreateObject();
+    cJSON *datas = cJSON_CreateObject();
     char tempCharArray[32], humidityCharArray[32], mq2CharArray[32];
     snprintf(tempCharArray, sizeof(tempCharArray), "%.0f", data.temp);
     snprintf(humidityCharArray, sizeof(humidityCharArray), "%.0f", data.humidity);
     snprintf(mq2CharArray, sizeof(mq2CharArray), "%.0f", data.mq);
-    cJSON_AddItemToObject(root, "datas", dates);
-    cJSON_AddStringToObject(dates, "temp", tempCharArray);
-    cJSON_AddStringToObject(dates, "humidity", humidityCharArray);
-    cJSON_AddStringToObject(dates, "mq", mq2CharArray);
+    cJSON_AddItemToObject(root, "datas", datas);
+    cJSON_AddStringToObject(datas, "temp", tempCharArray);
+    cJSON_AddStringToObject(datas, "humidity", humidityCharArray);
+    cJSON_AddStringToObject(datas, "mq", mq2CharArray);
 
     char *jsonStr = cJSON_PrintUnformatted(root);
 
-    mqttClient.publish(mqtt_pub, jsonStr);
+    mqttClient.publish(mqtt_app_pub, jsonStr);
+    mqttClient.publish(mqtt_qt_pub, jsonStr);
+    cJSON_Delete(root);
+}
+
+/**
+ * {
+ *  code:200,
+ *  data:[
+ *   switch1:state
+ * ]
+ * }
+ */
+
+void pulishSwitchDatas(const lampButtonData &data)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "code", "200");
+
+    cJSON *datas = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "lampButtons", datas);
+    cJSON_AddBoolToObject(datas, "lampButton1", data.lampButton1);
+    cJSON_AddBoolToObject(datas, "lampButton2", data.lampButton2);
+    cJSON_AddBoolToObject(datas, "lampButton3", data.lampButton3);
+    cJSON_AddBoolToObject(datas, "lampButton4", data.lampButton4);
+
+    char *jsonStr = cJSON_PrintUnformatted(root);
+
+    mqttClient.publish(mqtt_app_pub, jsonStr);
     mqttClient.publish(mqtt_qt_pub, jsonStr);
     cJSON_Delete(root);
 }
