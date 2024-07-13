@@ -39,6 +39,8 @@ WebsocketsClient webSocketClient_stt;
 extern Audio audio;
 #endif
 
+int noise = 50;
+
 SpeakState_t speakState = NO_DIALOGUE;
 String ai_speak = "xiaoyan";
 int useAIMode = 0;
@@ -241,6 +243,7 @@ void sendSTTData()
     } else {
         Serial.println("Not Connected!");
         lv_setSpeechinfo("服务器连接失败");
+        return;
     }
     // 分段向STT发送PCM音频数据
     for (int i = 0; i < lan; i++) {

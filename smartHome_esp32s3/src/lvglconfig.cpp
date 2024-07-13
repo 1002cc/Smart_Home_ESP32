@@ -1167,6 +1167,7 @@ void speakScreenCD(lv_event_t *e)
             if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
                 lv_label_set_text(ui_cameraLabel, "录制...");
                 speakState = RECORDING;
+                // newSpeakTask();
                 Serial.println("录制中");
             } else {
                 lv_label_set_text(ui_cameraLabel, "识别");

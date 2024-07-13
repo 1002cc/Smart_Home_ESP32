@@ -7,7 +7,6 @@
 #include "module_speak.h"
 #include "wificonfig.h"
 #include <Arduino.h>
-#include <WiFi.h>
 
 void setup()
 {
