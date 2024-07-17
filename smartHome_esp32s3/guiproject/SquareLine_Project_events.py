@@ -82,3 +82,7 @@ def chooseScreenFCD(event_struct):
 def monitorScreenFCD(event_struct):
     return
 
+
+def monitorScreenOCD(event_struct):
+    return
+

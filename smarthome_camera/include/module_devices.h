@@ -27,5 +27,7 @@
 #define CONNECTTIMEOUT 15
 
 void initLED();
-
+void led_off();
+void led_on();
+void blinkLED(int n, int t);
 #endif

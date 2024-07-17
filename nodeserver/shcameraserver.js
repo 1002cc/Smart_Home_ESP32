@@ -1,95 +1,115 @@
-const _http_ = require('http');
+const http = require('http');
 const WebSocket = require('ws');
-const _fs_ = require('fs');
+const fs = require('fs');
+const path = require('path');
+const url = require('url');
 const { Console } = require('console');
 
+// 配置项
+const PORT = 3000;
+const HOST = "47.120.7.163";
+const BOUNDARY = '123456789000000000000987654321';
+const VIDEO_STREAM_PATH = path.join(__dirname, 'videoStream.jpg');
+
 // 创建HTTP服务器
-const httpServer = _http_.createServer((_req, _res) => {
-    if (_req.url === '/mjpeg/1' && _req.method === 'GET') {
-        handleJPGSstream(_req, _res);
-    } else if (_req.url === '/jpg' && _req.method === 'GET') {
-        handleJPG(_req, _res);
-    } else {
-        handleNotFound(_req, _res);
+const server = http.createServer((req, res) => {
+    const { pathname } = url.parse(req.url);
+    
+    switch (pathname) {
+        case '/mjpeg/1':
+            if (req.method === 'GET') {
+                handleMJPEGStream(req, res);
+            }
+            break;
+        case '/jpg':
+            if (req.method === 'GET') {
+                handleJPEG(req, res);
+            }
+            break;
+        default:
+            handleNotFound(req, res);
     }
 });
 
-function camCB() {
-    return _fs_.readFileSync('videoStream.jpg');
-}
-
 // 处理单帧图片请求
-function handleJPG(_req, _res) {
-    const img = camCB();
-    _res.writeHead(200, {
-        'Content-Type': 'image/jpeg',
-        'Content-Length': img.length
-    });
-    _res.end(img);
+function handleJPEG(req, res) {
+    readAndSendFile(res, VIDEO_STREAM_PATH);
 }
 
 // 处理视频流请求
-function handleJPGSstream(_req, _res) {
-    _res.writeHead(200, {
-        'Content-Type': 'multipart/x-mixed-replace; boundary=123456789000000000000987654321',
-        'Access-Control-Allow-Origin': '*'
-    });
-
-    function sendFrame() {
-        const img = camCB();
-        _res.write(`--123456789000000000000987654321\r\n`);
-        _res.write(`Content-Type: image/jpeg\r\n`);
-        _res.write(`Content-Length: ${img.length}\r\n\r\n`);
-        _res.write(img, 'binary');
-        _res.write(`\r\n`);
-        setTimeout(sendFrame, 100);
-    }
-    sendFrame();
+function handleMJPEGStream(req, res) {
+    setHeader(res, 200, 'multipart/x-mixed-replace; boundary=' + BOUNDARY);
+    setInterval(() => {
+        readAndSendFile(res, VIDEO_STREAM_PATH, BOUNDARY);
+    }, 100);
 }
 
 // 处理未找到的请求
-function handleNotFound(_req, _res) {
-    _res.writeHead(404, { 'Content-Type': 'text/plain' });
-    _res.end('Not Found');
+function handleNotFound(req, res) {
+    setHeader(res, 404, 'text/plain');
+    res.end('Not Found');
+}
+
+// 设置HTTP响应头
+function setHeader(res, statusCode, contentType) {
+    res.writeHead(statusCode, { 'Content-Type': contentType, 'Access-Control-Allow-Origin': '*' });
+}
+
+// 读取文件并发送
+function readAndSendFile(res, filePath, boundary) {
+    fs.readFile(filePath, (err, data) => {
+        if (err) {
+            console.error('Error reading file:', err);
+            res.end();
+            return;
+        }
+        if (boundary) {
+            res.write(`--${boundary}\r\n`);
+            res.write(`Content-Type: image/jpeg\r\n`);
+            res.write(`Content-Length: ${data.length}\r\n\r\n`);
+        }
+        res.write(data, 'binary');
+        if (boundary) {
+            res.write(`\r\n`);
+        }
+    });
 }
 
 // 创建WebSocket服务器
-const wsServer = new WebSocket.Server({ server: httpServer });
-let streamingClients = [];
+const wss = new WebSocket.Server({ server });
+let clients = [];
 
 // 处理WebSocket连接
-wsServer.on('connection', (_ws) => {
+wss.on('connection', (ws) => {
     console.log('A new client connected to WebSocket server');
+    clients.push(ws);
 
-    // 将新客户端添加到连接列表中
-    streamingClients.push(_ws);
-
-    _ws.on('message', (_data) => {
-        // 接收到数据后的处理逻辑（根据需求自行添加）
-
-        // 更新视频流图片
-        _fs_.writeFileSync('videoStream.jpg', _data, 'binary');
-
-        // 向所有客户端发送数据
-        streamingClients.forEach(_client => {
-            if (_client.readyState === WebSocket.OPEN) {
-                _client.send(_data);
-            }
+    ws.on('message', (data) => {
+            fs.writeFile(VIDEO_STREAM_PATH, data, 'binary', () => {
+            broadcast(data);
         });
     });
 
-    _ws.on('close', () => {
-      console.log('A client disconnected');
-        // 从连接列表中移除断开的客户端
-        streamingClients = streamingClients.filter(_client => _client !== _ws);
+    ws.on('close', () => {
+        console.log('A client disconnected');
+        clients = clients.filter(client => client !== ws);
+        console.log("Clients count:", clients.length);
     });
 });
 
-// 监听端口
-const PORT = 3000;
-httpServer.listen(PORT, () => {
+// 广播数据给所有客户端
+function broadcast(data) {
+    clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(data);
+        }
+    });
+}
+
+
+server.listen(PORT, () => {
     console.log(`HTTP and WebSocket servers are running on port ${PORT}`);
-    console.log(`HTTP videoSteam: http://localhost:${PORT}/mjpeg/1`);
-    console.log(`HTTP jpg: http://localhost:${PORT}/jpg`);
-    console.log(`WebSocket : ws://localhost:${PORT}`);
+    console.log(`HTTP videoSteam: http://${HOST}:${PORT}/mjpeg/1`);
+    console.log(`HTTP jpg: http://${HOST}:${PORT}/jpg`);
+    console.log(`WebSocket : ws://${HOST}:${PORT}`);
 });

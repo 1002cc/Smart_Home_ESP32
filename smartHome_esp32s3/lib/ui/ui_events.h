@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+void monitorScreenOCD(lv_event_t * e);
 void speakScreenCD(lv_event_t * e);
 void lampButtonCB(lv_event_t * e);
 void setChooseScreenCD(lv_event_t * e);

@@ -45,7 +45,8 @@ SpeakState_t speakState = NO_DIALOGUE;
 String ai_speak = "xiaoyan";
 int useAIMode = 0;
 
-static TaskHandle_t speakTaskHandle = NULL;
+TaskHandle_t speakTaskHandle = NULL;
+SemaphoreHandle_t xspeakSemaphore = NULL;
 
 void sendSTTData();
 String XF_wsUrl(const char *Secret, const char *Key, String request, String host);
@@ -152,6 +153,7 @@ bool initI2SConfig()
 
 void initSpeakConfig()
 {
+    xspeakSemaphore = xSemaphoreCreateMutex();
     audioData = (int16_t *)ps_malloc(2560 * sizeof(int16_t));
 
     esp_err_t err = i2s_start(I2S_NMP411_PORT);
@@ -247,7 +249,6 @@ void sendSTTData()
     }
     // 分段向STT发送PCM音频数据
     for (int i = 0; i < lan; i++) {
-
         if (i == (lan - 1)) {
             status = 2;
         }
@@ -260,7 +261,7 @@ void sendSTTData()
             input += base64audioString;
             input += "\"}}";
             Serial.printf("input: %d , status: %d \n", i, status);
-            Serial.println(input);
+            // Serial.println(input);
             webSocketClient_stt.send(input);
             status = 1;
         } else if (status == 1) {
@@ -269,7 +270,7 @@ void sendSTTData()
             String base64audioString = base64::encode((uint8_t *)pcm_data + (i * dataSize), dataSize);
             input += base64audioString;
             input += "\"}}";
-            Serial.printf("input: %d , status: %d \n", i, status);
+            // Serial.printf("input: %d , status: %d \n", i, status);
             webSocketClient_stt.send(input);
         } else if (status == 2) {
             if (lan_end == 0) {
@@ -466,6 +467,40 @@ String getMiniMaxAnswer(String inputText)
     }
 }
 
+String getvAnswer(String ouputText)
+{
+    HTTPClient http2;
+    http2.begin(MINIMAX_TTS);
+    http2.addHeader("Content-Type", "application/json");
+    http2.addHeader("Authorization", String("Bearer ") + MINIMAX_KEY);
+    // 创建一个StaticJsonDocument对象，足够大以存储JSON数据
+    StaticJsonDocument<200> doc;
+    // 填充数据
+    doc["text"] = ouputText;
+    doc["model"] = "speech-01";
+    doc["audio_sample_rate"] = 32000;
+    doc["bitrate"] = 128000;
+    doc["voice_id"] = "female-tianmei-jingpin";
+    // 创建一个String对象来存储序列化后的JSON字符串
+    String jsonString;
+    // 序列化JSON到String对象
+    serializeJson(doc, jsonString);
+    int httpResponseCode = http2.POST(jsonString);
+    if (httpResponseCode == 200) {
+        DynamicJsonDocument jsonDoc(1024);
+        String response = http2.getString();
+        Serial.println(response);
+        http2.end();
+        deserializeJson(jsonDoc, response);
+        String aduiourl = jsonDoc["audio_file"];
+        return aduiourl;
+    } else {
+        Serial.printf("tts %i \n", httpResponseCode);
+        http2.end();
+        return "error";
+    }
+}
+
 void speakTask(void *pvParameter)
 {
     Serial.println("start speakTask");
@@ -486,13 +521,12 @@ void speakTask(void *pvParameter)
                 esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
                 memcpy(pcm_data + recordingSize, audioData, bytes_read);
                 recordingSize += bytes_read / 2;
-                if (!(millis() - min < 6000)) {
+                if (!(millis() - min < 3000)) {
                     speakState = RECORDED;
                 }
             }
             lv_setSpeechinfo("正在思考");
-            Serial.printf("Total bytes read: %d\n", recordingSize);
-            Serial.println("Recording complete.");
+            Serial.printf("Recorded done. recordingSize: %d\n", recordingSize);
 
             sendSTTData();
             free(pcm_data);
@@ -520,12 +554,12 @@ void speakTask(void *pvParameter)
                 answer_list_num = 9;
             }
 
-            for (int i = 0; i < answer_list_num + 1; i++) {
-                Serial.print("answer_list_num: ");
-                Serial.println(i);
-                Serial.print("answer_list: ");
-                Serial.println(answer_list[i]);
-            }
+            // for (int i = 0; i < answer_list_num + 1; i++) {
+            //     Serial.print("answer_list_num: ");
+            //     Serial.println(i);
+            //     Serial.print("answer_list: ");
+            //     Serial.println(answer_list[i]);
+            // }
 
             String answer = "";
 
@@ -540,7 +574,7 @@ void speakTask(void *pvParameter)
                     Serial.println("doupao POST出错重新提交");
                 }
             }
-
+            Serial.printf("answer : %s\n", answer);
             // 保存最近的5次对话到列表中
             answer.replace("\n", "");
             answer_list[answer_list_num] = answer;
@@ -554,10 +588,19 @@ void speakTask(void *pvParameter)
             }
 
             if (!answer.isEmpty()) {
-                postTTS(answer);
+                if (1) {
+                    postTTS(answer);
+                } else {
+                    // String aduiourl = getvAnswer(answer);
+                    // if (aduiourl != "error") {
+                    //     audio.stopSong();
+                    //     audio.connecttohost(aduiourl.c_str()); //  128k mp3
+                    // }
+                }
             } else {
                 Serial.println("回答内容为空,取消TTS发送。");
             }
+
             lv_setSpeechinfo(" ");
             speakState = NO_DIALOGUE;
         }
@@ -568,7 +611,7 @@ void speakTask(void *pvParameter)
 void startSpeakTask()
 {
     if (speakTaskHandle == NULL) {
-        xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 10, &speakTaskHandle, 0);
+        xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 10, &speakTaskHandle, 1);
     }
 }
 

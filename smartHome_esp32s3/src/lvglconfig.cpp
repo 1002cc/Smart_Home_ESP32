@@ -35,7 +35,7 @@ std::vector<String> foundWifiList;
 using namespace websockets;
 String websockets_server_host = "172.20.10.4";
 uint16_t websockets_server_port = 3000;
-WebsocketsClient client;
+WebsocketsClient cameraClient;
 uint16_t *image_buffer;
 static lv_img_dsc_t img_dsc;
 
@@ -59,6 +59,8 @@ extern int useAIMode;
 
 extern String ntpServer2;
 extern int updatetimentp;
+
+extern TaskHandle_t speakTaskHandle;
 /********************************************************************
                          BUILD UI
 ********************************************************************/
@@ -147,8 +149,8 @@ void initLVGLConfig(void)
     uint16_t calData[5] = {490, 3259, 422, 3210, 1};
     tft.setTouch(calData);
 
-    lv_color_t *draw_buf1 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM);
-    lv_color_t *draw_buf2 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM);
+    lv_color_t *draw_buf1 = (lv_color_t *)ps_malloc(screenWidth * screenHeight * 2);
+    lv_color_t *draw_buf2 = (lv_color_t *)ps_malloc(screenWidth * screenHeight * 2);
 
     lv_disp_draw_buf_init(&draw_buf, draw_buf1, draw_buf2, screenWidth * screenHeight);
 
@@ -1004,27 +1006,26 @@ void cameraScreenCD(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
     lv_obj_t *btn = lv_event_get_target(e);
-    Serial.println(code);
-    Serial.println(btn->state);
     if (btn == ui_connectCameraButton) {
         if (code == LV_EVENT_CLICKED) {
             if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
                 lv_label_set_text(ui_cameraLabel, "关闭");
                 Serial.println("connect cameraserver");
                 isStartCamera = true;
-                publishStartVideo(true);
                 startCameraTask();
             } else {
                 lv_label_set_text(ui_cameraLabel, "连接");
                 Serial.println("disconnect cameraserver");
                 closeCameraServer();
             }
-        } else if (code == LV_EVENT_LONG_PRESSED) {
-            Serial.println("return cameraserver");
-            closeCameraServer();
-            lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
         }
     }
+}
+
+void monitorScreenOCD(lv_event_t *e)
+{
+    vTaskSuspend(speakTaskHandle);
+    lv_scr_load_anim(ui_monitorScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
 }
 
 void monitorScreenFCD(lv_event_t *e)
@@ -1034,21 +1035,26 @@ void monitorScreenFCD(lv_event_t *e)
     lv_label_set_text(ui_cameraLabel, "连接");
     lv_label_set_text(ui_cameraStateLabel, "未连接");
     closeCameraServer();
+    if (eTaskGetState(speakTaskHandle) == eTaskState::eSuspended) {
+        Serial.println("vTaskResume speakTaskHandle");
+        vTaskResume(speakTaskHandle);
+    }
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
 }
 
 bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 {
-    if (y >= tft.height())
-        return 0;
+    // if (y >= tft.height())
+    //     return 0;
+    // if (x >= tft.width())
+    //     return 0;
+
     for (uint16_t j = 0; j < h; j++) {
         for (uint16_t i = 0; i < w; i++) {
             image_buffer[(y + j) * screenWidth + (x + i)] = bitmap[j * w + i];
         }
     }
 
-    // if (y >= tft.height())
-    //     return false; // 返回 false 表示失败
     // for (uint16_t j = 0; j < h; j++) {
     //     for (uint16_t i = 0; i < w; i++) {
     //         uint16_t pixel = bitmap[j * w + i];
@@ -1062,8 +1068,8 @@ bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
 bool startCameraServer()
 {
     lv_label_set_text(ui_cameraStateLabel, "正在连接");
-    if ((websockets_server_port == 100001) && (client.connect(websockets_server_host))) {
-    } else if ((client.connect(websockets_server_host, websockets_server_port, "/"))) {
+    if ((websockets_server_port == 100001) && (cameraClient.connect(websockets_server_host))) {
+    } else if ((cameraClient.connect(websockets_server_host, websockets_server_port, "/"))) {
     } else {
         Serial.println("WebSocket connect failed.");
         lv_label_set_text(ui_cameraStateLabel, "连接失败");
@@ -1077,18 +1083,16 @@ bool startCameraServer()
 void closeCameraServer()
 {
     lv_label_set_text(ui_cameraStateLabel, "未连接");
+
     if (isStartCamera) {
         publishStartVideo(false);
+        isStartCamera = false;
     }
-    isStartCamera = false;
 
+    cameraClient.close();
     if (cameraTaskHandle != NULL) {
         vTaskDelete(cameraTaskHandle);
         cameraTaskHandle = NULL;
-    }
-
-    if (client.poll()) {
-        client.close();
     }
 }
 
@@ -1104,37 +1108,29 @@ void initCameraUI()
     TJpgDec.setSwapBytes(false);
     // TJpgDec.setSwapBytes(true);
     TJpgDec.setCallback(tft_output);
-
+    image_buffer = (uint16_t *)ps_malloc(320 * 240 * sizeof(uint16_t));
     img_dsc.header.always_zero = 0;
     img_dsc.header.w = 320;
     img_dsc.header.h = 240;
     img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * sizeof(uint16_t);
     img_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
-
-    image_buffer = (uint16_t *)ps_malloc(320 * 240 * sizeof(uint16_t));
 }
 
 void videocameratask(void *pvParameter)
 {
-    if (!startCameraServer()) {
-        lv_label_set_text(ui_cameraLabel, "连接");
-        lv_label_set_text(ui_cameraStateLabel, "未连接");
-        vTaskDelete(cameraTaskHandle);
-        cameraTaskHandle = NULL;
-        return;
-    }
-
     Serial.println("start camera task");
+
     while (1) {
-        if (client.poll()) {
-            WebsocketsMessage msg = client.readBlocking();
+        if (cameraClient.poll()) {
+            WebsocketsMessage msg = cameraClient.readBlocking();
+
             TJpgDec.drawJpg(0, 0, (const uint8_t *)msg.c_str(), msg.length());
 
             img_dsc.data = (const uint8_t *)image_buffer;
             lv_img_set_src(videoImage, &img_dsc);
             lv_obj_invalidate(videoImage);
         }
-        vTaskDelay(100);
+        vTaskDelay(50);
     }
     vTaskDelete(NULL);
 }
@@ -1142,12 +1138,17 @@ void videocameratask(void *pvParameter)
 void startCameraTask()
 {
     if (isStartCamera && cameraTaskHandle == NULL) {
+        if (!startCameraServer()) {
+            lv_obj_clear_state(ui_connectCameraButton, LV_STATE_CHECKED);
+            lv_label_set_text(ui_cameraLabel, "连接");
+            lv_label_set_text(ui_cameraStateLabel, "连接失败");
+            isStartCamera = false;
+            return;
+        }
+        publishStartVideo(true);
         xTaskCreatePinnedToCore(&videocameratask, "videocamera_task", 5 * 1024, NULL, 3, &cameraTaskHandle, 1);
-    } else if (!isStartCamera && cameraTaskHandle != NULL) {
-        client.close();
-        Serial.println("vTaskDelete cameraHandle");
-        vTaskDelete(cameraTaskHandle);
-        cameraTaskHandle = NULL;
+    } else {
+        Serial.println("cameraTaskHandle is not NULL");
     }
 }
 
@@ -1164,15 +1165,13 @@ void speakScreenCD(lv_event_t *e)
             lv_scr_load_anim(ui_speechScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
             drawing_screen();
         } else if (btn == ui_speakButton) {
-            if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
-                lv_label_set_text(ui_cameraLabel, "录制...");
+            if (lv_obj_has_state(btn, LV_STATE_FOCUSED)) {
+                lv_label_set_text(ui_speakLabel, "录制");
                 speakState = RECORDING;
-                // newSpeakTask();
                 Serial.println("录制中");
             } else {
-                lv_label_set_text(ui_cameraLabel, "识别");
-                speakState = RECORDED;
-                Serial.println("识别");
+                lv_label_set_text(ui_speakLabel, "录音");
+                Serial.println("录音");
             }
             Serial.println("speakState = " + String(speakState));
         }

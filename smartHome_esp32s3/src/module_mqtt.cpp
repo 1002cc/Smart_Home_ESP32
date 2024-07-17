@@ -93,6 +93,7 @@ bool firstConnectMQTT(void)
         lv_setMQTTState("未连接");
         enable_mqtt = false;
     }
+    vTaskDelay(500);
     return enable_mqtt;
 }
 
@@ -101,6 +102,7 @@ bool mqttconnect(void)
     Serial.println("Connecting to MQTT...");
     if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
         Serial.println("MQTT connected!");
+        lv_setstatusbarLabel(3);
         mqttClient.publish(mqtt_pub, "ESP32 S3 connect mqtt!");
         mqttClient.subscribe(mqtt_sub);
         lv_setMQTTState("已连接");
@@ -110,6 +112,11 @@ bool mqttconnect(void)
         Serial.print(mqttClient.state());
         Serial.println(" try again in 5 seconds");
         lv_setMQTTState("连接失败");
+        if (WiFi.status() == WL_CONNECTED) {
+            lv_setstatusbarLabel(1);
+        } else {
+            lv_setstatusbarLabel(0);
+        }
         return false;
     }
 }

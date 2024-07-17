@@ -187,7 +187,7 @@ void sensor_task(void *pvParameter)
             snprintf(temp_char, sizeof(temp_char), "%.0f%%", humidity);
             lv_label_set_text(ui_HumidityLabel, temp_char);
             lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
-            snprintf(temp_char, sizeof(temp_char), "%d%%", (int)mq2sensorValue);
+            snprintf(temp_char, sizeof(temp_char), "%.0f%%", mq2sensorValue);
             lv_label_set_text(ui_MQLabel, temp_char);
             if (getMqttStart()) {
                 SensorData sensorData = {
@@ -223,5 +223,5 @@ void startSensorTask(void)
     Serial.println("Starting sensor task");
     initDHT();
     initmq2();
-    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, NULL, 0);
 }

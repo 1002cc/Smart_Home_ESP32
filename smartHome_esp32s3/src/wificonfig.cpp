@@ -194,6 +194,8 @@ void beginWIFITask(void *pvParameters)
         Serial.println("Connection to WiFi failed");
         lv_setWIFIState("连接失败");
     }
+
+    WSLED_OFF();
     Serial.println("delete wifiConnecttask");
     vTaskDelete(NULL);
 }

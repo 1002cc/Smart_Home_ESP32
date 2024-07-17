@@ -42,25 +42,28 @@ void ui_speechScreen_screen_init(void)
     lv_obj_set_x(ui_speakButton, 116);
     lv_obj_set_y(ui_speakButton, -90);
     lv_obj_set_align(ui_speakButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_speakButton, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_add_flag(ui_speakButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_speakButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_Label28 = lv_label_create(ui_speakButton);
-    lv_obj_set_width(ui_Label28, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label28, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label28, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label28, "录音");
-    lv_obj_set_style_text_font(ui_Label28, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_speakLabel = lv_label_create(ui_speakButton);
+    lv_obj_set_width(ui_speakLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_speakLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_speakLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_speakLabel, "录制");
+    lv_obj_set_style_text_color(ui_speakLabel, lv_color_hex(0xF5F5F5), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_speakLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_speakLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_speechStateLabel = lv_label_create(ui_s1);
     lv_obj_set_width(ui_speechStateLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_speechStateLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_speechStateLabel, -116);
-    lv_obj_set_y(ui_speechStateLabel, -97);
+    lv_obj_set_x(ui_speechStateLabel, -85);
+    lv_obj_set_y(ui_speechStateLabel, -96);
     lv_obj_set_align(ui_speechStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_speechStateLabel, "");
     lv_obj_set_style_text_color(ui_speechStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_speechStateLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_align(ui_speechStateLabel, LV_TEXT_ALIGN_AUTO, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_speechStateLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_expressionChart = lv_chart_create(ui_s1);

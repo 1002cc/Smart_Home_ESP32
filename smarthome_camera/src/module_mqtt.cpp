@@ -42,6 +42,7 @@ WiFiClientSecure net;
 PubSubClient mqttClient;
 bool enable_mqtt = true;
 extern bool isStartCamera;
+int devices_num = 0;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
@@ -66,7 +67,6 @@ bool mqttconnect(void)
     Serial.println("Connecting to MQTT...");
     if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
         Serial.println("MQTT connected!");
-        Serial.println(mqttClient.getBufferSize());
         mqttClient.publish(mqtt_pub, "ESP32-CAM connect mqtt!");
         mqttClient.subscribe(mqtt_sub);
         return true;
@@ -120,8 +120,10 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 if (startVideo != NULL) {
                     if (startVideo->valueint == 1) {
                         isStartCamera = true;
+                        devices_num++;
                     } else {
                         isStartCamera = false;
+                        devices_num--;
                     }
                     Serial.printf("startVideo: %d  isStartCamera:%d\n", startVideo->valueint, isStartCamera);
                     startcameraTask();

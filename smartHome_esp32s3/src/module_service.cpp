@@ -22,7 +22,7 @@ void ntpTimerCallback(TimerHandle_t xTimer)
     //     ntpxHandle = NULL;
     // }
     Serial.println("Re-syncing time with NTP server");
-    xTaskCreatePinnedToCore(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle, 1);
+    xTaskCreatePinnedToCore(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle, 0);
     Serial.println("Update weather information");
     weatherQuery();
 }
@@ -66,7 +66,7 @@ bool isNetworkAvailable()
     WiFiClient client;
     const int timeoutMs = 2000;
     bool result = client.connect(remoteIp, 80, timeoutMs);
-    delay(10);
+    delay(100);
     if (result) {
         client.stop();
         return true;

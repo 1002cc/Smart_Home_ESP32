@@ -27,8 +27,8 @@ void ui_MainScreen_screen_init(void)
     ui_Label2 = lv_label_create(ui_MainScreen);
     lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label2, -76);
-    lv_obj_set_y(ui_Label2, -90);
+    lv_obj_set_x(ui_Label2, -80);
+    lv_obj_set_y(ui_Label2, -97);
     lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label2, "智能家居");
     lv_obj_set_style_text_color(ui_Label2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -294,8 +294,8 @@ void ui_MainScreen_screen_init(void)
     ui_statusbarLabel = lv_label_create(ui_MainScreen);
     lv_obj_set_width(ui_statusbarLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_statusbarLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_statusbarLabel, -97);
-    lv_obj_set_y(ui_statusbarLabel, -108);
+    lv_obj_set_x(ui_statusbarLabel, -27);
+    lv_obj_set_y(ui_statusbarLabel, -99);
     lv_obj_set_align(ui_statusbarLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_statusbarLabel, "");
     lv_obj_set_style_text_color(ui_statusbarLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);

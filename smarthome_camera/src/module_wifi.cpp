@@ -2,6 +2,15 @@
 #include "module_devices.h"
 #include "module_server.h"
 
+/**
+ * @brief  WiFi配置模块
+ * 指示灯:
+ *        快闪烁 正在连接
+ *        慢闪烁 wed配置
+ *        常亮 已连接
+ *        不亮 未连接
+ */
+
 const byte DNS_PORT = 53;
 const int webPort = 80;
 
@@ -182,15 +191,16 @@ void connectToWiFi(int timeOut_s)
     while (WiFi.status() != WL_CONNECTED) {
         Serial.print(".");
         digitalWrite(LED_RED_NUM, !digitalRead(LED_RED_NUM));
-        delay(500);
+        delay(300);
         Connect_time++;
 
         if (Connect_time > 2 * timeOut_s) // 长时间连接不上，重新进入配网页面
         {
-            digitalWrite(LED_RED_NUM, LOW);
+            led_off();
             Serial.println(""); // 主要目的是为了换行符
             Serial.println("WIFI autoconnect fail, start AP for webconfig now...");
             wifiConfig();
+            blinkLED(5, 500);
             return;
         }
     }
@@ -206,7 +216,7 @@ void connectToWiFi(int timeOut_s)
         Serial.println(WiFi.gatewayIP());
         Serial.print("WIFI status is:");
         Serial.print(WiFi.status());
-        digitalWrite(LED_RED_NUM, HIGH);
+        led_on();
         server.stop();
         initNtpTime();
     }
@@ -226,18 +236,14 @@ void restoreWiFi()
     esp_wifi_restore(); // 删除保存的wifi信息
     Serial.println("连接信息已清空,准备重启设备..");
     delay(10);
-    blinkLED(LED_RED_NUM, 5, 500);
-    digitalWrite(LED_RED_NUM, LOW);
+    blinkLED(5, 500);
+    led_off();
 }
 
 void checkConnect(bool reConnect)
 {
-    if (WiFi.status() != WL_CONNECTED) // wifi连接失败
-    {
-        if (digitalRead(LED_RED_NUM) != LOW) {
-            digitalWrite(LED_RED_NUM, LOW);
-        }
-
+    if (WiFi.status() != WL_CONNECTED) {
+        led_off();
         if (reConnect == true && WiFi.getMode() != WIFI_AP && WiFi.getMode() != WIFI_AP_STA) {
             Serial.println("WIFI未连接.");
             Serial.println("WiFi Mode:");
@@ -245,14 +251,6 @@ void checkConnect(bool reConnect)
             Serial.println("正在连接WiFi...");
             connectToWiFi(CONNECTTIMEOUT); // 连接wifi函数
         }
-    }
-}
-
-void blinkLED(int led, int n, int t)
-{
-    for (int i = 0; i < 2 * n; i++) {
-        digitalWrite(led, !digitalRead(led));
-        delay(t);
     }
 }
 

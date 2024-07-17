@@ -147,7 +147,7 @@ void startAudioTack()
 {
     Serial.println("start Audio Tack");
     audio_init();
-    xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, NULL, 2, NULL, 0);
+    xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, NULL, 2, NULL, 1);
 }
 
 #endif

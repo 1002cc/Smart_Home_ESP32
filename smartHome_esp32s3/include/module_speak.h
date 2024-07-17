@@ -14,5 +14,4 @@ void initSpeakConfig();
 void startSpeakTask();
 void stopSpeakTask();
 void speakloop();
-
 #endif

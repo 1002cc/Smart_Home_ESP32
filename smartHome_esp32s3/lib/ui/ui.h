@@ -186,7 +186,7 @@ extern lv_obj_t * ui_TabView4;
 extern lv_obj_t * ui_s1;
 void ui_event_speakButton(lv_event_t * e);
 extern lv_obj_t * ui_speakButton;
-extern lv_obj_t * ui_Label28;
+extern lv_obj_t * ui_speakLabel;
 extern lv_obj_t * ui_speechStateLabel;
 extern lv_obj_t * ui_expressionChart;
 extern lv_obj_t * ui_s2;
