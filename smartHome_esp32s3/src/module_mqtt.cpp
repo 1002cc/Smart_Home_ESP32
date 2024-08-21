@@ -8,11 +8,11 @@
 #include <WiFiClientSecure.h>
 
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
-const char *mqtt_sub = "/smartHome/esp32_sub";
-const char *mqtt_pub = "/smartHome/esp32_pub";
-const char *mqtt_app_pub = "/smartHome/esp32_app_pub";
-const char *mqtt_qt_pub = "/smartHome/esp32_qt_pub";
-const char *mqtt_cam_pub = "/smartHome/esp32_cam_pub";
+String mqtt_sub = "";
+String mqtt_pub = "";
+String mqtt_app_pub = "";
+String mqtt_qt_pub = "";
+String mqtt_cam_pub = "";
 const uint16_t mqtt_broker_port = 8883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "esp32";
@@ -48,8 +48,10 @@ WiFiClientSecure net;
 PubSubClient mqttClient;
 
 bool enable_mqtt;
+extern bool loginState;
 
-static void mqtt_callback(char *topic, byte *payload, unsigned int length);
+static void
+mqtt_callback(char *topic, byte *payload, unsigned int length);
 bool firstConnectMQTT(void);
 
 bool initMQTTConfig(void)
@@ -62,7 +64,20 @@ bool initMQTTConfig(void)
     mqttClient.setCallback(mqtt_callback);
     mqttClient.setKeepAlive(mqtt_keepalive);
     mqtt_client_id += String(WiFi.macAddress());
-    return firstConnectMQTT();
+    int isLogin = ReadintData("isLogin");
+    if (isLogin != 1000 && isLogin == 1) {
+        String userlogin = ReadData("username");
+        if (userlogin != "null") {
+            Serial.printf("userlogin : %s\n", userlogin);
+            mqtMontage(userlogin);
+            loginState = true;
+            lv_setMQTTSwitchState(true);
+            return firstConnectMQTT();
+        }
+    }
+    loginState = false;
+    enable_mqtt = false;
+    return false;
 }
 
 bool firstConnectMQTT(void)
@@ -103,8 +118,8 @@ bool mqttconnect(void)
     if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
         Serial.println("MQTT connected!");
         lv_setstatusbarLabel(3);
-        mqttClient.publish(mqtt_pub, "ESP32 S3 connect mqtt!");
-        mqttClient.subscribe(mqtt_sub);
+        mqttClient.publish(mqtt_pub.c_str(), "ESP32 S3 connect mqtt!");
+        mqttClient.subscribe(mqtt_sub.c_str());
         lv_setMQTTState("已连接");
         return true;
     } else {
@@ -123,7 +138,7 @@ bool mqttconnect(void)
 
 void mqttLoop(void)
 {
-    if (enable_mqtt) {
+    if (enable_mqtt && loginState) {
         if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
             lv_setMQTTState("未连接");
             Serial.println("MQTT disconnected, reconnecting...");
@@ -138,11 +153,21 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
     Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
     Serial.print("Message:");
-    // for (int i = 0; i < length; i++) {
-    //     Serial.print((char)payload[i]);
-    // }
+    for (int i = 0; i < length; i++) {
+        Serial.print((char)payload[i]);
+    }
 
-    // Serial.println(String(payload));
+    String payloadString(payload, length);
+
+    cJSON *root = cJSON_Parse(payloadString.c_str());
+    if (root == NULL) {
+        Serial.println("Failed to parse JSON!");
+    } else {
+
+        cJSON *datas = cJSON_GetObjectItem(root, "datas");
+        if (datas) {
+        }
+    }
 
     Serial.println("\n----------------END----------------");
 }
@@ -150,7 +175,6 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 void publishSensorData(const SensorData &data)
 {
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "code", "200");
 
     cJSON *datas = cJSON_CreateObject();
     char tempCharArray[32], humidityCharArray[32], mq2CharArray[32];
@@ -164,27 +188,32 @@ void publishSensorData(const SensorData &data)
 
     char *jsonStr = cJSON_PrintUnformatted(root);
 
-    mqttClient.publish(mqtt_app_pub, jsonStr);
-    mqttClient.publish(mqtt_qt_pub, jsonStr);
+    mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
+    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 
 /**
- * {
- *  code:200,
- *  data:[
- *   switch1:state
- * ]
- * }
+{
+    "datas":
+    {
+        "getmessage": "hello",
+        "temp": "28",
+        "humidity": "11",
+        "mq": "12"
+    },
+    "switches" : {
+        "lampButton1":0,
+        "lampButton2": 0
+    }
+}
  */
 
 void pulishSwitchDatas(const lampButtonData &data)
 {
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "code", "200");
-
     cJSON *datas = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "lampButtons", datas);
+    cJSON_AddItemToObject(root, "switches", datas);
     cJSON_AddBoolToObject(datas, "lampButton1", data.lampButton1);
     cJSON_AddBoolToObject(datas, "lampButton2", data.lampButton2);
     cJSON_AddBoolToObject(datas, "lampButton3", data.lampButton3);
@@ -192,8 +221,8 @@ void pulishSwitchDatas(const lampButtonData &data)
 
     char *jsonStr = cJSON_PrintUnformatted(root);
 
-    mqttClient.publish(mqtt_app_pub, jsonStr);
-    mqttClient.publish(mqtt_qt_pub, jsonStr);
+    mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
+    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 
@@ -208,7 +237,7 @@ void publishGetImage()
     char *jsonStr = cJSON_PrintUnformatted(root);
 
     // publishMQTT(jsonStr);
-    mqttClient.publish(mqtt_cam_pub, jsonStr);
+    mqttClient.publish(mqtt_cam_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 
@@ -222,13 +251,13 @@ void publishStartVideo(bool isStartVideo)
     cJSON_AddBoolToObject(dates, "startVideo", isStartVideo);
     char *jsonStr = cJSON_PrintUnformatted(root);
     Serial.println(jsonStr);
-    mqttClient.publish(mqtt_cam_pub, jsonStr);
+    mqttClient.publish(mqtt_cam_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 
 bool publishMQTT(const char payload[])
 {
-    return mqttClient.publish(mqtt_pub, payload);
+    return mqttClient.publish(mqtt_pub.c_str(), payload);
 }
 
 bool subscribeMQTT(const char topic[])
@@ -243,4 +272,18 @@ void mqtt_disconnect(void)
 bool getMqttStart()
 {
     return mqttClient.connected();
+}
+
+void mqtMontage(const String &user)
+{
+    mqtt_sub = "/smartHome/" + user + "/esp32_sub";
+    mqtt_pub = "/smartHome/" + user + "/esp32_pub";
+    mqtt_app_pub = "/smartHome/" + user + "/esp32_app_pub";
+    mqtt_qt_pub = "/smartHome/" + user + "/esp32_qt_pub";
+    mqtt_cam_pub = "/smartHome/" + user + "/esp32_cam_pub";
+    Serial.printf("mqtt_sub:%s\n", mqtt_sub.c_str());
+    Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
+    Serial.printf("mqtt_app_pub:%s\n", mqtt_app_pub.c_str());
+    Serial.printf("mqtt_qt_pub:%s\n", mqtt_qt_pub.c_str());
+    Serial.printf("mqtt_cam_pub:%s\n", mqtt_cam_pub.c_str());
 }

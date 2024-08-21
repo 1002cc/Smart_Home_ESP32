@@ -14,9 +14,9 @@ void ui_StartupScreen_screen_init(void);
 void ui_event_StartupScreen(lv_event_t * e);
 lv_obj_t * ui_StartupScreen;
 lv_obj_t * ui_Image5;
-lv_obj_t * ui_Label7;
 lv_obj_t * ui_tipLabel;
 lv_obj_t * ui_Spinner2;
+lv_obj_t * ui_Label7;
 
 
 // SCREEN: ui_MainScreen
@@ -151,19 +151,19 @@ lv_obj_t * ui_wifiStateLabel;
 lv_obj_t * ui_wifilistPanel;
 lv_obj_t * ui_ipLabel;
 lv_obj_t * ui_w2;
-lv_obj_t * ui_Label13;
-lv_obj_t * ui_Label10;
-lv_obj_t * ui_mqttSwitch;
 lv_obj_t * ui_Label16;
+lv_obj_t * ui_mqttStateLabel;
+lv_obj_t * ui_Label28;
+lv_obj_t * ui_Label13;
 lv_obj_t * ui_Label17;
 void ui_event_mqttuseButton(lv_event_t * e);
 lv_obj_t * ui_mqttuseButton;
-lv_obj_t * ui_Label18;
-lv_obj_t * ui_mqttStateLabel;
+lv_obj_t * ui_mqttConnectStateLabel;
 lv_obj_t * ui_w3;
 lv_obj_t * ui_Label21;
 lv_obj_t * ui_Label22;
 lv_obj_t * ui_Label23;
+lv_obj_t * ui_Label10;
 void ui_event_timeuseButton(lv_event_t * e);
 lv_obj_t * ui_timeuseButton;
 lv_obj_t * ui_Label24;

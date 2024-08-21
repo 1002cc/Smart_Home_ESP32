@@ -1,8 +1,10 @@
 #include "module_server.h"
 #include "esp_camera.h"
+#include "module_mqtt.h"
+#include "module_wifi.h"
 #include "sntp.h"
 #include "time.h"
-#include <Arduino.h>
+#include <ArduinoJson.h>
 #include <ArduinoWebsockets.h>
 #include <Preferences.h>
 
@@ -14,21 +16,18 @@ const char *g_time_zone = "CST-8"; // TimeZone rule for China Standard Time (UTC
 struct tm g_time;
 
 String websockets_server_host = "47.120.7.163";
-String serverip = "";
 const uint16_t websockets_server_port = 3000;
 using namespace websockets;
-WebsocketsClient client;
-
-TaskHandle_t cameraHandle = NULL;
-bool isStartCamera = false;
+WebsocketsClient cameraClient;
 
 Preferences preferences;
 
-extern int devices_num;
+static int printf_num = 0;
 
+bool enableVideoSteam = false;
 /********************************************************************
                          NTP SERVER
-*****************************************   ***************************/
+*********************************************************************/
 void printLocalTime(void)
 {
     if (!getLocalTime(&g_time)) {
@@ -53,18 +52,19 @@ void initNtpTime()
     configTzTime(g_time_zone, g_ntp_server1, g_ntp_server2);
 }
 
-void StoreData(const char *key, const char *val)
-{
-    preferences.begin("config", false);
-    preferences.putString(key, val);
-    preferences.end();
-}
 String ReadData(const char *val)
 {
     preferences.begin("config", false);
     String ret = preferences.getString(val, "null");
     preferences.end();
     return ret;
+}
+
+void StoreData(const char *key, const char *val)
+{
+    preferences.begin("config", false);
+    preferences.putString(key, val);
+    preferences.end();
 }
 
 /********************************************************************
@@ -76,69 +76,95 @@ void webSocketEvent(WebsocketsEvent event, WSInterfaceString data)
     if (event == WebsocketsEvent::ConnectionOpened) {
         Serial.println("Connection Opened");
         Serial.println(data);
+        sendCameraState(true);
         StoreData("cameraip", websockets_server_host.c_str());
     } else if (event == WebsocketsEvent::ConnectionClosed) {
-        isStartCamera = false;
-        devices_num = 0;
-        if (cameraHandle != NULL) {
-            vTaskDelete(cameraHandle);
-            cameraHandle = NULL;
-        }
-        Serial.println("Connection Closed, delete task");
+        Serial.println("Connection Closed");
+        sendCameraState(false);
+    } else if (event == WebsocketsEvent::GotPong) {
+        Serial.println("Got Pong");
+    } else if (event == WebsocketsEvent::GotPing) {
+        Serial.println("Got Ping");
     }
 }
 
-void initwedServer()
+void onMessageCallback(WebsocketsMessage message)
 {
+    if (message.length() > 0) { // 检查数据是否非空
+        Serial.print("Got Message: ");
+        Serial.println(message.data());
+        StaticJsonDocument<200> doc;
+        DeserializationError error = deserializeJson(doc, message.data());
+        if (error) {
+            Serial.print("Failed to parse JSON, error: ");
+            Serial.println(error.c_str());
+            return;
+        }
+
+        enableVideoSteam = doc["enableVideoSteam"];
+        Serial.println(enableVideoSteam);
+    } else {
+        Serial.println("Received empty or null message.");
+    }
+}
+
+void initWedServer()
+{
+    Serial.println("initWedServer");
+    if (!wifitate() || cameraClient.available()) {
+        Serial.printf("initWedServer: wifitate=%d, cameraClient.available=%d\n", wifitate(), cameraClient.available());
+        return;
+    }
+
     String cameraip = ReadData("cameraip");
     if (cameraip != "null") {
         websockets_server_host = cameraip;
     }
-    client.onEvent(webSocketEvent);
-    if (!serverip.isEmpty()) {
-        websockets_server_host = serverip;
-    }
-
-    while (!client.connect(websockets_server_host.c_str(), websockets_server_port, "/")) {
+    cameraClient.onEvent(webSocketEvent);
+    cameraClient.onMessage(onMessageCallback);
+    // if (!serverip.isEmpty()) {
+    //     websockets_server_host = serverip;
+    //     serverip = "";
+    // }
+    Serial.println("connect" + websockets_server_host);
+    while (!cameraClient.connect(websockets_server_host.c_str(), websockets_server_port, "/")) {
         delay(500);
         Serial.print(".");
     }
 
+    cameraClient.send("{camera:true}");
     Serial.println("server connect successful");
 }
 
 void cameraserver_task(void *pvParameter)
 {
-    initwedServer();
-    Serial.println("start cameraserver_task");
+    Serial.println("camera server task start");
     while (1) {
-        if (client.available()) {
-            // 拍摄图片
-            camera_fb_t *fb = esp_camera_fb_get();
-            if (!fb) {
-                Serial.println("Camera capture failed");
-                break;
-            }
-            // Serial.println(fb->len);
-            //  发送图片
-            client.sendBinary((const char *)fb->buf, fb->len);
+        if (cameraClient.available()) {
+            cameraClient.poll();
 
-            // 返回内存
-            esp_camera_fb_return(fb);
+            if (enableVideoSteam) {
+                camera_fb_t *fb = esp_camera_fb_get();
+                if (!fb) {
+                    Serial.println("Camera capture failed");
+                    esp_camera_fb_return(fb);
+                }
+                printf_num++;
+                if (printf_num >= 200) {
+                    printf_num = 0;
+                    Serial.println("Camera capture success");
+                    Serial.println(fb->len);
+                }
+
+                //  发送图片
+                cameraClient.sendBinary((const char *)fb->buf, fb->len);
+
+                // 返回内存
+                esp_camera_fb_return(fb);
+            }
         }
-        vTaskDelay(5);
+        // vTaskDelay(100);
+        delay(100);
     }
     vTaskDelete(NULL);
-}
-
-void startcameraTask(void)
-{
-    if (isStartCamera && cameraHandle == NULL) {
-        xTaskCreatePinnedToCore(cameraserver_task, "cameraserver_task", 5 * 1024, NULL, 5, &cameraHandle, 1);
-    } else if (!isStartCamera && cameraHandle != NULL && devices_num == 0) {
-        client.close();
-        Serial.println("vTaskDelete cameraHandle");
-        vTaskDelete(cameraHandle);
-        cameraHandle = NULL;
-    }
 }

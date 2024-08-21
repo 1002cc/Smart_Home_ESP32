@@ -3,7 +3,6 @@ const WebSocket = require('ws');
 const fs = require('fs');
 const path = require('path');
 const url = require('url');
-const { Console } = require('console');
 
 // 配置项
 const PORT = 3000;
@@ -14,7 +13,7 @@ const VIDEO_STREAM_PATH = path.join(__dirname, 'videoStream.jpg');
 // 创建HTTP服务器
 const server = http.createServer((req, res) => {
     const { pathname } = url.parse(req.url);
-    
+
     switch (pathname) {
         case '/mjpeg/1':
             if (req.method === 'GET') {
@@ -78,32 +77,61 @@ function readAndSendFile(res, filePath, boundary) {
 // 创建WebSocket服务器
 const wss = new WebSocket.Server({ server });
 let clients = [];
+let senderClient = null; // 记录发送数据的客户端
 
 // 处理WebSocket连接
 wss.on('connection', (ws) => {
     console.log('A new client connected to WebSocket server');
     clients.push(ws);
 
+    sendCameraControl();
     ws.on('message', (data) => {
+            senderClient = ws; 
+            //console.log(data);
             fs.writeFile(VIDEO_STREAM_PATH, data, 'binary', () => {
-            broadcast(data);
-        });
+                broadcast(data, ws);
+            });
     });
 
     ws.on('close', () => {
         console.log('A client disconnected');
         clients = clients.filter(client => client !== ws);
         console.log("Clients count:", clients.length);
+        if (ws === senderClient) {
+            senderClient = null;
+        }
+        //sendClientCount(); // 设备断开时发送设备数量
+        sendCameraControl();
     });
 });
 
-// 广播数据给所有客户端
-function broadcast(data) {
+// 广播数据给所有客户端，排除发送数据的客户端
+function broadcast(data, sender) {
     clients.forEach(client => {
-        if (client.readyState === WebSocket.OPEN) {
+        if (client !== sender && client.readyState === WebSocket.OPEN) {
             client.send(data);
         }
     });
+}
+
+// 发送当前设备数量给发送数据的客户端
+function sendClientCount() {
+    if (senderClient && senderClient.readyState === WebSocket.OPEN) {
+        const activeClients = clients.filter(client => client !== senderClient && client.readyState === WebSocket.OPEN);
+        const clientCount = activeClients.length;
+        console.log("Sending client count:", clientCount);
+        senderClient.send(JSON.stringify({ clientCount }));
+    }
+}
+
+// 控制摄像头
+function sendCameraControl() {
+    if (senderClient && senderClient.readyState === WebSocket.OPEN) {
+        const activeClients = clients.filter(client => client !== senderClient && client.readyState === WebSocket.OPEN);
+        const enableVideoSteam = activeClients.length > 0;
+        console.log("Sending enableVideoSteam:", enableVideoSteam);
+        senderClient.send(JSON.stringify({ enableVideoSteam }));
+    }
 }
 
 

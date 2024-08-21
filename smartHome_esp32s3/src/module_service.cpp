@@ -15,6 +15,31 @@ int updatetimentp = 360;
 String weatherApiUrl = "http://api.seniverse.com/v3/weather/now.json?key=Srhi2-y2LtemJAmOB&location=guangzhou&language=zh-Hans&unit=c";
 TaskHandle_t ntpxHandle = NULL;
 TimerHandle_t ntpTimer;
+
+const char *server = "http://hichchen.top";
+const int port = 3001;
+String username;
+String upassword;
+bool loginState = false;
+
+const char *root_ca =
+    "-----BEGIN CERTIFICATE-----\n"
+    "MIIDazCCAtegAwIBAgIQH0evqmIAcFBUTAGem2OZKjAKBggqhkjOPQQDAzCBhTEL\n"
+    "MAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UE\n"
+    "BxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxKzApBgNVBAMT\n"
+    "IkNPTU9ETyBFQ0MgQ2VydGlmaWNhdGlvbiBBdXRob3JpdHkwHhcNMDgwMzA2MDAw\n"
+    "MDAwWhcNMzgwMTE4MjM1OTU5WjCBhTELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdy\n"
+    "ZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09N\n"
+    "NT0RPIENBIExpbWl0ZWQxKzApBgNVBAMTIkNPTU9ETyBFQ0MgQ2VydGlmaWNhdGlv\n"
+    "biBBdXRob3JpdHkwdjAQBgcqhkjOPQIBBgUrgQQAIgNiAAQDR3svdcmCFYX7deSR\n"
+    "FtSrYpn1PlILBs5BAH+X4QokPB0BBO490o0JlwzgdeT6+3eKKvUDYEs2ixYjFq0J\n"
+    "cfRK9ChQtP6IHG4/bC8vCVlbpVsLM5niwz2J+Wos77LTBumjQjBAMB0GA1UdDgQW\n"
+    "BR1cacZSBm8nZ3qQUfflMRId5nTeTAOBgNVHQ8BAf8EBAMCAQYwDwYDVR0TAQH/\n"
+    "BAUwAwEB/zAKBggqhkjOPQQDAwNoADBlAjEA7wNbeqy3eApyt4jf/7VGFAkK+qDm\n"
+    "fQjGGoe9GKhzvSbKYAydzpmfz1wPMOG+FDHqAjAU9JM8SaczepBGR7NjfRObTrdv\n"
+    "GDeAU/7dIOA1mjbRxwG55tzd8/8dLDoWV9mSOdY=\n"
+    "-----END CERTIFICATE-----\n";
+
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
     // if (ntpxHandle != NULL) {
@@ -193,4 +218,55 @@ String getDateTime_one()
     strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", tblock);
     Serial.println(buffer);
     return String(buffer);
+}
+
+bool postlogin(String username, String password)
+{
+    bool isLogin = false;
+    HTTPClient http;
+    http.begin(server, port, "/userlogin", root_ca);
+    http.addHeader("Content-Type", "application/json;charset=UTF-8");
+
+    String data = "{\"username\":\"" + String(username) + "\",\"password\":\"" + String(password) + "\"}";
+
+    int httpCode = http.POST(data);
+    if (httpCode > 0) {
+        String payload = http.getString();
+        Serial.println(httpCode);
+        Serial.println(payload);
+    } else {
+        Serial.println("Error on HTTP request");
+        isLogin = false;
+    }
+    http.end();
+    return isLogin;
+}
+void LoginRRequestTask(void *pvParameters)
+{
+    while (1) {
+        if ((getwifistate())) {
+            HTTPClient http;
+            http.begin(server, port, "/userlogin", root_ca);
+            http.addHeader("Content-Type", "application/json;charset=UTF8");
+
+            String data = "{\"username\":\"" + String(username) + "\",\"password\":\"" + String(upassword) + "\"}";
+
+            int httpCode = http.POST(data);
+            if (httpCode > 0) {
+                String payload = http.getString();
+                Serial.println(httpCode);
+                Serial.println(payload);
+            } else {
+                Serial.println("Error on HTTP request");
+            }
+            http.end();
+        }
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
+    }
+}
+
+void startLoginReequestTask(void)
+{
+    Serial.println("Starting Login Request task");
+    xTaskCreatePinnedToCore(LoginRRequestTask, "httpRequestTask", 4096, NULL, 1, NULL, 0);
 }

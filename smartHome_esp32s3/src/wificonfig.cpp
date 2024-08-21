@@ -40,11 +40,15 @@ void WiFiEvent(WiFiEvent_t event)
         break;
     case SYSTEM_EVENT_STA_CONNECTED:
         lv_setWIFIState("已连接");
+        if (lv_getMQTTSwitchState()) {
+            enable_mqtt = true;
+        }
         Serial.println("已连接到接入点");
         lv_setstatusbarLabel(1);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         lv_setWIFIState("未连接");
+        enable_mqtt = false;
         Serial.println("与WiFi接入点断开连接");
         lv_setstatusbarLabel(0);
         break;
@@ -186,7 +190,6 @@ void beginWIFITask(void *pvParameters)
         lv_setWIFIState("已连接");
         hasNetwork = isNetworkAvailable();
         ntpTimerCallback(NULL);
-
     } else {
         xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
         networkStatus = NETWORK_CONNECT_FAILED;

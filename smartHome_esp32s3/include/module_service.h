@@ -17,5 +17,6 @@ void parse_json(const char *json_string);
 void updateTimer();
 String unixTimeToGMTString(time_t unixTime);
 String getDateTime_one();
+bool postlogin(String username, String password);
 
 #endif

@@ -20,7 +20,6 @@ void setup()
     initMQTTConfig();
     lv_gohome();
     startNTPTask();
-    initI2SConfig();
     initSpeakConfig();
     startSensorTask();
 #if USE_AUDIO
@@ -32,5 +31,5 @@ void setup()
 void loop()
 {
     mqttLoop();
-    vTaskDelay(100);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
 }

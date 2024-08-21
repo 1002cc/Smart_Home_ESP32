@@ -49,7 +49,7 @@ void WSLED_OFF()
 
 /********************************************************************
                          RGBled
-********************************************************************/
+*******************************************************************
 
 void rgbled_init()
 {
@@ -99,6 +99,7 @@ void rgbled_setColor(int r, int g, int b)
 {
     setColor(r, g, b);
 }
+*/
 
 /********************************************************************
                          mq2
@@ -159,47 +160,48 @@ void sensor_task(void *pvParameter)
 {
     float temperature, humidity, mq2sensorValue;
     char temp_char[12];
-    int count = 0;
+    unsigned long int lastPrintTime;
     while (1) {
-        temperature = dhtReadTemperature();
-        humidity = dhtReadHumidity();
+        temperature = dht.readTemperature();
+        humidity = dht.readHumidity();
         mq2sensorValue = readmq2();
 
-        if (isnan(temperature) || isnan(humidity) || isnan(mq2sensorValue)) {
+        if (isnan(temperature) || isnan(humidity)) {
+            temperature = 0;
+            humidity = 0;
             Serial.println("Failed to read from DHT sensor!");
-        } else {
-            count++;
-            if (count >= 30) {
-                count = 0;
-                Serial.print("Temperature: ");
-                Serial.print(temperature);
-                Serial.print(" °C, Humidity:");
-                Serial.print(humidity);
-                Serial.print("% ");
-                Serial.print(" mq2: ");
-                Serial.println(mq2sensorValue);
-            }
-
-            lv_arc_set_value(ui_TemperatureArc, (int16_t)temperature);
-            lv_arc_set_value(ui_HumidityArc, (int16_t)humidity);
-            snprintf(temp_char, sizeof(temp_char), "%.0f°C", temperature);
-            lv_label_set_text(ui_TemperatureLabel, temp_char);
-            snprintf(temp_char, sizeof(temp_char), "%.0f%%", humidity);
-            lv_label_set_text(ui_HumidityLabel, temp_char);
-            lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
-            snprintf(temp_char, sizeof(temp_char), "%.0f%%", mq2sensorValue);
-            lv_label_set_text(ui_MQLabel, temp_char);
-            if (getMqttStart()) {
-                SensorData sensorData = {
-                    .temp = temperature,
-                    .humidity = humidity,
-                    .mq = mq2sensorValue,
-                };
-                publishSensorData(sensorData);
-            }
-            vTaskDelay(3000 / portTICK_PERIOD_MS);
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+        lv_arc_set_value(ui_TemperatureArc, (int16_t)temperature);
+        lv_arc_set_value(ui_HumidityArc, (int16_t)humidity);
+        snprintf(temp_char, sizeof(temp_char), "%.0f°C", temperature);
+        lv_label_set_text(ui_TemperatureLabel, temp_char);
+        snprintf(temp_char, sizeof(temp_char), "%.0f%%", humidity);
+        lv_label_set_text(ui_HumidityLabel, temp_char);
+
+        if (isnan(mq2sensorValue)) {
+            mq2sensorValue = 0;
+            Serial.println("Failed to read from MQ2 sensor!");
+        }
+
+        lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
+        snprintf(temp_char, sizeof(temp_char), "%.0f%%", mq2sensorValue);
+        lv_label_set_text(ui_MQLabel, temp_char);
+
+        if (millis() - lastPrintTime > 2000) {
+            Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %d\n", temperature, humidity, mq2sensorValue);
+            lastPrintTime = millis();
+        }
+
+        if (getMqttStart()) {
+            SensorData sensorData = {
+                .temp = temperature,
+                .humidity = humidity,
+                .mq = mq2sensorValue,
+            };
+            publishSensorData(sensorData);
+        }
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }
@@ -212,9 +214,9 @@ void initDevices()
 {
     Serial.println("Init Devices ...");
     initWSrgbled();
-    rgbled_init();
-    pinMode(BUTTON_PIN, INPUT);
-    pinMode(BUTTON_PIN1, INPUT);
+    // rgbled_init();
+    // pinMode(BUTTON_PIN, INPUT);
+    // pinMode(BUTTON_PIN1, INPUT);
     Serial.println("Init Devices Done");
 }
 

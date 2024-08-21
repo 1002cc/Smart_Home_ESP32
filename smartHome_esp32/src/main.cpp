@@ -1,73 +1,49 @@
-#include "WiFi.h"
-#include <esp_wifi.h>
-
-#include "module_config.h"
 #include "module_devices.h"
-#include "module_service.h"
-#include "smarthome_mqtt.h"
+#include "module_mqtt.h"
+#include "module_server.h"
+#include "module_wifi.h"
+#include <Audio.h>
+#include <LittleFS.h>
 
-TimerHandle_t ntpTimer;
-unsigned long lastMillis = 0;
-
-bool hasNetwork = false;
-
-void WiFiEvent(WiFiEvent_t event)
-{
-    switch (event) {
-    case SYSTEM_EVENT_STA_DISCONNECTED:
-        hasNetwork = false;
-        Serial.println("wifi connect no");
-        break;
-    case SYSTEM_EVENT_STA_CONNECTED:
-        Serial.println("wifi connect ok");
-        hasNetwork = isNetworkAvailable();
-        Serial.printf("\r\n-- wifi connect success! --\r\n");
-        Serial.print("IP address: ");
-        Serial.println(WiFi.localIP());
-        Serial.print("isNetworkAvailable : ");
-        Serial.println(hasNetwork);
-        break;
-    }
-}
-
+extern Audio audio;
 void setup()
 {
     Serial.begin(115200);
 
+    printPSRAM();
+
+    // 初始化传感器设备
     initDevices();
-    updateFlashDate();
 
-    WiFi.onEvent(WiFiEvent);
-    if (!wifiConnect()) {
-        Serial.println("Connection to WiFi failed");
-    } else {
-        Serial.println("Connection to WiFi success");
-    }
-    hasNetwork = isNetworkAvailable();
-    if (hasNetwork) {
-        Serial.println("NetworkAvailable is true");
-        if (!initMQTT()) {
-            Serial.println("MQTT connect failed");
-        } else {
-            Serial.println("MQTT connect success");
-        }
+    // 配置wifi
+    Serial.println("Connecting to WiFi");
+    // connectToWiFi(CONNECTTIMEOUT);
 
-        ntpTimer = xTimerCreate("NTP and Weather Timer", pdMS_TO_TICKS(3600000), pdTRUE, (void *)0, ntpTimerCallback);
-        xTimerStart(ntpTimer, 0);
-        ntpTimerCallback(NULL);
-    } else {
-        Serial.println("NetworkAvailable is false");
-    }
+    // // 初始化mqtt
+    // initMQTTConfig();
 
-#if USE_AUDIO
     startAudioTack();
-#endif
-    startRainTask();
+    // startSensorTask();
+
+    // if (wifitate()) {
+    //     audioSpeak("连接成功");
+    // }
+    printPSRAM();
+
+    if (!LittleFS.begin()) {
+        Serial.println("An Error has occurred while mounting LittleFS");
+    }
+    Serial.println("LittleFS init succesful");
+    audio.connecttoFS(LittleFS, "/conect_s.mp3");
 }
 
 void loop()
 {
-    if (hasNetwork) {
-        mqttloop();
-    }
+    // mqttLoop();
+    // if (!wifitate()) {
+    //     checkDNS_HTTP();
+    // }
+    // checkConnect(true);
+
+    vTaskDelay(500);
 }

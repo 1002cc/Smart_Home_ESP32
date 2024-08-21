@@ -93,86 +93,78 @@ void ui_set1Screen_screen_init(void)
 
     ui_w2 = lv_tabview_add_tab(ui_chooseTabView, "m");
 
-    ui_Label13 = lv_label_create(ui_w2);
-    lv_obj_set_width(ui_Label13, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label13, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label13, -118);
-    lv_obj_set_y(ui_Label13, -53);
-    lv_obj_set_align(ui_Label13, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label13, "订阅主题");
-    lv_obj_set_style_text_color(ui_Label13, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label13, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Label13, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_Label10 = lv_label_create(ui_w2);
-    lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label10, -118);
-    lv_obj_set_y(ui_Label10, 42);
-    lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label10, "天气城市");
-    lv_obj_set_style_text_color(ui_Label10, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label10, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Label10, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_mqttSwitch = lv_switch_create(ui_w2);
-    lv_obj_set_width(ui_mqttSwitch, 50);
-    lv_obj_set_height(ui_mqttSwitch, 25);
-    lv_obj_set_x(ui_mqttSwitch, -4);
-    lv_obj_set_y(ui_mqttSwitch, -95);
-    lv_obj_set_align(ui_mqttSwitch, LV_ALIGN_CENTER);
-
-
     ui_Label16 = lv_label_create(ui_w2);
     lv_obj_set_width(ui_Label16, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label16, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label16, -98);
-    lv_obj_set_y(ui_Label16, -95);
+    lv_obj_set_x(ui_Label16, -115);
+    lv_obj_set_y(ui_Label16, -64);
     lv_obj_set_align(ui_Label16, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label16, "MQTT服务器");
+    lv_label_set_text(ui_Label16, "服务器");
     lv_obj_set_style_text_color(ui_Label16, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label16, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label16, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_Label17 = lv_label_create(ui_w2);
-    lv_obj_set_width(ui_Label17, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label17, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label17, -118);
-    lv_obj_set_y(ui_Label17, -3);
-    lv_obj_set_align(ui_Label17, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label17, "发布主题");
-    lv_obj_set_style_text_color(ui_Label17, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label17, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Label17, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ui_mqttuseButton = lv_btn_create(ui_w2);
-    lv_obj_set_width(ui_mqttuseButton, 46);
-    lv_obj_set_height(ui_mqttuseButton, 28);
-    lv_obj_set_x(ui_mqttuseButton, 89);
-    lv_obj_set_y(ui_mqttuseButton, 74);
-    lv_obj_set_align(ui_mqttuseButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_mqttuseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_clear_flag(ui_mqttuseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-
-    ui_Label18 = lv_label_create(ui_mqttuseButton);
-    lv_obj_set_width(ui_Label18, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label18, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_align(ui_Label18, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label18, "应用");
-    lv_obj_set_style_text_color(ui_Label18, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label18, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Label18, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_mqttStateLabel = lv_label_create(ui_w2);
     lv_obj_set_width(ui_mqttStateLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_mqttStateLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_mqttStateLabel, 63);
-    lv_obj_set_y(ui_mqttStateLabel, -93);
+    lv_obj_set_x(ui_mqttStateLabel, -56);
+    lv_obj_set_y(ui_mqttStateLabel, -64);
     lv_obj_set_align(ui_mqttStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_mqttStateLabel, "未连接");
     lv_obj_set_style_text_color(ui_mqttStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_mqttStateLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_mqttStateLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label28 = lv_label_create(ui_w2);
+    lv_obj_set_width(ui_Label28, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label28, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label28, -1);
+    lv_obj_set_y(ui_Label28, -98);
+    lv_obj_set_align(ui_Label28, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label28, "设备绑定");
+    lv_obj_set_style_text_color(ui_Label28, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label28, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label28, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label13 = lv_label_create(ui_w2);
+    lv_obj_set_width(ui_Label13, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label13, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label13, -116);
+    lv_obj_set_y(ui_Label13, -30);
+    lv_obj_set_align(ui_Label13, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label13, "账    号");
+    lv_obj_set_style_text_color(ui_Label13, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label13, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label13, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label17 = lv_label_create(ui_w2);
+    lv_obj_set_width(ui_Label17, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label17, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label17, -115);
+    lv_obj_set_y(ui_Label17, 7);
+    lv_obj_set_align(ui_Label17, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label17, "密    码");
+    lv_obj_set_style_text_color(ui_Label17, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label17, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label17, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_mqttuseButton = lv_btn_create(ui_w2);
+    lv_obj_set_width(ui_mqttuseButton, 46);
+    lv_obj_set_height(ui_mqttuseButton, 28);
+    lv_obj_set_x(ui_mqttuseButton, 94);
+    lv_obj_set_y(ui_mqttuseButton, 46);
+    lv_obj_set_align(ui_mqttuseButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_mqttuseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_mqttuseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_mqttConnectStateLabel = lv_label_create(ui_mqttuseButton);
+    lv_obj_set_width(ui_mqttConnectStateLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_mqttConnectStateLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_mqttConnectStateLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_mqttConnectStateLabel, "绑定");
+    lv_obj_set_style_text_color(ui_mqttConnectStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_mqttConnectStateLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_mqttConnectStateLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_w3 = lv_tabview_add_tab(ui_chooseTabView, "t");
 
@@ -191,7 +183,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label22, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label22, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label22, -118);
-    lv_obj_set_y(ui_Label22, -43);
+    lv_obj_set_y(ui_Label22, -53);
     lv_obj_set_align(ui_Label22, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label22, "NTP服务");
     lv_obj_set_style_text_color(ui_Label22, lv_color_hex(0xFDFDFD), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -202,12 +194,23 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label23, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label23, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label23, -118);
-    lv_obj_set_y(ui_Label23, 5);
+    lv_obj_set_y(ui_Label23, -18);
     lv_obj_set_align(ui_Label23, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label23, "校时时长");
     lv_obj_set_style_text_color(ui_Label23, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_Label23, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label23, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label10 = lv_label_create(ui_w3);
+    lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label10, -119);
+    lv_obj_set_y(ui_Label10, 18);
+    lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label10, "天气城市");
+    lv_obj_set_style_text_color(ui_Label10, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label10, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label10, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_timeuseButton = lv_btn_create(ui_w3);
     lv_obj_set_width(ui_timeuseButton, 46);

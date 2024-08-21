@@ -23,22 +23,11 @@ void ui_StartupScreen_screen_init(void)
     lv_obj_clear_flag(ui_Image5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
     lv_img_set_zoom(ui_Image5, 80);
 
-    ui_Label7 = lv_label_create(ui_StartupScreen);
-    lv_obj_set_width(ui_Label7, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label7, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label7, -72);
-    lv_obj_set_y(ui_Label7, -93);
-    lv_obj_set_align(ui_Label7, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label7, "智能家居");
-    lv_obj_set_style_text_color(ui_Label7, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label7, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_Label7, &ui_font_smartsystem, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_tipLabel = lv_label_create(ui_StartupScreen);
     lv_obj_set_width(ui_tipLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_tipLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_tipLabel, 0);
-    lv_obj_set_y(ui_tipLabel, -45);
+    lv_obj_set_y(ui_tipLabel, -54);
     lv_obj_set_align(ui_tipLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_tipLabel, "正在加载中");
     lv_obj_set_style_text_color(ui_tipLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -50,9 +39,20 @@ void ui_StartupScreen_screen_init(void)
     lv_obj_set_width(ui_Spinner2, 80);
     lv_obj_set_height(ui_Spinner2, 80);
     lv_obj_set_x(ui_Spinner2, 0);
-    lv_obj_set_y(ui_Spinner2, 20);
+    lv_obj_set_y(ui_Spinner2, 14);
     lv_obj_set_align(ui_Spinner2, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_Spinner2, LV_OBJ_FLAG_CLICKABLE);      /// Flags
+
+    ui_Label7 = lv_label_create(ui_StartupScreen);
+    lv_obj_set_width(ui_Label7, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label7, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label7, -72);
+    lv_obj_set_y(ui_Label7, -93);
+    lv_obj_set_align(ui_Label7, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label7, "智能家居");
+    lv_obj_set_style_text_color(ui_Label7, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label7, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label7, &ui_font_smartsystem, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_StartupScreen, ui_event_StartupScreen, LV_EVENT_ALL, NULL);
 

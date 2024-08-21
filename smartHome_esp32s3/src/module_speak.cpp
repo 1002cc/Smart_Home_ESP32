@@ -1,5 +1,4 @@
 #include "module_speak.h"
-#include "Audio.h"
 #include "confighelpr.h"
 #include "lvglconfig.h"
 #include "module_audio.h"
@@ -10,6 +9,9 @@
 #include <Base64_Arturo.h>
 #include <base64.h>
 #include <driver/i2s.h>
+#if USE_AUDIO
+#include "audiohelpr.h"
+#endif
 
 // int16_t audioData[2560];
 int16_t *audioData;
@@ -32,11 +34,11 @@ const char *minmaxapiKey = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWU
 String minimaxUrl = "https://api.minimax.chat/v1/text/chatcompletion_v2";
 
 using namespace websockets;
-WebsocketsClient webSocketClient_tts;
+// WebsocketsClient webSocketClient_tts;
 WebsocketsClient webSocketClient_stt;
 
 #if USE_AUDIO
-extern Audio audio;
+extern AudioHelpr audio;
 #endif
 
 int noise = 50;
@@ -153,6 +155,7 @@ bool initI2SConfig()
 
 void initSpeakConfig()
 {
+    initI2SConfig();
     xspeakSemaphore = xSemaphoreCreateMutex();
     audioData = (int16_t *)ps_malloc(2560 * sizeof(int16_t));
 
@@ -162,41 +165,32 @@ void initSpeakConfig()
         return;
     }
 
-    webSocketClient_tts.onMessage([&](WebsocketsMessage message) { // 讯飞TTS的 wx连接回调函数
-        // Serial.print("Got Message: ");
-        speakState = ANSWERING;
-        DynamicJsonDocument responseJson(51200);
-        DeserializationError error = deserializeJson(responseJson, message.data());
-        const char *response = responseJson["data"]["audio"].as<String>().c_str();
-        int response_len = responseJson["data"]["audio"].as<String>().length();
-        // Serial.printf("lan: %d  \n", response_len);
+    // webSocketClient_tts.onMessage([&](WebsocketsMessage message) { // 讯飞TTS的 wx连接回调函数
+    //     // Serial.print("Got Message: ");
+    //     speakState = ANSWERING;
+    //     DynamicJsonDocument responseJson(51200);
+    //     DeserializationError error = deserializeJson(responseJson, message.data());
+    //     const char *response = responseJson["data"]["audio"].as<String>().c_str();
+    //     int response_len = responseJson["data"]["audio"].as<String>().length();
+    //     // Serial.printf("lan: %d  \n", response_len);
 
-        // 分段获取PCM音频数据并输出到I2S上
-        for (int i = 0; i < response_len; i += CHUNK_SIZE) {
-            int remaining = min(CHUNK_SIZE, response_len);                                       // 计算剩余数据长度
-            char chunk[CHUNK_SIZE];                                                              // 创建一个缓冲区来存储读取的数据
-            int decoded_length = Base64_Arturo.decode(chunk, (char *)(response + i), remaining); // 从response中解码数据到chunk
-            size_t bytes_written = 0;
-#if USE_AUDIO
+    //     // 分段获取PCM音频数据并输出到I2S上
+    //     for (int i = 0; i < response_len; i += CHUNK_SIZE) {
+    //         int remaining = min(CHUNK_SIZE, response_len);                                       // 计算剩余数据长度
+    //         char chunk[CHUNK_SIZE];                                                              // 创建一个缓冲区来存储读取的数据
+    //         int decoded_length = Base64_Arturo.decode(chunk, (char *)(response + i), remaining); // 从response中解码数据到chunk
+    //         size_t bytes_written = 0;
+    //         i2s_write(I2S_MAX_PORT, chunk, decoded_length, &bytes_written, portMAX_DELAY);
+    //     }
 
-            audio.playtospeech(chunk, decoded_length, &bytes_written);
-#else
-            i2s_write(I2S_MAX_PORT, chunk, decoded_length, &bytes_written, portMAX_DELAY);
-#endif
-        }
-
-        if (responseJson["data"]["status"].as<int>() == 2) { // 收到结束标志
-            Serial.println("Playing complete.");
-            delay(500);
-#if USE_AUDIO
-            audio.cleartospeech();
-#else
-            i2s_zero_dma_buffer(I2S_MAX_PORT); // 清空I2S DMA缓冲区
-#endif
-            lv_setSpeechinfo(" ");
-            speakState = NO_DIALOGUE;
-        }
-    });
+    //     if (responseJson["data"]["status"].as<int>() == 2) { // 收到结束标志
+    //         Serial.println("Playing complete.");
+    //         delay(500);
+    //         i2s_zero_dma_buffer(I2S_MAX_PORT); // 清空I2S DMA缓冲区
+    //         lv_setSpeechinfo(" ");
+    //         speakState = NO_DIALOGUE;
+    //     }
+    // });
 
     webSocketClient_stt.onMessage([&](WebsocketsMessage message) { // STT ws连接的回调函数
         Serial.print("Got Message: ");
@@ -347,35 +341,35 @@ String XF_wsUrl(const char *Secret, const char *Key, String request, String host
 }
 
 // 向讯飞TTS发送请求
-void postTTS(String texttts)
-{
-    String TTSurl = XF_wsUrl(TTS_SECRETKEY, TTS_APIKEY, "/v2/tts", TTS_WED_API);
-    bool connected = webSocketClient_tts.connect(TTSurl);
-    if (connected) {
-        Serial.println("Connected!");
-    } else {
-        Serial.println("Not Connected!");
-        lv_setSpeechinfo("服务器连接失败");
-    }
+// void postTTS(String texttts)
+// {
+//     String TTSurl = XF_wsUrl(TTS_SECRETKEY, TTS_APIKEY, "/v2/tts", TTS_WED_API);
+//     bool connected = webSocketClient_tts.connect(TTSurl);
+//     if (connected) {
+//         Serial.println("Connected!");
+//     } else {
+//         Serial.println("Not Connected!");
+//         lv_setSpeechinfo("服务器连接失败");
+//     }
 
-    String TTStextbase64 = base64::encode(texttts);
-    DynamicJsonDocument requestJson(51200);
-    requestJson["common"]["app_id"] = TTS_APPID;
-    requestJson["business"]["aue"] = "raw";
-    requestJson["business"]["vcn"] = ai_speak.c_str();
-    requestJson["business"]["pitch"] = 50;
-    requestJson["business"]["speed"] = 50;
-    requestJson["business"]["tte"] = "UTF8";
-    requestJson["business"]["auf"] = "audio/L16;rate=16000";
-    requestJson["data"]["status"] = 2;
-    requestJson["data"]["text"] = TTStextbase64;
+//     String TTStextbase64 = base64::encode(texttts);
+//     DynamicJsonDocument requestJson(51200);
+//     requestJson["common"]["app_id"] = TTS_APPID;
+//     requestJson["business"]["aue"] = "raw";
+//     requestJson["business"]["vcn"] = ai_speak.c_str();
+//     requestJson["business"]["pitch"] = 50;
+//     requestJson["business"]["speed"] = 50;
+//     requestJson["business"]["tte"] = "UTF8";
+//     requestJson["business"]["auf"] = "audio/L16;rate=16000";
+//     requestJson["data"]["status"] = 2;
+//     requestJson["data"]["text"] = TTStextbase64;
 
-    String payload;
-    serializeJson(requestJson, payload);
-    Serial.print("payload: ");
-    Serial.println(payload);
-    webSocketClient_tts.send(payload);
-}
+//     String payload;
+//     serializeJson(requestJson, payload);
+//     Serial.print("payload: ");
+//     Serial.println(payload);
+//     webSocketClient_tts.send(payload);
+// }
 
 // 向豆包发送请求
 String postDouBaoAnswer(String *answerlist, int listnum)
@@ -535,9 +529,9 @@ void speakTask(void *pvParameter)
         if (webSocketClient_stt.available()) {
             webSocketClient_stt.poll();
         }
-        if (webSocketClient_tts.available()) {
-            webSocketClient_tts.poll();
-        }
+        // if (webSocketClient_tts.available()) {
+        //     webSocketClient_tts.poll();
+        // }
 
         if (speakState == WAITING) {
             Serial.println(stttext);
@@ -588,15 +582,15 @@ void speakTask(void *pvParameter)
             }
 
             if (!answer.isEmpty()) {
-                if (1) {
-                    postTTS(answer);
-                } else {
-                    // String aduiourl = getvAnswer(answer);
-                    // if (aduiourl != "error") {
-                    //     audio.stopSong();
-                    //     audio.connecttohost(aduiourl.c_str()); //  128k mp3
-                    // }
-                }
+                // if (1) {
+                //     postTTS(answer);
+                // } else {
+                // String aduiourl = getvAnswer(answer);
+                // if (aduiourl != "error") {
+                //     audio.stopSong();
+                //     audio.connecttohost(aduiourl.c_str()); //  128k mp3
+                // }
+                //}
             } else {
                 Serial.println("回答内容为空,取消TTS发送。");
             }
@@ -606,6 +600,7 @@ void speakTask(void *pvParameter)
         }
         vTaskDelay(100);
     }
+    vTaskDelete(NULL);
 }
 
 void startSpeakTask()

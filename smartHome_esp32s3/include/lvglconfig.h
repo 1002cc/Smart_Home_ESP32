@@ -7,6 +7,7 @@ void startLVGLTask(void);
 
 void lv_setMQTTState(const char *text);
 void lv_setMQTTSwitchState(bool state);
+bool lv_getMQTTSwitchState();
 void lv_setWIFIState(const char *text);
 void lv_setWIFISwitchState(bool state);
 void lv_setWeatherinfo(const char *text);

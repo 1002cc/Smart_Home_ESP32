@@ -6,18 +6,22 @@
 #define RGBLEDPIN 48
 
 #define MQ2PIN 8
-#define DHTPIN 7
+#define DHTPIN 14
 #define DHTTYPE DHT11
 
-#define PIN_R 2
-#define PIN_G 1
-#define PIN_B 38
+// #define PIN_R 2
+// #define PIN_G 1
+// #define PIN_B 38
 
 // MAX98357
 #define I2S_MAX_PORT I2S_NUM_0
-#define PIN_I2S_MAX98357_LRC 9
+// #define PIN_I2S_MAX98357_LRC 9
+// #define PIN_I2S_MAX98357_BCLK 10
+// #define PIN_I2S_MAX98357_DOUT 11
+#define PIN_I2S_MAX98357_LRC 11
 #define PIN_I2S_MAX98357_BCLK 10
-#define PIN_I2S_MAX98357_DOUT 11
+#define PIN_I2S_MAX98357_DOUT 9
+
 #define SAMPLE_RATE (16000)
 #define CHUNK_SIZE 2048
 
@@ -27,8 +31,8 @@
 #define PIN_I2S_INMP411_SD 45
 #define PIN_I2S_INMP411_SCK 21
 
-#define BUTTON_PIN 13
-#define BUTTON_PIN1 14
+// #define BUTTON_PIN 13
+// #define BUTTON_PIN1 14
 
 #define RECORD_TIME_SECONDS 60
 #define BUFFER_SIZE (SAMPLE_RATE * RECORD_TIME_SECONDS)

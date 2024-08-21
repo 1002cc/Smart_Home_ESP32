@@ -8,22 +8,25 @@
 void setup()
 {
     Serial.begin(115200);
-    Serial.println();
 
+    // 初始化led
     initLED();
 
+    // 初始化摄像头
     initCamera();
 
-    Serial.println("Connecting to WiFi...");
+    // 配置wifi
+    Serial.println("Connecting to WiFi");
     connectToWiFi(CONNECTTIMEOUT);
-    Serial.println("Connected to WiFi");
 
-    if (!initMQTTConfig()) {
-        Serial.println("MQTT init failed");
-        return;
-    }
+    // 初始化mqtt
+    initMQTTConfig();
+
+    // 初始化wedsocket服务
+    initWedServer();
+    // 开始视频流服务
+    xTaskCreatePinnedToCore(cameraserver_task, "cameraserver_task", 5 * 1024, NULL, 5, NULL, 1);
 }
-
 void loop()
 {
     mqttLoop();
@@ -31,4 +34,5 @@ void loop()
         checkDNS_HTTP();
     }
     checkConnect(true);
+    vTaskDelay(5);
 }

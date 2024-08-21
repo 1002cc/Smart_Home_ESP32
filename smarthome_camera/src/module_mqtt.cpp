@@ -1,12 +1,14 @@
 #include "module_mqtt.h"
 #include "module_server.h"
+#include "module_wifi.h"
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 #include <cJSON.h>
 
 const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
-const char *mqtt_sub = "/smartHome/esp32_cam_pub";
-const char *mqtt_pub = "/smartHome/esp32_sub";
+
+String mqtt_sub = "";
+String mqtt_pub = "";
 const uint16_t mqtt_broker_port = 8883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "chen";
@@ -41,8 +43,8 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 WiFiClientSecure net;
 PubSubClient mqttClient;
 bool enable_mqtt = true;
-extern bool isStartCamera;
-int devices_num = 0;
+
+extern bool enableVideoSteam;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
@@ -58,8 +60,28 @@ bool initMQTTConfig(void)
     mqttClient.setCallback(mqtt_callback);
     mqttClient.setKeepAlive(mqtt_keepalive);
     mqtt_client_id += String(WiFi.macAddress());
-
+    String userlogin = ReadData("username");
+    if (userlogin != "null") {
+        Serial.printf("userlogin : %s\n", userlogin);
+        mqttMontage(userlogin);
+    } else {
+        Serial.println("no username, start wifi config");
+        wifiConfig();
+    }
     return mqttconnect();
+}
+
+void mqttMontage(const String &user)
+{
+    mqtt_sub = "/smartHome/" + user + "/esp32_cam_pub";
+    mqtt_pub = "/smartHome/" + user + "/esp32_sub";
+
+    Serial.printf("mqtt_sub:%s\n", mqtt_sub.c_str());
+    Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
+
+    if (mqttClient.connected()) {
+        mqttClient.subscribe(mqtt_sub.c_str());
+    }
 }
 
 bool mqttconnect(void)
@@ -67,8 +89,8 @@ bool mqttconnect(void)
     Serial.println("Connecting to MQTT...");
     if (mqttClient.connect(mqtt_client_id.c_str(), mqtt_username, mqtt_password)) {
         Serial.println("MQTT connected!");
-        mqttClient.publish(mqtt_pub, "ESP32-CAM connect mqtt!");
-        mqttClient.subscribe(mqtt_sub);
+        mqttClient.publish(mqtt_pub.c_str(), "ESP32-CAM connect mqtt!");
+        mqttClient.subscribe(mqtt_sub.c_str());
         return true;
     } else {
         Serial.print("failed, rc=");
@@ -80,13 +102,11 @@ bool mqttconnect(void)
 
 void mqttLoop(void)
 {
-    if (enable_mqtt) {
-        if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
-            Serial.println("MQTT disconnected, reconnecting...");
-            mqttconnect();
-        }
-        mqttClient.loop();
+    if (!mqttClient.connected() && WiFi.status() == WL_CONNECTED) {
+        Serial.println("MQTT disconnected, reconnecting...");
+        mqttconnect();
     }
+    mqttClient.loop();
 }
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length)
@@ -97,7 +117,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         Serial.print((char)payload[i]);
     }
 
-    String payloadString(payload, length); // 使用构造函数直接转换
+    String payloadString(payload, length);
 
     cJSON *root = cJSON_Parse(payloadString.c_str());
     if (root == NULL) {
@@ -108,25 +128,14 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             Serial.printf("Code: %s\n", code->valuestring);
             cJSON *datas = cJSON_GetObjectItem(root, "datas");
             if (datas != NULL) {
-                cJSON *getImage = cJSON_GetObjectItem(datas, "getImage");
-                if (getImage != NULL) {
-                    Serial.printf("getImage: %s\n", getImage->valuestring);
-                    if (strcmp(getImage->valuestring, "true") == 0) {
-                        Serial.println("getImage: true");
-                        sendImgPieces();
-                    }
-                }
                 cJSON *startVideo = cJSON_GetObjectItem(datas, "startVideo");
                 if (startVideo != NULL) {
                     if (startVideo->valueint == 1) {
-                        isStartCamera = true;
-                        devices_num++;
+                        enableVideoSteam = true;
                     } else {
-                        isStartCamera = false;
-                        devices_num--;
+                        enableVideoSteam = false;
                     }
-                    Serial.printf("startVideo: %d  isStartCamera:%d\n", startVideo->valueint, isStartCamera);
-                    startcameraTask();
+                    Serial.printf("startVideo: %d  isStartCamera:%d\n", startVideo->valueint, enableVideoSteam);
                 }
             }
         }
@@ -136,14 +145,24 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
     Serial.println("\n----------------END----------------");
 }
 
+void sendCameraState(bool state)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddBoolToObject(root, "camerastate", state);
+    char *jsonStr = cJSON_PrintUnformatted(root);
+
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
 bool publishMQTT(const char payload[])
 {
-    return mqttClient.publish(mqtt_pub, payload);
+    return mqttClient.publish(mqtt_pub.c_str(), payload);
 }
 
 bool publishMQTT(const char payload[], unsigned int plength)
 {
-    return mqttClient.publish(mqtt_pub, payload, plength);
+    return mqttClient.publish(mqtt_pub.c_str(), payload, plength);
 }
 
 bool subscribeMQTT(const char topic[])
@@ -162,7 +181,7 @@ bool getMqttStart()
 
 void mqtt_beginPublish(unsigned int plength, boolean retained)
 {
-    mqttClient.beginPublish(mqtt_pub, plength, retained);
+    mqttClient.beginPublish(mqtt_pub.c_str(), plength, retained);
 }
 
 void mqtt_print(const String &s)

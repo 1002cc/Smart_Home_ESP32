@@ -4,12 +4,12 @@
 #include "module_devices.h"
 
 #if USE_AUDIO
-#include "Audio.h"
+#include "audiohelpr.h"
 #endif
 
 #if USE_AUDIO
 static std::vector<String> stations_list;
-Audio audio;
+AudioHelpr audio;
 uint8_t max_stations = 0;
 uint8_t cur_station = 0;
 uint8_t cur_volume = 0;
@@ -21,6 +21,8 @@ String stations[] = {
 };
 
 #endif
+
+// https://console.bce.baidu.com/support/#/api?product=AI&project=%E8%AF%AD%E9%9F%B3%E6%8A%80%E6%9C%AF&parent=%E8%AF%AD%E9%9F%B3%E5%90%88%E6%88%90&api=text2audio&method=post
 
 /********************************************************************
                          audio
@@ -42,7 +44,7 @@ void audio_init()
 
     max_stations = stations_list.size();
 
-    int volume_c = 15;
+    int volume_c = 21;
     volume_c = ReadintData("volume");
     int station_c = 0;
     station_c = ReadintData("station");
@@ -131,9 +133,14 @@ void audioPause()
 
 void audioTask(void *pt)
 {
+    long long last_time = millis();
     while (1) {
         audio.loop();
         vTaskDelay(3);
+        // if (millis() - last_time > 10000) {
+        //     last_time = millis();
+        //     audio.connecttospeech("你好你好你好", "zh");
+        // }
     }
     vTaskDelete(NULL);
 }
@@ -141,13 +148,15 @@ void audioTask(void *pt)
 void audioLoop()
 {
     audio.loop();
+    // vTaskDelay(3);
 }
 
 void startAudioTack()
 {
     Serial.println("start Audio Tack");
     audio_init();
-    xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, NULL, 10, NULL, 1);
+    audio.connecttohost("https://music.163.com/song/media/outer/url?id=1932354158");
 }
 
 #endif

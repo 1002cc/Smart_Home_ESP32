@@ -1,47 +1,22 @@
 #include "module_devices.h"
+#include "module_mqtt.h"
+#include "module_wifi.h"
+#include <ArduinoJson.h>
+#include <Audio.h>
+#include <HTTPClient.h>
 
-#if USE_AUDIO
-#include "Audio.h"
-#include <Preferences.h>
-#endif
-
-#if USE_AUDIO
-String stations[] = {
-    "0n-80s.radionetz.de:8000/0n-70s.mp3",
-    "https://music.163.com/song/media/outer/url?id=1932354158",
-    "www.surfmusic.de/m3u/100-5-das-hitradio,4529.m3u",
-    "stream.1a-webradio.de/deutsch/mp3-128/vtuner-1a",
-    "mp3.ffh.de/radioffh/hqlivestream.aac", //  128k aac
-    "www.antenne.de/webradio/antenne.m3u",
-    "listen.rusongs.ru/ru-mp3-128",
-    "edge.audio.3qsdn.com/senderkw-mp3",
-    "macslons-irish-pub-radio.com/media.asx",
-};
 Audio audio;
-uint8_t max_stations = 0;
-uint8_t cur_station = 0;
-uint8_t cur_volume = 0;
-extern Preferences preferences;
-#endif
+uint8_t cur_volume = 21;
+
+lampButtonData mqttSwitchState = {false, false};
+
+int rainState, soundState, pirState;
 
 int pos = 0;
 
 /********************************************************************
-                         led
-********************************************************************/
-void led_init()
-{
-    pinMode(ONBOARDLAMPPIN, OUTPUT);
-}
-
-void led_on()
-{
-    digitalWrite(ONBOARDLAMPPIN, 1);
-}
-void led_off()
-{
-    digitalWrite(ONBOARDLAMPPIN, 0);
-}
+                         led1
+*******************************************************************
 
 void rgbled_init()
 {
@@ -82,61 +57,121 @@ void rgbled_setColor(int r, int g, int b)
     setColor(r, g, b);
 }
 
+void redled_on()
+{
+    digitalWrite(PIN_R, 1);
+}
+
+void redled_off()
+{
+    digitalWrite(PIN_R, 0);
+}
+
+int redled_state()
+{
+    return digitalRead(PIN_R);
+}
+
+void greenled_on()
+{
+    digitalWrite(PIN_G, 1);
+}
+
+void greenled_off()
+{
+    digitalWrite(PIN_G, 0);
+}
+
+int greenled_state()
+{
+    return digitalRead(PIN_G);
+}
+
+void blueled_on()
+{
+    digitalWrite(PIN_B, 1);
+}
+
+void blueled_off()
+{
+    digitalWrite(PIN_B, 0);
+}
+
+int blueled_state()
+{
+    return digitalRead(PIN_B);
+}
+
+*/
+
+/********************************************************************
+                         LED
+********************************************************************/
+
+void rgbled_init()
+{
+    pinMode(AUTOLED_PIN, OUTPUT);
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(ONBOARDLAMPPIN, OUTPUT);
+    led_off();
+    autoled_off();
+}
+
+void led_on()
+{
+    digitalWrite(ONBOARDLAMPPIN, 1);
+}
+void led_off()
+{
+    digitalWrite(ONBOARDLAMPPIN, 0);
+}
+
+void blinkLED(int n, int t)
+{
+    for (int i = 0; i < 2 * n; i++) {
+        digitalWrite(ONBOARDLAMPPIN, !digitalRead(ONBOARDLAMPPIN));
+        delay(t);
+    }
+}
+
+void autoled_on()
+{
+    digitalWrite(AUTOLED_PIN, 1);
+}
+void autoled_off()
+{
+    digitalWrite(AUTOLED_PIN, 0);
+}
+
+int autoled_state()
+{
+    return digitalRead(AUTOLED_PIN);
+}
+
+void led3w_on()
+{
+    digitalWrite(LED_PIN, 1);
+}
+
+void led3w_off()
+{
+    digitalWrite(LED_PIN, 0);
+}
+
+int led3w_state()
+{
+    return digitalRead(LED_PIN);
+}
+
 /********************************************************************
                          audio
 ********************************************************************/
-#if USE_AUDIO
 
 void audio_init()
 {
-    max_stations = sizeof(stations) / sizeof(stations[0]);
-    Serial.println(max_stations);
     audio.setPinout(PIN_I2S_MAX98357_BCLK, PIN_I2S_MAX98357_LRC, PIN_I2S_MAX98357_DOUT);
     audio.setVolume(cur_volume);
     // audio.connecttohost(stations[cur_station].c_str());
-}
-
-void audioVolume(int volume)
-{
-    cur_volume = volume;
-    preferences.putInt("volume", cur_volume);
-    audio.setVolume(volume);
-}
-
-void audioStation(int station)
-{
-    cur_station = station;
-    preferences.putInt("station", cur_station);
-    audioPlay();
-}
-void audioPrevious()
-{
-    if (cur_station > 0) {
-        cur_station--;
-        audioStation(cur_station);
-    }
-}
-
-void audioNext()
-{
-    if (cur_station < max_stations - 1) {
-        cur_station++;
-        audioStation(cur_station);
-    }
-}
-
-void audioPlay()
-{
-    Serial.println("Play");
-    if (audio.isRunning()) {
-        audio.stopSong();
-    }
-    if (audio.connecttohost(stations[cur_station].c_str())) {
-        Serial.println("Connect to host");
-    } else {
-        Serial.println("Connect to host failed");
-    }
-    Serial.printf("cur station %s\n", stations[cur_station].c_str());
 }
 
 void audioPause()
@@ -147,6 +182,7 @@ void audioPause()
 
 void audioTask(void *pt)
 {
+    Serial.println("start audioTask");
     while (1) {
         audio.loop();
         vTaskDelay(5);
@@ -154,11 +190,56 @@ void audioTask(void *pt)
     vTaskDelete(NULL);
 }
 
+String getvAnswer(const String &ouputText)
+{
+    HTTPClient http2;
+    http2.begin(MINIMAX_TTS);
+    http2.addHeader("Content-Type", "application/json");
+    http2.addHeader("Authorization", String("Bearer ") + MINIMAX_KEY);
+    // 创建一个StaticJsonDocument对象，足够大以存储JSON数据
+    StaticJsonDocument<200> doc;
+    // 填充数据
+    doc["text"] = ouputText;
+    doc["model"] = "speech-01";
+    doc["audio_sample_rate"] = 32000;
+    doc["bitrate"] = 128000;
+    doc["voice_id"] = "audiobook_female_1";
+    // 创建一个String对象来存储序列化后的JSON字符串
+    String jsonString;
+    // 序列化JSON到String对象
+    serializeJson(doc, jsonString);
+    int httpResponseCode = http2.POST(jsonString);
+    if (httpResponseCode == 200) {
+        DynamicJsonDocument jsonDoc(1024);
+        String response = http2.getString();
+        Serial.println(response);
+        http2.end();
+        deserializeJson(jsonDoc, response);
+        String aduiourl = jsonDoc["audio_file"];
+        return aduiourl;
+    } else {
+        Serial.printf("tts %i \n", httpResponseCode);
+        http2.end();
+        return "error";
+    }
+}
+
+void audioSpeak(const String &text)
+{
+    if (wifitate()) {
+        String aduiourl = getvAnswer(text);
+        Serial.println(aduiourl);
+        if (aduiourl != "error") {
+            audio.stopSong();
+            audio.connecttohost(aduiourl.c_str());
+        }
+    }
+}
+
 void startAudioTack()
 {
-    xTaskCreatePinnedToCore(audioTask, "audio_task", 1024 * 5, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(audioTask, "audio_task", 1024 * 3, NULL, 2, NULL, 1);
 }
-#endif
 
 /********************************************************************
                          sg90
@@ -179,48 +260,92 @@ void sg90_setAngle(int angle)
                          RAIN
 ********************************************************************/
 
-void rainTask(void *pt)
+void sensorTask(void *pt)
 {
-    int rain;
+    unsigned long lastPrintTime = 0;
+    unsigned long autoLampTime = 0, rainTime = 0;
+    bool rainFlag = 0, isRain = 0;
     while (1) {
-        // analogWrite(RAIN_PIN, (map(analogRead(A0), 0, 1023, 235, 0)));
-        rain = map(analogRead(A0), 0, 1023, 235, 0);
-        Serial.print("rain = ");
-        Serial.println(rain); // 串口输出雨量
-        int soundState = digitalRead(SOUND_PIN);
-        Serial.print("soundState = ");
-        Serial.println(soundState);
-        int pirState = digitalRead(PIR_PIN);
-        Serial.print("PIR_PIN = ");
-        Serial.println(pirState);
-        if (rain > 100) {
-            if (pos <= 0) {
-                for (pos = 0; pos <= 180; pos += 1) {
-                    sg90_setAngle(pos);
-                    vTaskDelay(15);
-                }
+        rainState = map(analogRead(RAIN_CHANNL), 0, 4095, 235, 0);
+        if (rainState > 0) {
+            if (rainFlag) {
+                rainTime = millis();
+                rainFlag = 0;
             }
         } else {
-            if (pos >= 180) {
-                for (pos = 180; pos >= 0; pos -= 1) {
-                    sg90_setAngle(pos);
-                    vTaskDelay(15);
-                }
+            if (isRain) {
+                isRain = false;
+                // pulishState("rain", false);
             }
+            rainFlag = 1;
         }
-        vTaskDelay(500);
+        // if (rainState && millis() - rainTime >= RAINTIME) {
+        //     isRain = true;
+        //     Serial.println("has rain");
+        //     audioSpeak("下雨了,请注意关窗");
+        //     pulishState("rain", isRain);
+        // }
+
+        // soundState = map(analogRead(SOUND_PIN), 0, 4095, 235, 0);
+        soundState = digitalRead(SOUND_PIN);
+        if (!soundState) {
+            Serial.println("has sound");
+        }
+
+        pirState = analogRead(PIR_CHANNL);
+        if (pirState > 0) {
+            // autoLampTime = millis();
+            // if (!autoled_state()) {
+            //     autoled_on();
+            //     // mqttSwitchState.lampButton2 = true;
+            //     //  pulishState("lampButton4", mqttSwitchState.lampButton4, "switches");
+            // }
+            Serial.println("has people");
+        } else {
+            // if (autoled_state() && millis() - autoLampTime >= AUTOLAMPTIME) {
+            //     autoled_off();
+            //     mqttSwitchState.lampButton4 = false;
+            //     // pulishState("lampButton4", mqttSwitchState.lampButton4, "switches");
+            // }
+        }
+
+        if (millis() - lastPrintTime > 1000) // 每秒打印一次
+        {
+            Serial.printf("rainState = %d  soundState = %d  pirState = %d\n", rainState, soundState, pirState);
+            lastPrintTime = millis();
+        }
+
+        if (digitalRead(BUTTON_PIN1)) {
+            Serial.println("BUTTON_PIN1");
+            mqttSwitchState.lampButton1 = !autoled_state();
+            mqttSwitchState.lampButton1 ? autoled_on() : autoled_off();
+            // pulishState("lampButton1", mqttSwitchState.lampButton1, "switches");
+        }
+
+        if (digitalRead(BUTTON_PIN2)) {
+
+            Serial.println("BUTTON_PIN2");
+            mqttSwitchState.lampButton2 = !led3w_state();
+            mqttSwitchState.lampButton2 ? led3w_on() : led3w_off();
+            // pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
+        }
+
+        vTaskDelay(200);
     }
+    vTaskDelete(NULL);
 }
 
-void rain_init()
+void sensor_init()
 {
-    pinMode(RAINADCPIN, INPUT); // A0口接收模拟输入信号，即接收是否有雨水的信号
-    pinMode(RAIN_PIN, OUTPUT);
+    pinMode(SOUND_PIN, INPUT);
+
+    pinMode(BUTTON_PIN1, INPUT);
+    pinMode(BUTTON_PIN2, INPUT);
 }
 
-void startRainTask()
+void startSensorTask()
 {
-    xTaskCreatePinnedToCore(rainTask, "rain_task", 1024 * 5, NULL, 2, NULL, 1);
+    xTaskCreatePinnedToCore(sensorTask, "sensor_task", 1024 * 5, NULL, 2, NULL, 0);
 }
 
 /********************************************************************
@@ -228,13 +353,8 @@ void startRainTask()
 ********************************************************************/
 void initDevices()
 {
-    led_init();
     rgbled_init();
-    pinMode(SOUND_PIN, INPUT);
-    pinMode(PIR_PIN, INPUT);
+    sensor_init();
     sg90_init();
-    rain_init();
-#if USE_AUDIO
     audio_init();
-#endif
 }

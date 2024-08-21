@@ -1,6 +1,7 @@
 #ifndef _MODULE_CONFIG_H_
 #define _MODULE_CONFIG_H_
 
+#include <Arduino.h>
 #include <cJSON.h>
 
 struct SensorData {
@@ -27,5 +28,6 @@ void publishGetImage();
 void publishStartVideo(bool isStartVideo);
 void mqtt_disconnect(void);
 bool getMqttStart();
+void mqtMontage(const String &user);
 
 #endif
