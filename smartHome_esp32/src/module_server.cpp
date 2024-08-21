@@ -4,7 +4,13 @@
 #include "sntp.h"
 #include "time.h"
 #include <ArduinoJson.h>
+#include <Audio.h>
+#include <HTTPClient.h>
+#include <LittleFS.h>
 #include <Preferences.h>
+
+Audio audio;
+uint8_t cur_volume = 21;
 
 const char *g_ntp_server1 = "ntp.aliyun.com";
 const char *g_ntp_server2 = "stdtime.gov.hk";
@@ -70,4 +76,90 @@ void printPSRAM(void)
     Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
     Serial.printf("sp_get_free_internal_heap_size = %ld\n", esp_get_free_internal_heap_size());
     Serial.println("-----------------------------printPSRAM-----------------------------");
+}
+
+void littlefs_init()
+{
+    if (!LittleFS.begin()) {
+        Serial.println("An Error has occurred while mounting LittleFS");
+    }
+    Serial.println("LittleFS init succesful");
+    audio.connecttoFS(LittleFS, "/conect_s.mp3");
+}
+
+/********************************************************************
+                         audio
+********************************************************************/
+
+void audio_init()
+{
+    audio.setPinout(PIN_I2S_MAX98357_BCLK, PIN_I2S_MAX98357_LRC, PIN_I2S_MAX98357_DOUT);
+    audio.setVolume(cur_volume);
+}
+
+void audioPause()
+{
+    audio.stopSong();
+    Serial.println(audio.isRunning());
+}
+
+void audioTask(void *pt)
+{
+    Serial.println("start audioTask");
+    while (1) {
+        audio.loop();
+        vTaskDelay(5);
+    }
+    vTaskDelete(NULL);
+}
+
+String getvAnswer(const String &ouputText)
+{
+    HTTPClient http2;
+    http2.begin(MINIMAX_TTS);
+    http2.addHeader("Content-Type", "application/json");
+    http2.addHeader("Authorization", String("Bearer ") + MINIMAX_KEY);
+    // 创建一个StaticJsonDocument对象，足够大以存储JSON数据
+    StaticJsonDocument<200> doc;
+    // 填充数据
+    doc["text"] = ouputText;
+    doc["model"] = "speech-01";
+    doc["audio_sample_rate"] = 32000;
+    doc["bitrate"] = 128000;
+    doc["voice_id"] = "audiobook_female_1";
+    // 创建一个String对象来存储序列化后的JSON字符串
+    String jsonString;
+    // 序列化JSON到String对象
+    serializeJson(doc, jsonString);
+    int httpResponseCode = http2.POST(jsonString);
+    if (httpResponseCode == 200) {
+        DynamicJsonDocument jsonDoc(1024);
+        String response = http2.getString();
+        Serial.println(response);
+        http2.end();
+        deserializeJson(jsonDoc, response);
+        String aduiourl = jsonDoc["audio_file"];
+        return aduiourl;
+    } else {
+        Serial.printf("tts %i \n", httpResponseCode);
+        http2.end();
+        return "error";
+    }
+}
+
+void audioSpeak(const String &text)
+{
+    if (wifitate()) {
+        String aduiourl = getvAnswer(text);
+        Serial.println(aduiourl);
+        if (aduiourl != "error") {
+            audio.stopSong();
+            audio.connecttohost(aduiourl.c_str());
+        }
+    }
+}
+
+void startAudioTack()
+{
+    xTaskCreatePinnedToCore(audioTask, "audio_task", 1024 * 3, NULL, 2, NULL, 1);
 }

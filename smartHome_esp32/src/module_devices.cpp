@@ -1,108 +1,13 @@
 #include "module_devices.h"
 #include "module_mqtt.h"
+#include "module_server.h"
 #include "module_wifi.h"
-#include <ArduinoJson.h>
-#include <Audio.h>
-#include <HTTPClient.h>
-
-Audio audio;
-uint8_t cur_volume = 21;
 
 lampButtonData mqttSwitchState = {false, false};
 
 int rainState, soundState, pirState;
 
 int pos = 0;
-
-/********************************************************************
-                         led1
-*******************************************************************
-
-void rgbled_init()
-{
-    pinMode(RPIN, OUTPUT);
-    pinMode(GPIN, OUTPUT);
-    pinMode(BPIN, OUTPUT);
-}
-
-void setColor(int r, int g, int b)
-{
-    analogWrite(RPIN, r);
-    analogWrite(GPIN, g);
-    analogWrite(BPIN, b);
-}
-
-void rgbled_red()
-{
-    setColor(255, 0, 0);
-}
-
-void rgbled_green()
-{
-    setColor(0, 255, 0);
-}
-
-void rgbled_blue()
-{
-    setColor(0, 0, 255);
-}
-
-void rgbled_off()
-{
-    setColor(0, 0, 0);
-}
-
-void rgbled_setColor(int r, int g, int b)
-{
-    setColor(r, g, b);
-}
-
-void redled_on()
-{
-    digitalWrite(PIN_R, 1);
-}
-
-void redled_off()
-{
-    digitalWrite(PIN_R, 0);
-}
-
-int redled_state()
-{
-    return digitalRead(PIN_R);
-}
-
-void greenled_on()
-{
-    digitalWrite(PIN_G, 1);
-}
-
-void greenled_off()
-{
-    digitalWrite(PIN_G, 0);
-}
-
-int greenled_state()
-{
-    return digitalRead(PIN_G);
-}
-
-void blueled_on()
-{
-    digitalWrite(PIN_B, 1);
-}
-
-void blueled_off()
-{
-    digitalWrite(PIN_B, 0);
-}
-
-int blueled_state()
-{
-    return digitalRead(PIN_B);
-}
-
-*/
 
 /********************************************************************
                          LED
@@ -161,84 +66,6 @@ void led3w_off()
 int led3w_state()
 {
     return digitalRead(LED_PIN);
-}
-
-/********************************************************************
-                         audio
-********************************************************************/
-
-void audio_init()
-{
-    audio.setPinout(PIN_I2S_MAX98357_BCLK, PIN_I2S_MAX98357_LRC, PIN_I2S_MAX98357_DOUT);
-    audio.setVolume(cur_volume);
-    // audio.connecttohost(stations[cur_station].c_str());
-}
-
-void audioPause()
-{
-    audio.stopSong();
-    Serial.println(audio.isRunning());
-}
-
-void audioTask(void *pt)
-{
-    Serial.println("start audioTask");
-    while (1) {
-        audio.loop();
-        vTaskDelay(5);
-    }
-    vTaskDelete(NULL);
-}
-
-String getvAnswer(const String &ouputText)
-{
-    HTTPClient http2;
-    http2.begin(MINIMAX_TTS);
-    http2.addHeader("Content-Type", "application/json");
-    http2.addHeader("Authorization", String("Bearer ") + MINIMAX_KEY);
-    // 创建一个StaticJsonDocument对象，足够大以存储JSON数据
-    StaticJsonDocument<200> doc;
-    // 填充数据
-    doc["text"] = ouputText;
-    doc["model"] = "speech-01";
-    doc["audio_sample_rate"] = 32000;
-    doc["bitrate"] = 128000;
-    doc["voice_id"] = "audiobook_female_1";
-    // 创建一个String对象来存储序列化后的JSON字符串
-    String jsonString;
-    // 序列化JSON到String对象
-    serializeJson(doc, jsonString);
-    int httpResponseCode = http2.POST(jsonString);
-    if (httpResponseCode == 200) {
-        DynamicJsonDocument jsonDoc(1024);
-        String response = http2.getString();
-        Serial.println(response);
-        http2.end();
-        deserializeJson(jsonDoc, response);
-        String aduiourl = jsonDoc["audio_file"];
-        return aduiourl;
-    } else {
-        Serial.printf("tts %i \n", httpResponseCode);
-        http2.end();
-        return "error";
-    }
-}
-
-void audioSpeak(const String &text)
-{
-    if (wifitate()) {
-        String aduiourl = getvAnswer(text);
-        Serial.println(aduiourl);
-        if (aduiourl != "error") {
-            audio.stopSong();
-            audio.connecttohost(aduiourl.c_str());
-        }
-    }
-}
-
-void startAudioTack()
-{
-    xTaskCreatePinnedToCore(audioTask, "audio_task", 1024 * 3, NULL, 2, NULL, 1);
 }
 
 /********************************************************************
