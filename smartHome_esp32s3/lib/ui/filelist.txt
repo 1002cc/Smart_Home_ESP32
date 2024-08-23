@@ -9,6 +9,8 @@ screens/ui_setchooseScreen.c
 screens/ui_set1Screen.c
 screens/ui_speechScreen.c
 screens/ui_monitorScreen.c
+ui_theme_manager.c
+ui_themes.c
 ui.c
 components/ui_comp_hook.c
 ui_helpers.c
@@ -22,7 +24,7 @@ images/ui_img_configure_png.c
 images/ui_img_lamps_png.c
 images/ui_img_s1_png.c
 images/ui_img_data_png.c
-images/ui_img_y1_png.c
+images/ui_img_chat_png.c
 images/ui_img_l2_png.c
 images/ui_img_l1_png.c
 images/ui_img_a1_png.c
@@ -30,6 +32,8 @@ images/ui_img_t2_png.c
 images/ui_img_w1_png.c
 images/ui_img_wifi_png.c
 images/ui_img_c1_png.c
+images/ui_img_cc1_png.c
+images/ui_img_vv1_png.c
 fonts/ui_font_dan.c
 fonts/ui_font_misc.c
 fonts/ui_font_smartsystem.c

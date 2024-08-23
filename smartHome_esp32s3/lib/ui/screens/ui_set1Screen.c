@@ -9,8 +9,10 @@ void ui_set1Screen_screen_init(void)
 {
     ui_set1Screen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_set1Screen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_set1Screen, lv_color_hex(0x161924), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_set1Screen, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_set1Screen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_back);
+    ui_object_set_themeable_style_property(ui_set1Screen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_back);
 
     ui_Panel5 = lv_obj_create(ui_set1Screen);
     lv_obj_set_width(ui_Panel5, 117);
@@ -45,8 +47,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label1, -97);
     lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label1, "WIFI");
-    lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label1, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label1, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label1, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_wifiSwitch = lv_switch_create(ui_w1);
@@ -65,8 +69,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_wifiStateLabel, -95);
     lv_obj_set_align(ui_wifiStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_wifiStateLabel, "已连接");
-    lv_obj_set_style_text_color(ui_wifiStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_wifiStateLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_wifiStateLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_wifiStateLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_wifiStateLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_wifilistPanel = lv_obj_create(ui_w1);
@@ -76,8 +82,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_wifilistPanel, 10);
     lv_obj_set_align(ui_wifilistPanel, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_wifilistPanel, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_wifilistPanel, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_wifilistPanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_wifilistPanel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_wifilistPanel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
     lv_obj_set_style_border_color(ui_wifilistPanel, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_wifilistPanel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -88,8 +96,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_ipLabel, -96);
     lv_obj_set_align(ui_ipLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_ipLabel, "IP:");
-    lv_obj_set_style_text_color(ui_ipLabel, lv_color_hex(0xE8E8E8), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_ipLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_ipLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_ipLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
 
     ui_w2 = lv_tabview_add_tab(ui_chooseTabView, "m");
 
@@ -100,8 +110,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label16, -64);
     lv_obj_set_align(ui_Label16, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label16, "服务器");
-    lv_obj_set_style_text_color(ui_Label16, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label16, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label16, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label16, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label16, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_mqttStateLabel = lv_label_create(ui_w2);
@@ -111,8 +123,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_mqttStateLabel, -64);
     lv_obj_set_align(ui_mqttStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_mqttStateLabel, "未连接");
-    lv_obj_set_style_text_color(ui_mqttStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_mqttStateLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_mqttStateLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_mqttStateLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_mqttStateLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label28 = lv_label_create(ui_w2);
@@ -122,8 +136,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label28, -98);
     lv_obj_set_align(ui_Label28, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label28, "设备绑定");
-    lv_obj_set_style_text_color(ui_Label28, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label28, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label28, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label28, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label28, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label13 = lv_label_create(ui_w2);
@@ -133,8 +149,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label13, -30);
     lv_obj_set_align(ui_Label13, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label13, "账    号");
-    lv_obj_set_style_text_color(ui_Label13, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label13, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label13, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label13, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label13, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label17 = lv_label_create(ui_w2);
@@ -144,8 +162,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label17, 7);
     lv_obj_set_align(ui_Label17, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label17, "密    码");
-    lv_obj_set_style_text_color(ui_Label17, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label17, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label17, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label17, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label17, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_mqttuseButton = lv_btn_create(ui_w2);
@@ -175,8 +195,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label21, -89);
     lv_obj_set_align(ui_Label21, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label21, "时间设置");
-    lv_obj_set_style_text_color(ui_Label21, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label21, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label21, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label21, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label21, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label22 = lv_label_create(ui_w3);
@@ -186,8 +208,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label22, -53);
     lv_obj_set_align(ui_Label22, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label22, "NTP服务");
-    lv_obj_set_style_text_color(ui_Label22, lv_color_hex(0xFDFDFD), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label22, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label22, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label22, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label22, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label23 = lv_label_create(ui_w3);
@@ -197,8 +221,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label23, -18);
     lv_obj_set_align(ui_Label23, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label23, "校时时长");
-    lv_obj_set_style_text_color(ui_Label23, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label23, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label23, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label23, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label23, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label10 = lv_label_create(ui_w3);
@@ -208,8 +234,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label10, 18);
     lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label10, "天气城市");
-    lv_obj_set_style_text_color(ui_Label10, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label10, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label10, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label10, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label10, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_timeuseButton = lv_btn_create(ui_w3);
@@ -230,6 +258,28 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_style_text_opa(ui_Label24, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_Label24, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_Label31 = lv_label_create(ui_w3);
+    lv_obj_set_width(ui_Label31, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label31, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label31, -118);
+    lv_obj_set_y(ui_Label31, 51);
+    lv_obj_set_align(ui_Label31, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label31, "深色主题");
+    ui_object_set_themeable_style_property(ui_Label31, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label31, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_Label31, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_themeSwitch = lv_switch_create(ui_w3);
+    lv_obj_set_width(ui_themeSwitch, 50);
+    lv_obj_set_height(ui_themeSwitch, 25);
+    lv_obj_set_x(ui_themeSwitch, -48);
+    lv_obj_set_y(ui_themeSwitch, 51);
+    lv_obj_set_align(ui_themeSwitch, LV_ALIGN_CENTER);
+    lv_obj_add_state(ui_themeSwitch, LV_STATE_CHECKED);       /// States
+
+
     ui_W4 = lv_tabview_add_tab(ui_chooseTabView, "S");
 
     ui_Label19 = lv_label_create(ui_W4);
@@ -239,8 +289,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label19, -87);
     lv_obj_set_align(ui_Label19, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label19, "语音配置");
-    lv_obj_set_style_text_color(ui_Label19, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label19, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label19, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label19, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label19, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label32 = lv_label_create(ui_W4);
@@ -250,8 +302,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label32, -36);
     lv_obj_set_align(ui_Label32, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label32, "发音人");
-    lv_obj_set_style_text_color(ui_Label32, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label32, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label32, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label32, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label32, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_speechDropdown = lv_dropdown_create(ui_W4);
@@ -262,6 +316,15 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_speechDropdown, -36);
     lv_obj_set_align(ui_speechDropdown, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_speechDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    ui_object_set_themeable_style_property(ui_speechDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_speechDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    ui_object_set_themeable_style_property(ui_speechDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_speechDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_border_width(ui_speechDropdown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -272,8 +335,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label33, 17);
     lv_obj_set_align(ui_Label33, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label33, "AI模型");
-    lv_obj_set_style_text_color(ui_Label33, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label33, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label33, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label33, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label33, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_aimodeDropdown = lv_dropdown_create(ui_W4);
@@ -284,6 +349,15 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_aimodeDropdown, 19);
     lv_obj_set_align(ui_aimodeDropdown, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_aimodeDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    ui_object_set_themeable_style_property(ui_aimodeDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_aimodeDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    ui_object_set_themeable_style_property(ui_aimodeDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_aimodeDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_border_width(ui_aimodeDropdown, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 
 
@@ -296,8 +370,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label66, -45);
     lv_obj_set_align(ui_Label66, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label66, "IP:");
-    lv_obj_set_style_text_color(ui_Label66, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label66, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label66, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label66, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label66, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label67 = lv_label_create(ui_W5);
@@ -307,8 +383,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label67, 0);
     lv_obj_set_align(ui_Label67, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label67, "端口:");
-    lv_obj_set_style_text_color(ui_Label67, lv_color_hex(0xFBFBFB), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label67, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label67, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label67, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label67, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_cameraButton = lv_btn_create(ui_W5);
@@ -336,13 +414,16 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_Label35, -89);
     lv_obj_set_align(ui_Label35, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label35, "监控设置");
-    lv_obj_set_style_text_color(ui_Label35, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label35, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label35, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label35, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label35, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_Panel5, ui_event_Panel5, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_mqttuseButton, ui_event_mqttuseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_timeuseButton, ui_event_timeuseButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_themeSwitch, ui_event_themeSwitch, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_cameraButton, ui_event_cameraButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_set1Screen, ui_event_set1Screen, LV_EVENT_ALL, NULL);
 

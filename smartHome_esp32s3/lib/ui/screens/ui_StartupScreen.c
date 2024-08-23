@@ -9,8 +9,10 @@ void ui_StartupScreen_screen_init(void)
 {
     ui_StartupScreen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_StartupScreen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_StartupScreen, lv_color_hex(0x161924), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_StartupScreen, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_StartupScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_back);
+    ui_object_set_themeable_style_property(ui_StartupScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_back);
 
     ui_Image5 = lv_img_create(ui_StartupScreen);
     lv_img_set_src(ui_Image5, &ui_img_icon_png);
@@ -30,8 +32,10 @@ void ui_StartupScreen_screen_init(void)
     lv_obj_set_y(ui_tipLabel, -54);
     lv_obj_set_align(ui_tipLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_tipLabel, "正在加载中");
-    lv_obj_set_style_text_color(ui_tipLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_tipLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_tipLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_tipLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_align(ui_tipLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_tipLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
@@ -50,8 +54,10 @@ void ui_StartupScreen_screen_init(void)
     lv_obj_set_y(ui_Label7, -93);
     lv_obj_set_align(ui_Label7, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label7, "智能家居");
-    lv_obj_set_style_text_color(ui_Label7, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label7, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label7, &ui_font_smartsystem, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_StartupScreen, ui_event_StartupScreen, LV_EVENT_ALL, NULL);

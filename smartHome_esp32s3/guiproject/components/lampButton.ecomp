@@ -957,8 +957,8 @@
       "flags": 17,
       "strtype": "OBJECT/Position",
       "intarray": [
-        -70,
-        -42
+        50,
+        -40
       ],
       "InheritedType": 7
     },
@@ -1342,7 +1342,7 @@
         {
           "nid": 1089672366,
           "flags": 1048576,
-          "strtype": "_custom/action",
+          "strtype": "_event/action",
           "strval": "LABEL_PROPERTY",
           "childs": [
             {
@@ -1385,7 +1385,7 @@
         },
         {
           "nid": -183845177,
-          "strtype": "_custom/action",
+          "strtype": "_event/action",
           "strval": "CALL FUNCTION",
           "childs": [
             {
@@ -1415,7 +1415,7 @@
             {
               "nid": -1664448547,
               "strtype": "CALL FUNCTION/Dont_export_function",
-              "strval": "False",
+              "strval": "True",
               "InheritedType": 2
             }
           ],
@@ -1500,7 +1500,7 @@
         {
           "nid": 1656077748,
           "flags": 1048576,
-          "strtype": "_custom/action",
+          "strtype": "_event/action",
           "strval": "LABEL_PROPERTY",
           "childs": [
             {
@@ -1543,7 +1543,7 @@
         },
         {
           "nid": 1216858257,
-          "strtype": "_custom/action",
+          "strtype": "_event/action",
           "strval": "CALL FUNCTION",
           "childs": [
             {
@@ -1573,7 +1573,7 @@
             {
               "nid": 1156313307,
               "strtype": "CALL FUNCTION/Dont_export_function",
-              "strval": "False",
+              "strval": "True",
               "InheritedType": 2
             }
           ],

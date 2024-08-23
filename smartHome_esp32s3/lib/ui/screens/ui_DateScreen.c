@@ -9,8 +9,10 @@ void ui_DateScreen_screen_init(void)
 {
     ui_DateScreen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_DateScreen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_DateScreen, lv_color_hex(0x161924), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_DateScreen, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_DateScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_back);
+    ui_object_set_themeable_style_property(ui_DateScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_back);
 
     ui_TemperatureWifget = lv_obj_create(ui_DateScreen);
     lv_obj_set_width(ui_TemperatureWifget, 100);
@@ -20,16 +22,21 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_align(ui_TemperatureWifget, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_TemperatureWifget,
                       LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_SCROLLABLE);     /// Flags
-    lv_obj_set_style_bg_color(ui_TemperatureWifget, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_TemperatureWifget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_TemperatureWifget, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_TemperatureWifget, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_TemperatureWifget, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_TemperatureWifget, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_border_width(ui_TemperatureWifget, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_TemperatureLabel = lv_label_create(ui_TemperatureWifget);
     lv_obj_set_width(ui_TemperatureLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_TemperatureLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_TemperatureLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_TemperatureLabel, "20°C");
+    ui_object_set_themeable_style_property(ui_TemperatureLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_TemperatureLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_TemperatureLabel, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label3 = lv_label_create(ui_TemperatureWifget);
@@ -39,6 +46,10 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_y(ui_Label3, 30);
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label3, "温度");
+    ui_object_set_themeable_style_property(ui_Label3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label3, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_TemperatureArc = lv_arc_create(ui_TemperatureWifget);
@@ -63,16 +74,21 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_y(ui_HumidityWifget, -60);
     lv_obj_set_align(ui_HumidityWifget, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_HumidityWifget, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_HumidityWifget, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_HumidityWifget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_HumidityWifget, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_HumidityWifget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_HumidityWifget, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_HumidityWifget, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_border_width(ui_HumidityWifget, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_HumidityLabel = lv_label_create(ui_HumidityWifget);
     lv_obj_set_width(ui_HumidityLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_HumidityLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_HumidityLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_HumidityLabel, "60%");
+    ui_object_set_themeable_style_property(ui_HumidityLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_HumidityLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_HumidityLabel, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label4 = lv_label_create(ui_HumidityWifget);
@@ -82,6 +98,10 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_y(ui_Label4, 30);
     lv_obj_set_align(ui_Label4, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label4, "湿度");
+    ui_object_set_themeable_style_property(ui_Label4, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label4, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label4, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_HumidityArc = lv_arc_create(ui_HumidityWifget);
@@ -107,14 +127,17 @@ void ui_DateScreen_screen_init(void)
                       LV_OBJ_FLAG_SCROLLABLE);     /// Flags
     lv_obj_set_style_bg_color(ui_MQ2Wifget, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(ui_MQ2Wifget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_color(ui_MQ2Wifget, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_opa(ui_MQ2Wifget, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_MQ2Wifget, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MQLabel = lv_label_create(ui_MQ2Wifget);
     lv_obj_set_width(ui_MQLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_MQLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_MQLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_MQLabel, "20°C");
+    ui_object_set_themeable_style_property(ui_MQLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_MQLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_MQLabel, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Label9 = lv_label_create(ui_MQ2Wifget);
@@ -124,6 +147,10 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_y(ui_Label9, 30);
     lv_obj_set_align(ui_Label9, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label9, "气体浓度");
+    ui_object_set_themeable_style_property(ui_Label9, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label9, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label9, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_MQArc = lv_arc_create(ui_MQ2Wifget);

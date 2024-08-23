@@ -86,3 +86,7 @@ def monitorScreenFCD(event_struct):
 def monitorScreenOCD(event_struct):
     return
 
+
+def switchThemesCD(event_struct):
+    return
+

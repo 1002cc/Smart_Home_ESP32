@@ -465,6 +465,15 @@ void lv_setstatusbarLabel(int status)
     }
 }
 
+void switchThemesCD(lv_event_t *e)
+{
+    if (lv_obj_has_state(ui_themeSwitch, LV_STATE_CHECKED)) {
+        _ui_switch_theme(UI_THEME_DARKTHEME);
+    } else {
+        _ui_switch_theme(UI_THEME_LIGHTTHEME);
+    }
+}
+
 /********************************************************************
                          LVGL_SET_UI
 ********************************************************************/

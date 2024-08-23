@@ -16,6 +16,7 @@ void lampButtonCB(lv_event_t * e);
 void setChooseScreenCD(lv_event_t * e);
 void chooseScreenFCD(lv_event_t * e);
 void chooseBtEventCD(lv_event_t * e);
+void switchThemesCD(lv_event_t * e);
 void speakScreenFCD(lv_event_t * e);
 void monitorScreenFCD(lv_event_t * e);
 void cameraScreenCD(lv_event_t * e);

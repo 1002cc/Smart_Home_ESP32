@@ -167,6 +167,9 @@ lv_obj_t * ui_Label10;
 void ui_event_timeuseButton(lv_event_t * e);
 lv_obj_t * ui_timeuseButton;
 lv_obj_t * ui_Label24;
+lv_obj_t * ui_Label31;
+void ui_event_themeSwitch(lv_event_t * e);
+lv_obj_t * ui_themeSwitch;
 lv_obj_t * ui_W4;
 lv_obj_t * ui_Label19;
 lv_obj_t * ui_Label32;
@@ -222,11 +225,12 @@ lv_obj_t * ui_cameraStateLabel;
 lv_obj_t * ui____initial_actions0;
 const lv_img_dsc_t * ui_imgset_a[1] = {&ui_img_a1_png};
 const lv_img_dsc_t * ui_imgset_c[1] = {&ui_img_c1_png};
+const lv_img_dsc_t * ui_imgset_cc[1] = {&ui_img_cc1_png};
 const lv_img_dsc_t * ui_imgset_l[2] = {&ui_img_l1_png, &ui_img_l2_png};
 const lv_img_dsc_t * ui_imgset_s[1] = {&ui_img_s1_png};
 const lv_img_dsc_t * ui_imgset_t[1] = {&ui_img_t2_png};
+const lv_img_dsc_t * ui_imgset_vv[1] = {&ui_img_vv1_png};
 const lv_img_dsc_t * ui_imgset_w[1] = {&ui_img_w1_png};
-const lv_img_dsc_t * ui_imgset_y[1] = {&ui_img_y1_png};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -501,6 +505,17 @@ void ui_event_timeuseButton(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         chooseBtEventCD(e);
+    }
+}
+void ui_event_themeSwitch(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        switchThemesCD(e);
+    }
+    if(event_code == LV_EVENT_CLICKED) {
+        _ui_switch_theme(UI_THEME_DARKTHEME);
     }
 }
 void ui_event_cameraButton(lv_event_t * e)

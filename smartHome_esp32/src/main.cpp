@@ -30,6 +30,16 @@ void setup()
 
     // 打印PSRAM
     printPSRAM();
+
+    audioSpeak("网络连接失败");
+    delay(2000);
+    audioSpeak("网络断开连接");
+    delay(2000);
+    audioSpeak("请连接wifi配置网络");
+    delay(2000);
+    audioSpeak("下雨了,请注意关窗");
+    delay(2000);
+    audioSpeak("有人长时间停留");
 }
 
 void loop()

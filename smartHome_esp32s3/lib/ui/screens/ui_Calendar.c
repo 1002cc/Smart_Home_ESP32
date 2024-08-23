@@ -9,8 +9,10 @@ void ui_Calendar_screen_init(void)
 {
     ui_Calendar = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_Calendar, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Calendar, lv_color_hex(0x162432), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Calendar, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Calendar, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_back);
+    ui_object_set_themeable_style_property(ui_Calendar, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_back);
 
     ui_Calendar2 = lv_calendar_create(ui_Calendar);
     lv_calendar_set_today_date(ui_Calendar2, 2024, 5, 1);
@@ -19,8 +21,10 @@ void ui_Calendar_screen_init(void)
     lv_obj_set_width(ui_Calendar2, 320);
     lv_obj_set_height(ui_Calendar2, 240);
     lv_obj_set_align(ui_Calendar2, LV_ALIGN_CENTER);
-    lv_obj_set_style_bg_color(ui_Calendar2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Calendar2, 55, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Calendar2, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_Calendar2, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
     lv_obj_set_style_border_color(ui_Calendar2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_Calendar2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 

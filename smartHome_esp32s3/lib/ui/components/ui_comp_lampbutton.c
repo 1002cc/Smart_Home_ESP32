@@ -28,8 +28,8 @@ lv_obj_t * ui_lampButton_create(lv_obj_t * comp_parent)
     cui_lampButton = lv_btn_create(comp_parent);
     lv_obj_set_width(cui_lampButton, 80);
     lv_obj_set_height(cui_lampButton, 80);
-    lv_obj_set_x(cui_lampButton, -70);
-    lv_obj_set_y(cui_lampButton, -42);
+    lv_obj_set_x(cui_lampButton, 50);
+    lv_obj_set_y(cui_lampButton, -40);
     lv_obj_set_align(cui_lampButton, LV_ALIGN_CENTER);
     lv_obj_add_flag(cui_lampButton, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(cui_lampButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags

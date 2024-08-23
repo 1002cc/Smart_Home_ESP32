@@ -1,8 +1,166 @@
 {
   "deftheme": {
     "name": "Default",
-    "properties": []
+    "properties": [
+      {
+        "nid": 0,
+        "strtype": "THEME_COLOR",
+        "strval": "back",
+        "intarray": [
+          31,
+          34,
+          40,
+          255
+        ],
+        "InheritedType": 0
+      },
+      {
+        "nid": 0,
+        "strtype": "THEME_COLOR",
+        "strval": "font",
+        "intarray": [
+          255,
+          255,
+          255,
+          255
+        ],
+        "InheritedType": 0
+      },
+      {
+        "nid": 0,
+        "strtype": "THEME_COLOR",
+        "strval": "btn",
+        "intarray": [
+          65,
+          80,
+          98,
+          255
+        ],
+        "InheritedType": 0
+      },
+      {
+        "nid": 0,
+        "strtype": "THEME_COLOR",
+        "strval": "boeder",
+        "intarray": [
+          141,
+          120,
+          244,
+          255
+        ],
+        "InheritedType": 0
+      }
+    ]
   },
-  "themes": [],
-  "selected_theme": "Default"
+  "themes": [
+    {
+      "name": "darkTheme",
+      "properties": [
+        {
+          "nid": 0,
+          "strtype": "THEME_COLOR",
+          "strval": "back",
+          "intarray": [
+            16,
+            24,
+            32,
+            255
+          ],
+          "InheritedType": 0
+        },
+        {
+          "nid": 0,
+          "strtype": "THEME_COLOR",
+          "strval": "font",
+          "intarray": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "InheritedType": 0
+        },
+        {
+          "nid": 0,
+          "strtype": "THEME_COLOR",
+          "strval": "btn",
+          "intarray": [
+            65,
+            80,
+            98,
+            255
+          ],
+          "InheritedType": 0
+        },
+        {
+          "nid": 0,
+          "flags": 2097152,
+          "strtype": "THEME_COLOR",
+          "strval": "boeder",
+          "intarray": [
+            141,
+            120,
+            244,
+            255
+          ],
+          "InheritedType": 0
+        }
+      ]
+    },
+    {
+      "name": "LightTheme",
+      "properties": [
+        {
+          "nid": 0,
+          "strtype": "THEME_COLOR",
+          "strval": "back",
+          "intarray": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "InheritedType": 0
+        },
+        {
+          "nid": 0,
+          "strtype": "THEME_COLOR",
+          "strval": "font",
+          "intarray": [
+            9,
+            8,
+            8,
+            255
+          ],
+          "InheritedType": 0
+        },
+        {
+          "nid": 0,
+          "strtype": "THEME_COLOR",
+          "strval": "btn",
+          "intarray": [
+            169,
+            178,
+            181,
+            200
+          ],
+          "InheritedType": 0
+        },
+        {
+          "nid": 0,
+          "flags": 2097152,
+          "strtype": "THEME_COLOR",
+          "strval": "boeder",
+          "intarray": [
+            141,
+            120,
+            244,
+            255
+          ],
+          "InheritedType": 0
+        }
+      ]
+    }
+  ],
+  "selected_theme": "LightTheme"
 }

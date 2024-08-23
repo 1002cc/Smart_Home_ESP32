@@ -10,8 +10,10 @@ void ui_MainScreen_screen_init(void)
     ui_MainScreen = lv_obj_create(NULL);
     lv_obj_add_flag(ui_MainScreen, LV_OBJ_FLAG_SCROLL_ONE);     /// Flags
     lv_obj_clear_flag(ui_MainScreen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_MainScreen, lv_color_hex(0x161924), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_MainScreen, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_MainScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_back);
+    ui_object_set_themeable_style_property(ui_MainScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_back);
 
     ui_Image2 = lv_img_create(ui_MainScreen);
     lv_img_set_src(ui_Image2, &ui_img_icon_png);
@@ -31,8 +33,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_y(ui_Label2, -97);
     lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label2, "智能家居");
-    lv_obj_set_style_text_color(ui_Label2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_Label2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Label2, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label2, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label2, &ui_font_smartsystem, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_timeLabel = lv_label_create(ui_MainScreen);
@@ -43,8 +47,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_align(ui_timeLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_timeLabel, "12:12");
     lv_obj_add_flag(ui_timeLabel, LV_OBJ_FLAG_CLICKABLE);     /// Flags
-    lv_obj_set_style_text_color(ui_timeLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_timeLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_timeLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_timeLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_timeLabel, &lv_font_montserrat_22, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_weathericonImage = lv_img_create(ui_MainScreen);
@@ -98,8 +104,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_y(ui_weatherLabel, -72);
     lv_obj_set_align(ui_weatherLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_weatherLabel, "多云  室外温度:25°C");
-    lv_obj_set_style_text_color(ui_weatherLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_weatherLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_weatherLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_weatherLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_weatherLabel, &ui_font_weatherfont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Container1 = lv_obj_create(ui_MainScreen);
@@ -152,8 +160,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_align(ui_Button5, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button5, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Button5, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button5, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Button5, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_Button5, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
 
     ui_Image7 = lv_img_create(ui_Button5);
     lv_img_set_src(ui_Image7, &ui_img_lamps_png);
@@ -173,6 +183,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_y(ui_Label11, 0);
     lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label11, "LED灯");
+    ui_object_set_themeable_style_property(ui_Label11, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label11, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label11, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Button3 = lv_btn_create(ui_Container1);
@@ -183,8 +197,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_align(ui_Button3, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button3, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Button3, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Button3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_Button3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
 
     ui_Image3 = lv_img_create(ui_Button3);
     lv_img_set_src(ui_Image3, &ui_img_s1_png);
@@ -204,6 +220,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_y(ui_Label5, 0);
     lv_obj_set_align(ui_Label5, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label5, "监控");
+    ui_object_set_themeable_style_property(ui_Label5, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label5, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label5, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Button2 = lv_btn_create(ui_Container1);
@@ -214,8 +234,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_align(ui_Button2, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button2, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Button2, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Button2, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_Button2, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
 
     ui_Image4 = lv_img_create(ui_Button2);
     lv_img_set_src(ui_Image4, &ui_img_data_png);
@@ -235,6 +257,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_y(ui_Label6, 0);
     lv_obj_set_align(ui_Label6, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label6, "传感器");
+    ui_object_set_themeable_style_property(ui_Label6, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label6, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label6, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Button4 = lv_btn_create(ui_Container1);
@@ -245,19 +271,21 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_align(ui_Button4, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Button4, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_Button4, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Button4, lv_color_hex(0x465363), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Button4, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_Button4, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_Button4, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
 
     ui_Image6 = lv_img_create(ui_Button4);
-    lv_img_set_src(ui_Image6, &ui_img_y1_png);
+    lv_img_set_src(ui_Image6, &ui_img_chat_png);
     lv_obj_set_width(ui_Image6, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Image6, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Image6, -33);
-    lv_obj_set_y(ui_Image6, -3);
+    lv_obj_set_x(ui_Image6, -27);
+    lv_obj_set_y(ui_Image6, 0);
     lv_obj_set_align(ui_Image6, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_Image6, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_Image6, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_img_set_zoom(ui_Image6, 160);
+    lv_img_set_zoom(ui_Image6, 100);
 
     ui_Label29 = lv_label_create(ui_Button4);
     lv_obj_set_width(ui_Label29, LV_SIZE_CONTENT);   /// 1
@@ -266,6 +294,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_y(ui_Label29, 0);
     lv_obj_set_align(ui_Label29, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label29, "语音");
+    ui_object_set_themeable_style_property(ui_Label29, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label29, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label29, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_Panel2 = lv_obj_create(ui_Container1);
@@ -287,8 +319,10 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_y(ui_cityLabel, -99);
     lv_obj_set_align(ui_cityLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_cityLabel, "广州");
-    lv_obj_set_style_text_color(ui_cityLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_cityLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_cityLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_cityLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_cityLabel, &ui_font_UniversalFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_statusbarLabel = lv_label_create(ui_MainScreen);

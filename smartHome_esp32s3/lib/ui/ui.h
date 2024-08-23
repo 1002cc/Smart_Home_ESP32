@@ -16,6 +16,8 @@ extern "C" {
 #include "components/ui_comp.h"
 #include "components/ui_comp_hook.h"
 #include "ui_events.h"
+#include "ui_theme_manager.h"
+#include "ui_themes.h"
 
 // SCREEN: ui_StartupScreen
 void ui_StartupScreen_screen_init(void);
@@ -163,6 +165,9 @@ extern lv_obj_t * ui_Label10;
 void ui_event_timeuseButton(lv_event_t * e);
 extern lv_obj_t * ui_timeuseButton;
 extern lv_obj_t * ui_Label24;
+extern lv_obj_t * ui_Label31;
+void ui_event_themeSwitch(lv_event_t * e);
+extern lv_obj_t * ui_themeSwitch;
 extern lv_obj_t * ui_W4;
 extern lv_obj_t * ui_Label19;
 extern lv_obj_t * ui_Label32;
@@ -223,7 +228,7 @@ LV_IMG_DECLARE(ui_img_configure_png);    // assets/configure.png
 LV_IMG_DECLARE(ui_img_lamps_png);    // assets/lamps.png
 LV_IMG_DECLARE(ui_img_s1_png);    // assets/s1.png
 LV_IMG_DECLARE(ui_img_data_png);    // assets/data.png
-LV_IMG_DECLARE(ui_img_y1_png);    // assets/y1.png
+LV_IMG_DECLARE(ui_img_chat_png);    // assets/chat.png
 LV_IMG_DECLARE(ui_img_l2_png);    // assets/l2.png
 LV_IMG_DECLARE(ui_img_l1_png);    // assets/l1.png
 LV_IMG_DECLARE(ui_img_a1_png);    // assets/a1.png
@@ -231,6 +236,8 @@ LV_IMG_DECLARE(ui_img_t2_png);    // assets/t2.png
 LV_IMG_DECLARE(ui_img_w1_png);    // assets/w1.png
 LV_IMG_DECLARE(ui_img_wifi_png);    // assets/wifi.png
 LV_IMG_DECLARE(ui_img_c1_png);    // assets/c1.png
+LV_IMG_DECLARE(ui_img_cc1_png);    // assets/cc1.png
+LV_IMG_DECLARE(ui_img_vv1_png);    // assets/vv1.png
 
 
 

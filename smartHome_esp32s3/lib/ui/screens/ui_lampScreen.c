@@ -9,8 +9,10 @@ void ui_lampScreen_screen_init(void)
 {
     ui_lampScreen = lv_obj_create(NULL);
     lv_obj_clear_flag(ui_lampScreen, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_lampScreen, lv_color_hex(0x161924), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_lampScreen, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_lampScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_back);
+    ui_object_set_themeable_style_property(ui_lampScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_back);
     lv_obj_set_style_text_color(ui_lampScreen, lv_color_hex(0x808080), LV_PART_MAIN | LV_STATE_CHECKED);
     lv_obj_set_style_text_opa(ui_lampScreen, 255, LV_PART_MAIN | LV_STATE_CHECKED);
 
@@ -34,7 +36,7 @@ void ui_lampScreen_screen_init(void)
     lv_obj_set_x(ui_lampButton1, -70);
     lv_obj_set_y(ui_lampButton1, -40);
 
-
+    lv_img_set_src(ui_comp_get_child(ui_lampButton1, UI_COMP_LAMPBUTTON_STATEIMAGE2), &ui_img_l1_png);
 
     ui_lampButton2 = ui_lampButton_create(ui_TabPage1);
     lv_obj_set_x(ui_lampButton2, 50);

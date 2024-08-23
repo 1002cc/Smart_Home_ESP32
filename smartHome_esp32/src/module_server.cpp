@@ -84,7 +84,6 @@ void littlefs_init()
         Serial.println("An Error has occurred while mounting LittleFS");
     }
     Serial.println("LittleFS init succesful");
-    audio.connecttoFS(LittleFS, "/conect_s.mp3");
 }
 
 /********************************************************************
@@ -151,15 +150,35 @@ void audioSpeak(const String &text)
 {
     if (wifitate()) {
         String aduiourl = getvAnswer(text);
-        Serial.println(aduiourl);
-        if (aduiourl != "error") {
-            audio.stopSong();
-            audio.connecttohost(aduiourl.c_str());
-        }
+        // Serial.println(aduiourl);
+        // if (aduiourl != "error") {
+        //     audio.stopSong();
+        //     audio.connecttohost(aduiourl.c_str());
+        // }
     }
 }
 
 void startAudioTack()
 {
     xTaskCreatePinnedToCore(audioTask, "audio_task", 1024 * 3, NULL, 2, NULL, 1);
+}
+
+void playAudio(const AUDIO_NAME &index)
+{
+    switch (index) {
+    case AUDIO_NAME::CONNECT_Y:
+        audio.connecttoFS(LittleFS, "/connect_y.mp3");
+        break;
+    case AUDIO_NAME::CONNECT_D:
+        audio.connecttoFS(LittleFS, "/connect_d.mp3");
+        break;
+    case AUDIO_NAME::CONNECT_N:
+        audio.connecttoFS(LittleFS, "/connect_n.mp3");
+        break;
+    case AUDIO_NAME::RAIN:
+        audio.connecttoFS(LittleFS, "/rain.mp3");
+
+    default:
+        break;
+    }
 }
