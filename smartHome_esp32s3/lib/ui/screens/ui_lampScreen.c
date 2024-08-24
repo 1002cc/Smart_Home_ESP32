@@ -32,32 +32,66 @@ void ui_lampScreen_screen_init(void)
 
     ui_TabPage1 = lv_tabview_add_tab(ui_TabView2, "switch");
 
-    ui_lampButton1 = ui_lampButton_create(ui_TabPage1);
-    lv_obj_set_x(ui_lampButton1, -70);
-    lv_obj_set_y(ui_lampButton1, -40);
-
-    lv_img_set_src(ui_comp_get_child(ui_lampButton1, UI_COMP_LAMPBUTTON_STATEIMAGE2), &ui_img_l1_png);
-
-    ui_lampButton2 = ui_lampButton_create(ui_TabPage1);
-    lv_obj_set_x(ui_lampButton2, 50);
-    lv_obj_set_y(ui_lampButton2, -40);
-
-
-    lv_label_set_text(ui_comp_get_child(ui_lampButton2, UI_COMP_LAMPBUTTON_NAMELABEL2), "灯2");
-
-    ui_lampButton3 = ui_lampButton_create(ui_TabPage1);
+    ui_lampButton3 = lv_btn_create(ui_TabPage1);
+    lv_obj_set_width(ui_lampButton3, 80);
+    lv_obj_set_height(ui_lampButton3, 80);
     lv_obj_set_x(ui_lampButton3, -70);
-    lv_obj_set_y(ui_lampButton3, 60);
+    lv_obj_set_y(ui_lampButton3, -40);
+    lv_obj_set_align(ui_lampButton3, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_lampButton3, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_lampButton3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_object_set_themeable_style_property(ui_lampButton3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_boeder);
+    ui_object_set_themeable_style_property(ui_lampButton3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_boeder);
+    lv_obj_set_style_bg_color(ui_lampButton3, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ui_lampButton3, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ui_lampButton3, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ui_lampButton3, 150, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ui_lampButton3, 10, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_spread(ui_lampButton3, 5, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui_lampButton3, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ui_lampButton3, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui_lampButton3, lv_color_hex(0xA94949), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_lampButton3, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
 
+    ui_stateLabel1 = lv_label_create(ui_lampButton3);
+    lv_obj_set_width(ui_stateLabel1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_stateLabel1, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_stateLabel1, 17);
+    lv_obj_set_y(ui_stateLabel1, 21);
+    lv_obj_set_align(ui_stateLabel1, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_stateLabel1, "OFF");
+    lv_obj_clear_flag(ui_stateLabel1, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE);      /// Flags
+    ui_object_set_themeable_style_property(ui_stateLabel1, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_stateLabel1, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_stateLabel1, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_label_set_text(ui_comp_get_child(ui_lampButton3, UI_COMP_LAMPBUTTON_NAMELABEL2), "灯3");
+    ui_stateImage1 = lv_img_create(ui_lampButton3);
+    lv_img_set_src(ui_stateImage1, &ui_img_l1_png);
+    lv_obj_set_width(ui_stateImage1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_stateImage1, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_stateImage1, -11);
+    lv_obj_set_y(ui_stateImage1, -12);
+    lv_obj_set_align(ui_stateImage1, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_stateImage1, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_stateImage1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_img_set_zoom(ui_stateImage1, 120);
 
-    ui_lampButton4 = ui_lampButton_create(ui_TabPage1);
-    lv_obj_set_x(ui_lampButton4, 50);
-    lv_obj_set_y(ui_lampButton4, 60);
-
-
-    lv_label_set_text(ui_comp_get_child(ui_lampButton4, UI_COMP_LAMPBUTTON_NAMELABEL2), "灯4");
+    ui_nameLabel1 = lv_label_create(ui_lampButton3);
+    lv_obj_set_width(ui_nameLabel1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_nameLabel1, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_nameLabel1, -19);
+    lv_obj_set_y(ui_nameLabel1, 22);
+    lv_obj_set_align(ui_nameLabel1, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_nameLabel1, "灯1");
+    ui_object_set_themeable_style_property(ui_nameLabel1, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_nameLabel1, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_nameLabel1, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_TabPage2 = lv_tabview_add_tab(ui_TabView2, "color");
 
@@ -77,6 +111,7 @@ void ui_lampScreen_screen_init(void)
     lv_obj_set_style_border_color(ui_Panel10, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_Panel10, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    lv_obj_add_event_cb(ui_lampButton3, ui_event_lampButton3, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_TabView2, ui_event_TabView2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Panel10, ui_event_Panel10, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_lampScreen, ui_event_lampScreen, LV_EVENT_ALL, NULL);

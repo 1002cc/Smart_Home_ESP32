@@ -6,16 +6,16 @@
 #include "ui.h"
 
 
-const ui_theme_variable_t _ui_theme_color_back[3] = {0x1F2228, 0x101820, 0xC4CAD6};
+const ui_theme_variable_t _ui_theme_color_back[3] = {0x1F2228, 0x101820, 0xFFFFFF};
 const ui_theme_variable_t _ui_theme_alpha_back[3] = {255, 255, 255};
 
 const ui_theme_variable_t _ui_theme_color_font[3] = {0xFFFFFF, 0xFFFFFF, 0x090808};
 const ui_theme_variable_t _ui_theme_alpha_font[3] = {255, 255, 255};
 
-const ui_theme_variable_t _ui_theme_color_btn[3] = {0x415062, 0x415062, 0x3A92FB};
-const ui_theme_variable_t _ui_theme_alpha_btn[3] = {255, 255, 255};
+const ui_theme_variable_t _ui_theme_color_btn[3] = {0x415062, 0x415062, 0xA9B2B5};
+const ui_theme_variable_t _ui_theme_alpha_btn[3] = {255, 255, 200};
 
-const ui_theme_variable_t _ui_theme_color_boeder[3] = {0x8D78F4, 0x8D78F4, 0x8D78F4};
+const ui_theme_variable_t _ui_theme_color_boeder[3] = {0x8D78F4, 0x101820, 0xE6E2E6};
 const ui_theme_variable_t _ui_theme_alpha_boeder[3] = {255, 255, 255};
 uint8_t ui_theme_idx = UI_THEME_DARKTHEME;
 

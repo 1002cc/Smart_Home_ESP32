@@ -21,7 +21,7 @@ void setup()
     lv_gohome();
     startNTPTask();
     initSpeakConfig();
-    startSensorTask();
+    // startSensorTask();
 #if USE_AUDIO
     startAudioTack();
 #endif

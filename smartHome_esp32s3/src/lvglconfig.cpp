@@ -154,6 +154,8 @@ void initLVGLConfig(void)
     // uint16_t calData[5] = {490, 3259, 422, 3210, 1};
     tft.setTouch(calData);
 
+    pinMode(TFT_BL, OUTPUT);
+
     lv_color_t *draw_buf1 = (lv_color_t *)ps_malloc(screenWidth * screenHeight * 2);
     lv_color_t *draw_buf2 = (lv_color_t *)ps_malloc(screenWidth * screenHeight * 2);
 
@@ -223,72 +225,72 @@ void lampButtonCB(lv_event_t *e)
     lv_obj_t *sw = lv_event_get_target(e);
     bool is_on = lv_obj_has_state(sw, LV_STATE_CHECKED);
     // Serial.println(is_on);
-    if (sw == ui_lampButton1) {
-        mqttSwitchState.lampButton1 = is_on;
-        // if (is_on) {
-        //     redled_on();
-        // } else {
-        //     redled_off();
-        // }
-    } else if (sw == ui_lampButton2) {
-        mqttSwitchState.lampButton2 = is_on;
-        // if (is_on) {
-        //     greenled_on();
-        // } else {
-        //     greenled_off();
-        // }
+    // if (sw == ui_lampButton1) {
+    //     mqttSwitchState.lampButton1 = is_on;
+    //     // if (is_on) {
+    //     //     redled_on();
+    //     // } else {
+    //     //     redled_off();
+    //     // }
+    // } else if (sw == ui_lampButton2) {
+    //     mqttSwitchState.lampButton2 = is_on;
+    //     // if (is_on) {
+    //     //     greenled_on();
+    //     // } else {
+    //     //     greenled_off();
+    //     // }
 
-    } else if (sw == ui_lampButton3) {
-        mqttSwitchState.lampButton3 = is_on;
-        // if (is_on) {
-        //     blueled_on();
-        // } else {
-        //     blueled_off();
-        // }
-    } else if (sw == ui_lampButton4) {
-        mqttSwitchState.lampButton4 = is_on;
-        // if (is_on) {
-        //     blueled_on();
-        // } else {
-        //     blueled_off();
-        // }
-    }
+    // } else if (sw == ui_lampButton3) {
+    //     mqttSwitchState.lampButton3 = is_on;
+    //     // if (is_on) {
+    //     //     blueled_on();
+    //     // } else {
+    //     //     blueled_off();
+    //     // }
+    // } else if (sw == ui_lampButton4) {
+    //     mqttSwitchState.lampButton4 = is_on;
+    //     // if (is_on) {
+    //     //     blueled_on();
+    //     // } else {
+    //     //     blueled_off();
+    //     // }
+    // }
     pulishSwitchDatas(mqttSwitchState);
 }
 
 void updateSwitchState(lampButtonData uSwitchState)
 {
-    if (uSwitchState.lampButton1) {
-        lv_obj_add_state(ui_lampButton1, LV_EVENT_CLICKED);
-        redled_on();
-    } else {
-        lv_obj_clear_flag(ui_lampButton1, LV_EVENT_CLICKED);
-        redled_off();
-    }
+    // if (uSwitchState.lampButton1) {
+    //     lv_obj_add_state(ui_lampButton1, LV_EVENT_CLICKED);
+    //     redled_on();
+    // } else {
+    //     lv_obj_clear_flag(ui_lampButton1, LV_EVENT_CLICKED);
+    //     redled_off();
+    // }
 
-    if (uSwitchState.lampButton2) {
-        lv_obj_add_state(ui_lampButton2, LV_EVENT_CLICKED);
-        greenled_on();
-    } else {
-        lv_obj_clear_flag(ui_lampButton2, LV_EVENT_CLICKED);
-        greenled_off();
-    }
+    // if (uSwitchState.lampButton2) {
+    //     lv_obj_add_state(ui_lampButton2, LV_EVENT_CLICKED);
+    //     greenled_on();
+    // } else {
+    //     lv_obj_clear_flag(ui_lampButton2, LV_EVENT_CLICKED);
+    //     greenled_off();
+    // }
 
-    if (uSwitchState.lampButton3) {
-        lv_obj_add_state(ui_lampButton3, LV_EVENT_CLICKED);
-        blueled_on();
-    } else {
-        lv_obj_clear_flag(ui_lampButton3, LV_EVENT_CLICKED);
-        blueled_off();
-    }
+    // if (uSwitchState.lampButton3) {
+    //     lv_obj_add_state(ui_lampButton3, LV_EVENT_CLICKED);
+    //     blueled_on();
+    // } else {
+    //     lv_obj_clear_flag(ui_lampButton3, LV_EVENT_CLICKED);
+    //     blueled_off();
+    // }
 
-    if (uSwitchState.lampButton4) {
-        lv_obj_add_state(ui_lampButton4, LV_EVENT_CLICKED);
-        blueled_on();
-    } else {
-        lv_obj_clear_flag(ui_lampButton4, LV_EVENT_CLICKED);
-        blueled_off();
-    }
+    // if (uSwitchState.lampButton4) {
+    //     lv_obj_add_state(ui_lampButton4, LV_EVENT_CLICKED);
+    //     blueled_on();
+    // } else {
+    //     lv_obj_clear_flag(ui_lampButton4, LV_EVENT_CLICKED);
+    //     blueled_off();
+    // }
 }
 
 /********************************************************************
@@ -337,11 +339,9 @@ void lv_setMQTTState(const char *text)
 void lv_setMQTTSwitchState(bool state)
 {
     if (state) {
-        lv_label_set_text(ui_mqttConnectStateLabel, "解绑");
         lv_obj_add_state(ui_mqttuseButton, LV_STATE_CHECKED);
     } else {
-        lv_label_set_text(ui_mqttConnectStateLabel, "绑定");
-        lv_obj_add_state(ui_mqttuseButton, LV_STATE_DEFAULT);
+        lv_obj_clear_state(ui_mqttuseButton, LV_STATE_CHECKED);
     }
 }
 
@@ -469,15 +469,25 @@ void switchThemesCD(lv_event_t *e)
 {
     if (lv_obj_has_state(ui_themeSwitch, LV_STATE_CHECKED)) {
         _ui_switch_theme(UI_THEME_DARKTHEME);
+        StoreintData("theme_id", 0);
     } else {
         _ui_switch_theme(UI_THEME_LIGHTTHEME);
+        StoreintData("theme_id", 1);
     }
+}
+
+void msgboxTip(const char *text)
+{
+    lv_obj_t *mbox2 = lv_msgbox_create(lv_scr_act(), "Tip", text, NULL, true);
+    lv_obj_set_style_text_font(mbox2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_align(mbox2, LV_ALIGN_CENTER, 0, 0);
 }
 
 /********************************************************************
                          LVGL_SET_UI
 ********************************************************************/
-static void kbClear_cb(lv_event_t *event)
+static void
+kbClear_cb(lv_event_t *event)
 {
     lv_keyboard_t *kb = (lv_keyboard_t *)event->target;
     lv_textarea_set_text(kb->ta, "");
@@ -575,18 +585,27 @@ void chooseBtEventCD(lv_event_t *e)
             lv_obj_add_flag(popupBox, LV_OBJ_FLAG_HIDDEN);
         } else if (btn == ui_mqttuseButton) {
             if (getwifistate()) {
-                if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+                if (lv_obj_has_state(ui_mqttuseButton, LV_STATE_CHECKED)) {
                     String substr = lv_textarea_get_text(subTextarea);
                     String pubstr = lv_textarea_get_text(pubTextarea);
                     if (!substr.isEmpty()) {
                         lv_textarea_set_placeholder_text(subTextarea, substr.c_str());
                         lv_textarea_set_text(subTextarea, "");
+                    } else {
+                        lv_setMQTTSwitchState(false);
+                        msgboxTip("账号不能为空!");
+                        return;
                     }
                     if (!pubstr.isEmpty()) {
-                        // lv_textarea_set_placeholder_text(pubTextarea, pubstr.c_str());
+                        lv_textarea_set_placeholder_text(pubTextarea, "******");
                         lv_textarea_set_text(pubTextarea, "");
+                    } else {
+                        lv_setMQTTSwitchState(false);
+                        msgboxTip("密码不能为空");
+                        return;
                     }
                     // 请求验证账号
+                    Serial.println("正在验证账号");
                     if (postlogin(substr, pubstr)) {
                         lv_setMQTTSwitchState(true);
                         StoreintData("isLogin", 1);
@@ -601,8 +620,7 @@ void chooseBtEventCD(lv_event_t *e)
                         StoreintData("isLogin", 0);
                         loginState = false;
                         enable_mqtt = false;
-                        Serial.println("no network dont check mqttSwitch");
-                        lv_obj_add_state(btn, LV_STATE_DEFAULT);
+                        Serial.println("登录失败");
                     }
                 } else {
                     lv_setMQTTSwitchState(false);
@@ -622,6 +640,7 @@ void chooseBtEventCD(lv_event_t *e)
                     Serial.println("ui_mqttSwitch NO LV_STATE_CHECKED");
                 }
             } else {
+                msgboxTip("网络未连接");
                 lv_setMQTTSwitchState(false);
                 loginState = false;
                 enable_mqtt = false;
@@ -743,6 +762,14 @@ void SpeechSetDCD(lv_event_t *e)
         useAIMode = lv_dropdown_get_selected(btn);
         StoreintData("speech_ai_mode", lv_dropdown_get_selected(btn));
     }
+}
+
+void controlBrightnessCD(lv_event_t *e)
+{
+    lv_obj_t *slider = lv_event_get_target(e);
+    Serial.println((int)lv_slider_get_value(slider));
+    analogWrite(TFT_BL, (int)lv_slider_get_value(slider));
+    StoreintData("brightness", (int)lv_slider_get_value(slider));
 }
 
 void initSetConfigUI()
@@ -1298,6 +1325,21 @@ void initDataUI()
     } else {
         lv_textarea_set_placeholder_text(portTextarea, String(websockets_server_port).c_str());
         StoreData("cameraport", String(websockets_server_port).c_str());
+    }
+
+    int theme_id = ReadintData("theme_id");
+    if (theme_id != 1000) {
+        if (theme_id == 1) {
+            _ui_switch_theme(UI_THEME_LIGHTTHEME);
+        } else {
+            _ui_switch_theme(UI_THEME_DARKTHEME);
+        }
+    }
+
+    int brightness = ReadintData("brightness");
+    if (brightness != 1000) {
+        analogWrite(TFT_BL, brightness);
+        lv_slider_set_value(ui_Slider1, brightness, LV_ANIM_OFF);
     }
 }
 

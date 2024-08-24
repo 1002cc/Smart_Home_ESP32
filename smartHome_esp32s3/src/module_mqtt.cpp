@@ -75,6 +75,7 @@ bool initMQTTConfig(void)
             return firstConnectMQTT();
         }
     }
+    Serial.printf("loginState is false \n");
     loginState = false;
     enable_mqtt = false;
     return false;

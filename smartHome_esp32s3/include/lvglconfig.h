@@ -25,6 +25,7 @@ void lv_setCameraImage(const void *path);
 void lv_setSpeechinfo(const char *text);
 void lv_setIPinfo(const char *text);
 void lv_setstatusbarLabel(int status);
+void msgboxTip(const char *text);
 
 void ui_calender_update(void);
 void startCameraTask();

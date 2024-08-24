@@ -90,3 +90,11 @@ def monitorScreenOCD(event_struct):
 def switchThemesCD(event_struct):
     return
 
+
+def brightnessbrightness(event_struct):
+    return
+
+
+def controlBrightnessCD(event_struct):
+    return
+

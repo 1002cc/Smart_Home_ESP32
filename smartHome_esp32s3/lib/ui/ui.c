@@ -87,10 +87,11 @@ lv_obj_t * ui_lampScreen;
 void ui_event_TabView2(lv_event_t * e);
 lv_obj_t * ui_TabView2;
 lv_obj_t * ui_TabPage1;
-lv_obj_t * ui_lampButton1;
-lv_obj_t * ui_lampButton2;
+void ui_event_lampButton3(lv_event_t * e);
 lv_obj_t * ui_lampButton3;
-lv_obj_t * ui_lampButton4;
+lv_obj_t * ui_stateLabel1;
+lv_obj_t * ui_stateImage1;
+lv_obj_t * ui_nameLabel1;
 lv_obj_t * ui_TabPage2;
 void ui_event_Panel10(lv_event_t * e);
 lv_obj_t * ui_Panel10;
@@ -170,6 +171,9 @@ lv_obj_t * ui_Label24;
 lv_obj_t * ui_Label31;
 void ui_event_themeSwitch(lv_event_t * e);
 lv_obj_t * ui_themeSwitch;
+lv_obj_t * ui_Label36;
+void ui_event_Slider1(lv_event_t * e);
+lv_obj_t * ui_Slider1;
 lv_obj_t * ui_W4;
 lv_obj_t * ui_Label19;
 lv_obj_t * ui_Label32;
@@ -359,6 +363,21 @@ void ui_event_TabView2(lv_event_t * e)
         _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_MainScreen_screen_init);
     }
 }
+void ui_event_lampButton3(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED &&  lv_obj_has_state(target, LV_STATE_CHECKED)) {
+        _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_l2_png);
+        _ui_label_set_property(ui_stateLabel1, _UI_LABEL_PROPERTY_TEXT, "ON");
+        lampButtonCB(e);
+    }
+    if(event_code == LV_EVENT_VALUE_CHANGED &&  !lv_obj_has_state(target, LV_STATE_CHECKED)) {
+        _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_l1_png);
+        _ui_label_set_property(ui_stateLabel1, _UI_LABEL_PROPERTY_TEXT, "OFF");
+        lampButtonCB(e);
+    }
+}
 void ui_event_Panel10(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -497,6 +516,7 @@ void ui_event_mqttuseButton(lv_event_t * e)
     lv_obj_t * target = lv_event_get_target(e);
     if(event_code == LV_EVENT_CLICKED) {
         chooseBtEventCD(e);
+        _ui_checked_set_text_value(ui_mqttConnectStateLabel, target, "解绑", "绑定");
     }
 }
 void ui_event_timeuseButton(lv_event_t * e)
@@ -514,8 +534,13 @@ void ui_event_themeSwitch(lv_event_t * e)
     if(event_code == LV_EVENT_VALUE_CHANGED) {
         switchThemesCD(e);
     }
-    if(event_code == LV_EVENT_CLICKED) {
-        _ui_switch_theme(UI_THEME_DARKTHEME);
+}
+void ui_event_Slider1(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_VALUE_CHANGED) {
+        controlBrightnessCD(e);
     }
 }
 void ui_event_cameraButton(lv_event_t * e)

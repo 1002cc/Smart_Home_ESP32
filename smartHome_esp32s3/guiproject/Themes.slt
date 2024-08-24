@@ -94,13 +94,12 @@
         },
         {
           "nid": 0,
-          "flags": 2097152,
           "strtype": "THEME_COLOR",
           "strval": "boeder",
           "intarray": [
-            141,
-            120,
-            244,
+            16,
+            24,
+            32,
             255
           ],
           "InheritedType": 0
@@ -148,13 +147,12 @@
         },
         {
           "nid": 0,
-          "flags": 2097152,
           "strtype": "THEME_COLOR",
           "strval": "boeder",
           "intarray": [
-            141,
-            120,
-            244,
+            230,
+            226,
+            230,
             255
           ],
           "InheritedType": 0
@@ -162,5 +160,5 @@
       ]
     }
   ],
-  "selected_theme": "LightTheme"
+  "selected_theme": "darkTheme"
 }

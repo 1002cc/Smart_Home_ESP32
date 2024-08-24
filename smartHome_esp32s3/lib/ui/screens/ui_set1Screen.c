@@ -174,8 +174,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_x(ui_mqttuseButton, 94);
     lv_obj_set_y(ui_mqttuseButton, 46);
     lv_obj_set_align(ui_mqttuseButton, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_mqttuseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_add_flag(ui_mqttuseButton, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_mqttuseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_bg_color(ui_mqttuseButton, lv_color_hex(0xDB82F5), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ui_mqttuseButton, 200, LV_PART_MAIN | LV_STATE_CHECKED);
 
     ui_mqttConnectStateLabel = lv_label_create(ui_mqttuseButton);
     lv_obj_set_width(ui_mqttConnectStateLabel, LV_SIZE_CONTENT);   /// 1
@@ -243,8 +245,8 @@ void ui_set1Screen_screen_init(void)
     ui_timeuseButton = lv_btn_create(ui_w3);
     lv_obj_set_width(ui_timeuseButton, 46);
     lv_obj_set_height(ui_timeuseButton, 28);
-    lv_obj_set_x(ui_timeuseButton, 87);
-    lv_obj_set_y(ui_timeuseButton, 62);
+    lv_obj_set_x(ui_timeuseButton, 93);
+    lv_obj_set_y(ui_timeuseButton, -87);
     lv_obj_set_align(ui_timeuseButton, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_timeuseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_timeuseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -278,6 +280,30 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_y(ui_themeSwitch, 51);
     lv_obj_set_align(ui_themeSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_themeSwitch, LV_STATE_CHECKED);       /// States
+
+
+    ui_Label36 = lv_label_create(ui_w3);
+    lv_obj_set_width(ui_Label36, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label36, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label36, -117);
+    lv_obj_set_y(ui_Label36, 81);
+    lv_obj_set_align(ui_Label36, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label36, "屏幕亮度");
+    ui_object_set_themeable_style_property(ui_Label36, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label36, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_Label36, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Slider1 = lv_slider_create(ui_w3);
+    lv_slider_set_range(ui_Slider1, 0, 255);
+    lv_slider_set_value(ui_Slider1, 0, LV_ANIM_OFF);
+    if(lv_slider_get_mode(ui_Slider1) == LV_SLIDER_MODE_RANGE) lv_slider_set_left_value(ui_Slider1, 0, LV_ANIM_OFF);
+    lv_obj_set_width(ui_Slider1, 170);
+    lv_obj_set_height(ui_Slider1, 10);
+    lv_obj_set_x(ui_Slider1, 22);
+    lv_obj_set_y(ui_Slider1, 81);
+    lv_obj_set_align(ui_Slider1, LV_ALIGN_CENTER);
 
 
     ui_W4 = lv_tabview_add_tab(ui_chooseTabView, "S");
@@ -424,6 +450,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_add_event_cb(ui_mqttuseButton, ui_event_mqttuseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_timeuseButton, ui_event_timeuseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_themeSwitch, ui_event_themeSwitch, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Slider1, ui_event_Slider1, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_cameraButton, ui_event_cameraButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_set1Screen, ui_event_set1Screen, LV_EVENT_ALL, NULL);
 
