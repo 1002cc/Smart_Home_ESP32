@@ -10,11 +10,17 @@ struct SensorData {
     float mq;
 };
 
+struct detectionDate {
+    bool pri;
+    bool rain;
+    bool voice;
+};
+
 struct lampButtonData {
     bool lampButton1;
     bool lampButton2;
-    bool lampButton3;
-    bool lampButton4;
+    bool priButton;
+    bool voiceButton;
 };
 
 bool initMQTTConfig(void);
@@ -23,11 +29,13 @@ void mqttLoop(void);
 bool publishMQTT(const char payload[]);
 bool subscribeMQTT(const char topic[]);
 void publishSensorData(const SensorData &data);
-void pulishSwitchDatas(const lampButtonData &data);
+bool pulishSwitchDatas(const lampButtonData &data);
 void publishGetImage();
 void publishStartVideo(bool isStartVideo);
 void mqtt_disconnect(void);
 bool getMqttStart();
 void mqtMontage(const String &user);
+bool pulishState(const String &object, const bool &state, const String &item);
+bool sendRePW();
 
 #endif

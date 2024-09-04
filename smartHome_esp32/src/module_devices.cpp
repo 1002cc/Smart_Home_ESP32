@@ -5,7 +5,15 @@
 
 lampButtonData mqttSwitchState = {false, false};
 
-int rainState, soundState, pirState;
+extern bool enable_pri;
+extern bool enable_VoiceControl;
+extern bool activeEnableAutoLamp;
+
+int rainState = 0,
+    soundState = 1, pirState = 0;
+
+bool mqttVoice = false;
+bool mqttPri = false;
 
 int pos = 0;
 
@@ -90,71 +98,103 @@ void sg90_setAngle(int angle)
 void sensorTask(void *pt)
 {
     unsigned long lastPrintTime = 0;
-    unsigned long autoLampTime = 0, rainTime = 0;
+    unsigned long autoLampTime = 0, rainTime = 0, priTime = 0, voiceTime = 0;
     bool rainFlag = 0, isRain = 0;
     while (1) {
         rainState = map(analogRead(RAIN_CHANNL), 0, 4095, 235, 0);
         if (rainState > 0) {
-            if (rainFlag) {
+            if (!rainTime && !isRain) {
                 rainTime = millis();
+            }
+        } else {
+            rainTime = 0;
+            isRain = false;
+            if (rainFlag) {
                 rainFlag = 0;
+                pulishState("rainState", isRain);
             }
-        } else {
-            if (isRain) {
-                isRain = false;
-                // pulishState("rain", false);
-            }
+        }
+        if (rainState && rainTime && millis() - rainTime >= RAINTIME) {
+            isRain = true;
+            rainTime = 0;
             rainFlag = 1;
-        }
-        // if (rainState && millis() - rainTime >= RAINTIME) {
-        //     isRain = true;
-        //     Serial.println("has rain");
-        //     audioSpeak("下雨了,请注意关窗");
-        //     pulishState("rain", isRain);
-        // }
-
-        // soundState = map(analogRead(SOUND_PIN), 0, 4095, 235, 0);
-        soundState = digitalRead(SOUND_PIN);
-        if (!soundState) {
-            Serial.println("has sound");
+            Serial.println("has rain");
+            playAudio(AUDIO_NAME::RAIN);
+            pulishState("rainState", isRain);
         }
 
-        pirState = analogRead(PIR_CHANNL);
-        if (pirState > 0) {
-            // autoLampTime = millis();
-            // if (!autoled_state()) {
-            //     autoled_on();
-            //     // mqttSwitchState.lampButton2 = true;
-            //     //  pulishState("lampButton4", mqttSwitchState.lampButton4, "switches");
-            // }
-            Serial.println("has people");
+        if (enable_pri) {
+            pirState = analogRead(PIR_CHANNL);
+            if (pirState > 0) {
+                mqttPri = true;
+                priTime = millis();
+                pulishState("priState", true);
+                Serial.println("has people");
+            } else {
+                if (mqttPri && millis() - priTime >= DETECTIONTIME) {
+                    mqttPri = false;
+                    pulishState("priState", false);
+                }
+            }
         } else {
-            // if (autoled_state() && millis() - autoLampTime >= AUTOLAMPTIME) {
-            //     autoled_off();
-            //     mqttSwitchState.lampButton4 = false;
-            //     // pulishState("lampButton4", mqttSwitchState.lampButton4, "switches");
-            // }
+            pirState = 0;
         }
 
-        if (millis() - lastPrintTime > 1000) // 每秒打印一次
-        {
+        if (enable_VoiceControl) {
+            soundState = digitalRead(SOUND_PIN);
+            if (!soundState) {
+                mqttVoice = true;
+                voiceTime = millis();
+                pulishState("voiceState", true);
+                Serial.println("has sound");
+            } else {
+                if (mqttVoice && millis() - voiceTime >= DETECTIONTIME) {
+                    mqttVoice = false;
+                    pulishState("voiceState", false);
+                }
+            }
+        } else {
+            soundState = 1;
+        }
+
+        if (pirState > 0 || !soundState || activeEnableAutoLamp) {
+            autoLampTime = millis();
+            if (!autoled_state()) {
+                autoled_on();
+                mqttSwitchState.lampButton1 = true;
+                pulishState("lampButton1", mqttSwitchState.lampButton1, "switches");
+            }
+        } else {
+            if (autoled_state() && millis() - autoLampTime >= AUTOLAMPTIME) {
+                autoled_off();
+                mqttSwitchState.lampButton2 = false;
+                pulishState("lampButton2", mqttSwitchState.lampButton1, "switches");
+            }
+        }
+
+        if (millis() - lastPrintTime > 2000) {
             Serial.printf("rainState = %d  soundState = %d  pirState = %d\n", rainState, soundState, pirState);
             lastPrintTime = millis();
         }
 
         if (digitalRead(BUTTON_PIN1)) {
-            Serial.println("BUTTON_PIN1");
-            mqttSwitchState.lampButton1 = !autoled_state();
-            mqttSwitchState.lampButton1 ? autoled_on() : autoled_off();
-            // pulishState("lampButton1", mqttSwitchState.lampButton1, "switches");
+            delay(20);
+            if (digitalRead(BUTTON_PIN1)) {
+                Serial.println("BUTTON_PIN1");
+                mqttSwitchState.lampButton1 = !led3w_state();
+                mqttSwitchState.lampButton1 ? led3w_on() : led3w_off();
+                pulishState("lampButton1", mqttSwitchState.lampButton1, "switches");
+            }
         }
 
         if (digitalRead(BUTTON_PIN2)) {
-
-            Serial.println("BUTTON_PIN2");
-            mqttSwitchState.lampButton2 = !led3w_state();
-            mqttSwitchState.lampButton2 ? led3w_on() : led3w_off();
-            // pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
+            delay(20);
+            if (digitalRead(BUTTON_PIN2)) {
+                Serial.println("BUTTON_PIN2");
+                mqttSwitchState.lampButton2 = !autoled_state();
+                mqttSwitchState.lampButton2 ? autoled_on() : autoled_off();
+                pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
+            }
         }
 
         vTaskDelay(200);

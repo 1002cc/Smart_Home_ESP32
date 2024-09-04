@@ -7,9 +7,18 @@
  * 作者:阿里(qq:617622104)
  *---------------------------------------------------------------
  */
+
 /*
 
+#include "esp_system.h"
 #include "lvgl.h"
+#include "stdio.h"
+// #include <LittleFS.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "esp_spiffs.h"
+#include "esp_vfs.h"
 
 typedef struct {
     uint16_t min;
@@ -35,14 +44,43 @@ static x_header_t __g_xbf_hd = {
     .bpp = 4,
 };
 
-static uint8_t __g_font_buf[280]; // 如bin文件存在SPI FLASH可使用此buff
+char *Font_buff = NULL;
+// static uint8_t __g_font_buf[280]; // 如bin文件存在SPI FLASH可使用此buff
+
+static void init_font(void)
+{
+    FILE *ff = fopen("/littefs/sFont_20.bin", "r");
+    if (ff == NULL) {
+        printf("Failed to open file for reading");
+        return;
+    }
+    fseek(ff, 0, SEEK_END);
+    long lSize = ftell(ff);
+    rewind(ff);
+    printf("Lsize %ld", lSize);
+    static uint8_t first_in = 1;
+    if (first_in == 1) {
+        first_in = 0;
+        Font_buff = (char *)malloc(sizeof(char) * lSize);
+    }
+    int br = fread(Font_buff, 1, lSize, ff);
+    printf("Bytes read %d", br);
+    fclose(ff);
+}
 
 static uint8_t *__user_font_getdata(int offset, int size)
 {
     // 如字模保存在SPI FLASH, SPIFLASH_Read(__g_font_buf,offset,size);
     // 如字模已加载到SDRAM,直接返回偏移地址即可如:return (uint8_t*)(sdram_fontddr+offset);
-    sf_of_read(__g_font_buf, offset, size);
-    return __g_font_buf;
+    // sf_of_read(__g_font_buf, offset, size);
+    // return __g_font_buf;
+    static uint8_t first_in = 1;
+    if (first_in == 1) // 第一次进入的时候初始化外部字体
+    {
+        first_in = 0;
+        init_font();
+    }
+    return (uint8_t *)(Font_buff + offset);
 }
 
 static const uint8_t *__user_font_get_bitmap(const lv_font_t *font, uint32_t unicode_letter)
@@ -89,4 +127,6 @@ lv_font_t sFont_20 = {
     .line_height = 28,
     .base_line = 0,
 };
+
+
 */

@@ -1,6 +1,4 @@
-SET(SOURCES components/ui_comp_lampbutton.c
-    components/ui_comp.c
-    screens/ui_StartupScreen.c
+SET(SOURCES screens/ui_StartupScreen.c
     screens/ui_MainScreen.c
     screens/ui_DateScreen.c
     screens/ui_lampScreen.c
@@ -18,22 +16,28 @@ SET(SOURCES components/ui_comp_lampbutton.c
     images/ui_img_icon_png.c
     images/ui_img_31831977.c
     images/ui_img_1282432712.c
-    images/ui_img_520433372.c
     images/ui_img_1809401540.c
+    images/ui_img_520433372.c
     images/ui_img_configure_png.c
     images/ui_img_lamps_png.c
     images/ui_img_s1_png.c
     images/ui_img_data_png.c
     images/ui_img_chat_png.c
+    images/ui_img_h2_png.c
+    images/ui_img_h1_png.c
+    images/ui_img_hh2_png.c
+    images/ui_img_hh1_png.c
+    images/ui_img_dd2_png.c
+    images/ui_img_dd1_png.c
     images/ui_img_l2_png.c
     images/ui_img_l1_png.c
+    images/ui_img_vv1_png.c
     images/ui_img_a1_png.c
     images/ui_img_t2_png.c
     images/ui_img_w1_png.c
     images/ui_img_wifi_png.c
     images/ui_img_c1_png.c
     images/ui_img_cc1_png.c
-    images/ui_img_vv1_png.c
     fonts/ui_font_dan.c
     fonts/ui_font_misc.c
     fonts/ui_font_smartsystem.c

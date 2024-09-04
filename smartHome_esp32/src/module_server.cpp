@@ -4,13 +4,13 @@
 #include "sntp.h"
 #include "time.h"
 #include <ArduinoJson.h>
-#include <Audio.h>
 #include <HTTPClient.h>
 #include <LittleFS.h>
 #include <Preferences.h>
+#include <audiohelpr.h>
 
-Audio audio;
-uint8_t cur_volume = 21;
+AudioHelpr audio;
+uint8_t cur_volume = 100;
 
 const char *g_ntp_server1 = "ntp.aliyun.com";
 const char *g_ntp_server2 = "stdtime.gov.hk";
@@ -112,49 +112,10 @@ void audioTask(void *pt)
     vTaskDelete(NULL);
 }
 
-String getvAnswer(const String &ouputText)
-{
-    HTTPClient http2;
-    http2.begin(MINIMAX_TTS);
-    http2.addHeader("Content-Type", "application/json");
-    http2.addHeader("Authorization", String("Bearer ") + MINIMAX_KEY);
-    // 创建一个StaticJsonDocument对象，足够大以存储JSON数据
-    StaticJsonDocument<200> doc;
-    // 填充数据
-    doc["text"] = ouputText;
-    doc["model"] = "speech-01";
-    doc["audio_sample_rate"] = 32000;
-    doc["bitrate"] = 128000;
-    doc["voice_id"] = "audiobook_female_1";
-    // 创建一个String对象来存储序列化后的JSON字符串
-    String jsonString;
-    // 序列化JSON到String对象
-    serializeJson(doc, jsonString);
-    int httpResponseCode = http2.POST(jsonString);
-    if (httpResponseCode == 200) {
-        DynamicJsonDocument jsonDoc(1024);
-        String response = http2.getString();
-        Serial.println(response);
-        http2.end();
-        deserializeJson(jsonDoc, response);
-        String aduiourl = jsonDoc["audio_file"];
-        return aduiourl;
-    } else {
-        Serial.printf("tts %i \n", httpResponseCode);
-        http2.end();
-        return "error";
-    }
-}
-
 void audioSpeak(const String &text)
 {
     if (wifitate()) {
-        String aduiourl = getvAnswer(text);
-        // Serial.println(aduiourl);
-        // if (aduiourl != "error") {
-        //     audio.stopSong();
-        //     audio.connecttohost(aduiourl.c_str());
-        // }
+        audio.connecttospeech(text.c_str(), "zh");
     }
 }
 
@@ -177,7 +138,13 @@ void playAudio(const AUDIO_NAME &index)
         break;
     case AUDIO_NAME::RAIN:
         audio.connecttoFS(LittleFS, "/rain.mp3");
-
+        break;
+    case AUDIO_NAME::PW:
+        audio.connecttoFS(LittleFS, "/pw.mp3");
+        break;
+    case AUDIO_NAME::WC:
+        audio.connecttoFS(LittleFS, "/wc.mp3");
+        break;
     default:
         break;
     }

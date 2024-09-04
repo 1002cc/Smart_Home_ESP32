@@ -2,6 +2,15 @@
 #define _LVGLCONFIG_H_
 #include <arduino.h>
 
+typedef enum {
+    NO_DIALOGUE,
+    WAKEUP,
+    RECORDING,
+    RECORDED,
+    ANSWERING,
+    SPEAKING
+} SpeakState_t;
+
 void initLVGLConfig(void);
 void startLVGLTask(void);
 
@@ -26,9 +35,18 @@ void lv_setSpeechinfo(const char *text);
 void lv_setIPinfo(const char *text);
 void lv_setstatusbarLabel(int status);
 void msgboxTip(const char *text);
+void lv_setPriState(bool state);
+void lv_setVoiceState(bool state);
+void lv_setRainState(bool state);
+void lv_updateSiwtech();
+void lv_setUser(const String &user);
+
+void lv_speakState(const SpeakState_t &state);
 
 void ui_calender_update(void);
 void startCameraTask();
 bool wifiConnect();
+
+void perinit();
 
 #endif

@@ -7,7 +7,9 @@
 // 雨滴检测时长
 #define RAINTIME 2000
 // 感应灯时长
-#define AUTOLAMPTIME 10000
+#define AUTOLAMPTIME 3000
+// 检测结果保存时长
+#define DETECTIONTIME 3000
 
 // RGBLED灯
 #define AUTOLED_PIN 19

@@ -979,6 +979,9 @@ bool AudioHelpr::connecttospeech(const char *speech, const char *lang)
     urlencode(speechBuff, speechBuffLen);
     // ctp = 1 &lan = zh &spd = 5 &pit = 5 &vol = 5 &per = 1 &aue = 3 ";
 
+    char perid_str[2];
+    sprintf(perid_str, "%d", m_perid);
+
     char resp[strlen(speechBuff) + 200] = "";
     strcat(resp, "tex=");
     strcat(resp, speechBuff);
@@ -990,8 +993,9 @@ bool AudioHelpr::connecttospeech(const char *speech, const char *lang)
     strcat(resp, "pit=5&");
     strcat(resp, "vol=15&");
     // 发音人 基础 精选需要开通免费领取额度
-    strcat(resp, "per=0&");
-    strcat(resp, "aue=3");
+    strcat(resp, "per=");
+    strcat(resp, perid_str);
+    strcat(resp, "&aue=3");
 
     if (speechBuff) {
         free(speechBuff);
@@ -5850,6 +5854,16 @@ uint8_t AudioHelpr::getI2sPort()
 {
     return m_i2s_num;
 }
+void AudioHelpr::setPerid(int perid)
+{
+    m_perid = perid;
+}
+
+int AudioHelpr::getPerid()
+{
+    return m_perid;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 void AudioHelpr::computeLimit()
 {                               // is calculated when the volume or balance changes

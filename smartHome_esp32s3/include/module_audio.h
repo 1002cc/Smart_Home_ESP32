@@ -14,6 +14,8 @@ void audioPrevious();
 void audioNext();
 void audioPlay();
 void audioPause();
+void audioSetPer(int per);
+void playStartAudio();
 bool getaudioPlayStatus();
 void audioLoop();
 #endif

@@ -30,4 +30,6 @@ void mqttMontage(const String &user);
 
 void pulishState(const String &object, const bool &state, const String &item = "datas");
 void pulishSwitchDatas(const lampButtonData &data);
+void pulishAllSwitchDatas();
+
 #endif

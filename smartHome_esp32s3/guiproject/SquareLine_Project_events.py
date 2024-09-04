@@ -98,3 +98,11 @@ def brightnessbrightness(event_struct):
 def controlBrightnessCD(event_struct):
     return
 
+
+def detectionCB(event_struct):
+    return
+
+
+def switchStartAudioCD(event_struct):
+    return
+

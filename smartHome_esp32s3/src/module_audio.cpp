@@ -2,6 +2,7 @@
 #include "confighelpr.h"
 #include "lvglconfig.h"
 #include "module_devices.h"
+#include <LittleFS.h>
 
 #if USE_AUDIO
 #include "audiohelpr.h"
@@ -64,6 +65,7 @@ void audio_init()
         lv_setMusicinfo(musicSubstring(stations_list[cur_station]).c_str());
         lv_setSliderVolume(cur_volume);
     }
+    perinit();
 }
 
 void audioVolume(int volume)
@@ -110,9 +112,9 @@ void audioPlay()
     Serial.println("Play");
     lv_setDropdown(cur_station);
     lv_setMusicinfo(musicSubstring(stations_list[cur_station]).c_str());
-    // if (audio.isRunning()) {
-    //     audio.stopSong();
-    // }
+    if (audio.isRunning()) {
+        audio.stopSong();
+    }
     if (audio.connecttohost(stations_list[cur_station].c_str())) {
         Serial.println("Connect to host");
         lv_setPlayState(true);
@@ -131,9 +133,19 @@ void audioPause()
     lv_setPlayState(false);
 }
 
+void audioSetPer(int per)
+{
+    audio.setPerid(per);
+}
+
+void playStartAudio()
+{
+    audio.connecttoFS(LittleFS, "/wc.mp3");
+}
+
 void audioTask(void *pt)
 {
-    long long last_time = millis();
+    // long long last_time = millis();
     while (1) {
         audio.loop();
         vTaskDelay(3);
@@ -148,7 +160,7 @@ void audioTask(void *pt)
 void audioLoop()
 {
     audio.loop();
-    // vTaskDelay(3);
+    vTaskDelay(3);
 }
 
 void startAudioTack()
@@ -156,7 +168,6 @@ void startAudioTack()
     Serial.println("start Audio Tack");
     audio_init();
     xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, NULL, 10, NULL, 1);
-    // audio.connecttohost("https://music.163.com/song/media/outer/url?id=1932354158");
 }
 
 #endif

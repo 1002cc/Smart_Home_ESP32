@@ -245,13 +245,15 @@ void connectToWiFi(int timeOut_s)
         led_on();
         server.stop();
         initNtpTime();
-        audioSpeak("连接成功");
+        playAudio(AUDIO_NAME::CONNECT_Y);
+    } else {
+        playAudio(AUDIO_NAME::CONNECT_N);
     }
 }
 
 void wifiConfig()
 {
-    audioSpeak("正在重新配网");
+    playAudio(AUDIO_NAME::PW);
     initSoftAP();
     initDNS();
     initWebServer();

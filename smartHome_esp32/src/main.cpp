@@ -13,11 +13,19 @@ void setup()
     // 初始化文件系统
     littlefs_init();
 
+    // 开始音频任务
+    startAudioTack();
+
+    // 播放欢迎语
+    playAudio(AUDIO_NAME::WC);
+
     // 初始化传感器设备
     initDevices();
 
-    // 开始音频任务
-    startAudioTack();
+    // 开始传感器任务
+    startSensorTask();
+
+    delay(3000);
 
     // 配置wifi
     connectToWiFi(CONNECTTIMEOUT);
@@ -25,21 +33,8 @@ void setup()
     // 初始化mqtt
     initMQTTConfig();
 
-    // 开始传感器任务
-    startSensorTask();
-
     // 打印PSRAM
     printPSRAM();
-
-    audioSpeak("网络连接失败");
-    delay(2000);
-    audioSpeak("网络断开连接");
-    delay(2000);
-    audioSpeak("请连接wifi配置网络");
-    delay(2000);
-    audioSpeak("下雨了,请注意关窗");
-    delay(2000);
-    audioSpeak("有人长时间停留");
 }
 
 void loop()

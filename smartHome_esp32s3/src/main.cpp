@@ -13,18 +13,19 @@ void setup()
     Serial.begin(115200);
     Serial.println("smarthome start-up");
     printPSRAM();
-    initLVGLConfig();
     LittleFS_init();
+    initLVGLConfig();
     initDevices();
-    initWIFIConfig();
-    initMQTTConfig();
-    lv_gohome();
-    startNTPTask();
-    initSpeakConfig();
-    // startSensorTask();
 #if USE_AUDIO
     startAudioTack();
 #endif
+    initWIFIConfig();
+    initMQTTConfig();
+    delay(100);
+    lv_gohome();
+    startNTPTask();
+    initSpeakConfig();
+    startSensorTask();
     printPSRAM();
 }
 

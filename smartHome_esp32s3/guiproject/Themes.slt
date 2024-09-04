@@ -3,7 +3,7 @@
     "name": "Default",
     "properties": [
       {
-        "nid": 0,
+        "nid": 736860552,
         "strtype": "THEME_COLOR",
         "strval": "back",
         "intarray": [
@@ -15,7 +15,7 @@
         "InheritedType": 0
       },
       {
-        "nid": 0,
+        "nid": 1221931646,
         "strtype": "THEME_COLOR",
         "strval": "font",
         "intarray": [
@@ -27,7 +27,7 @@
         "InheritedType": 0
       },
       {
-        "nid": 0,
+        "nid": -1195234298,
         "strtype": "THEME_COLOR",
         "strval": "btn",
         "intarray": [
@@ -39,7 +39,7 @@
         "InheritedType": 0
       },
       {
-        "nid": 0,
+        "nid": 2041362301,
         "strtype": "THEME_COLOR",
         "strval": "boeder",
         "intarray": [
@@ -57,7 +57,7 @@
       "name": "darkTheme",
       "properties": [
         {
-          "nid": 0,
+          "nid": 736860552,
           "strtype": "THEME_COLOR",
           "strval": "back",
           "intarray": [
@@ -69,7 +69,7 @@
           "InheritedType": 0
         },
         {
-          "nid": 0,
+          "nid": 1221931646,
           "strtype": "THEME_COLOR",
           "strval": "font",
           "intarray": [
@@ -81,7 +81,7 @@
           "InheritedType": 0
         },
         {
-          "nid": 0,
+          "nid": -1195234298,
           "strtype": "THEME_COLOR",
           "strval": "btn",
           "intarray": [
@@ -93,7 +93,7 @@
           "InheritedType": 0
         },
         {
-          "nid": 0,
+          "nid": 2041362301,
           "strtype": "THEME_COLOR",
           "strval": "boeder",
           "intarray": [
@@ -110,7 +110,7 @@
       "name": "LightTheme",
       "properties": [
         {
-          "nid": 0,
+          "nid": 736860552,
           "strtype": "THEME_COLOR",
           "strval": "back",
           "intarray": [
@@ -122,7 +122,7 @@
           "InheritedType": 0
         },
         {
-          "nid": 0,
+          "nid": 1221931646,
           "strtype": "THEME_COLOR",
           "strval": "font",
           "intarray": [
@@ -134,7 +134,7 @@
           "InheritedType": 0
         },
         {
-          "nid": 0,
+          "nid": -1195234298,
           "strtype": "THEME_COLOR",
           "strval": "btn",
           "intarray": [
@@ -146,7 +146,7 @@
           "InheritedType": 0
         },
         {
-          "nid": 0,
+          "nid": 2041362301,
           "strtype": "THEME_COLOR",
           "strval": "boeder",
           "intarray": [

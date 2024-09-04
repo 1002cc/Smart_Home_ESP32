@@ -6,7 +6,7 @@
 #define RGBLEDPIN 48
 
 #define MQ2PIN 8
-#define DHTPIN 14
+#define DHTPIN 7
 #define DHTTYPE DHT11
 
 // #define PIN_R 2
@@ -42,13 +42,6 @@ void WSLED_Red();
 void WSLED_Green();
 void WSLED_Blue();
 void WSLED_OFF();
-void redled_on();
-void redled_off();
-void greenled_on();
-void greenled_off();
-void blueled_on();
-void blueled_off();
-void rgbled_setColor(int r, int g, int b);
 
 void initmq2();
 float readmq2();

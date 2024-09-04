@@ -188,8 +188,8 @@ void sensor_task(void *pvParameter)
             lv_label_set_text(ui_MQLabel, temp_char);
         }
 
-        // if (millis() - lastPrintTime > 2000) {
-        //     Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %d\n", temperature, humidity, mq2sensorValue);
+        // if (millis() - lastPrintTime > 20000) {
+        //     Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
         //     lastPrintTime = millis();
         // }
 

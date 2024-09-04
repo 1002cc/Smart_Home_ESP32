@@ -25,8 +25,8 @@ String stttext = "";
 
 // 火山引擎(豆包)
 const char *apiKey = "b50ace91-bf6d-4628-9096-14a4d2a21b80";
-const char *endpointId = "ep-20240626132230-wxkrz";
-const String doubao_system = "你是一个智能家居助手，回答问题比较简洁。"; // 定义豆包的人设
+const char *endpointId = "hich_doubao";
+const String doubao_system = "你是一个智能家居助手小欧，回答问题比较简洁。"; // 定义豆包的人设
 String duobaoUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
 // MINIMAX模型
@@ -44,7 +44,6 @@ extern AudioHelpr audio;
 int noise = 50;
 
 SpeakState_t speakState = NO_DIALOGUE;
-String ai_speak = "xiaoyan";
 int useAIMode = 0;
 
 TaskHandle_t speakTaskHandle = NULL;
@@ -56,6 +55,8 @@ void speakTask(void *pvParameter);
 
 String postDouBaoAnswer(String *answerlist, int listnum);
 String getMiniMaxAnswer(String inputText);
+String getXunfeiAnswer(String inputText);
+String getDoubaoAnswer(String inputText);
 
 /********************************************************************
                          max98357
@@ -209,7 +210,7 @@ void initSpeakConfig()
             stttext += w;
         }
         if (doc["data"]["status"] == 2) { // 收到结束标志
-            speakState = WAITING;
+            lv_speakState(SpeakState_t::ANSWERING);
             Serial.print("stttext: ");
             Serial.println(stttext);
         }
@@ -238,7 +239,9 @@ void sendSTTData()
         Serial.println("Connected!");
     } else {
         Serial.println("Not Connected!");
+        lv_speakState(SpeakState_t::NO_DIALOGUE);
         lv_setSpeechinfo("服务器连接失败");
+
         return;
     }
     // 分段向STT发送PCM音频数据
@@ -461,6 +464,62 @@ String getMiniMaxAnswer(String inputText)
     }
 }
 
+String getXunfeiAnswer(String inputText)
+{
+    HTTPClient http;
+    http.setTimeout(20000);
+    http.begin("https://spark-api-open.xf-yun.com/v1/chat/completions");
+    String token_key = String("Bearer ") + "IXOdYaJFgIitgMpVZYIo:hmfWxQYOWwkqSTpLkHVp";
+    http.addHeader("Authorization", token_key);
+    http.addHeader("Content-Type", "application/json");
+    String payload = "{\"model\":\"general\",\"messages\":[{\"role\":\"system\",\"content\":\"你是我的AI助手小欧,你必须用中文回答且字数不超过60个\"},{\"role\":\"user\",\"content\":\"" + inputText + "\"}]}";
+
+    int httpResponseCode = http.POST(payload);
+    if (httpResponseCode == 200) {
+        String response = http.getString();
+        http.end();
+        Serial.println(response);
+
+        DynamicJsonDocument jsonDoc(1024);
+        deserializeJson(jsonDoc, response);
+        String outputText = jsonDoc["choices"][0]["message"]["content"];
+        Serial.println(outputText);
+        return outputText;
+
+    } else {
+        http.end();
+        Serial.printf("Error %i \n", httpResponseCode);
+        return "error";
+    }
+}
+
+String getDoubaoAnswer(String inputText)
+{
+    HTTPClient http;
+    http.setTimeout(20000);
+    http.begin("https://ark.cn-beijing.volces.com/api/v3/chat/completions");
+    String token_key = String("Bearer ") + "b50ace91-bf6d-4628-9096-14a4d2a21b80";
+    http.addHeader("Authorization", token_key);
+    http.addHeader("Content-Type", "application/json");
+    String payload = "{\"model\":\"ep-20240713-2fgvv\",\"messages\":[{\"role\":\"system\",\"content\":\"你是我的AI助手小欧,你必须用中文回答且字数不超过60个\"},{\"role\":\"user\",\"content\":\"" + inputText + "\"}],\"temperature\": 0.3}";
+
+    int httpResponseCode = http.POST(payload);
+    if (httpResponseCode == 200) {
+        String response = http.getString();
+        http.end();
+        Serial.println(response);
+
+        DynamicJsonDocument jsonDoc(1024);
+        deserializeJson(jsonDoc, response);
+        String outputText = jsonDoc["choices"][0]["message"]["content"];
+        return outputText;
+    } else {
+        http.end();
+        Serial.printf("Error %i \n", httpResponseCode);
+        return "error";
+    }
+}
+
 String getvAnswer(String ouputText)
 {
     HTTPClient http2;
@@ -495,6 +554,23 @@ String getvAnswer(String ouputText)
     }
 }
 
+int speakPerid(int num)
+{
+    // 度小宇=1，度小美=0，度逍遥（基础）=3，度丫丫=4
+    switch (num) {
+    case 0:
+        return 0;
+    case 1:
+        return 1;
+    case 2:
+        return 3;
+    case 3:
+        return 4;
+    default:
+        return 0;
+    }
+}
+
 void speakTask(void *pvParameter)
 {
     Serial.println("start speakTask");
@@ -502,7 +578,6 @@ void speakTask(void *pvParameter)
         if (speakState == RECORDING) {
             stttext = "";
             Serial.println("Recording...");
-            lv_setSpeechinfo("正在录音");
             size_t bytes_read = 0;
             recordingSize = 0;
             pcm_data = reinterpret_cast<int16_t *>(ps_malloc(BUFFER_SIZE * 2));
@@ -516,12 +591,11 @@ void speakTask(void *pvParameter)
                 memcpy(pcm_data + recordingSize, audioData, bytes_read);
                 recordingSize += bytes_read / 2;
                 if (!(millis() - min < 3000)) {
-                    speakState = RECORDED;
+                    lv_speakState(SpeakState_t::RECORDED);
                 }
             }
-            lv_setSpeechinfo("正在思考");
-            Serial.printf("Recorded done. recordingSize: %d\n", recordingSize);
 
+            Serial.printf("Recorded done. recordingSize: %d\n", recordingSize);
             sendSTTData();
             free(pcm_data);
         }
@@ -533,20 +607,20 @@ void speakTask(void *pvParameter)
         //     webSocketClient_tts.poll();
         // }
 
-        if (speakState == WAITING) {
+        if (speakState == ANSWERING) {
             Serial.println(stttext);
             delay(100);
 
-            stttext.replace("\n", "");
-            answer_list[answer_list_num] = stttext;
-            answer_list_num++;
-            if (answer_list_num > 9) {
-                for (int i = 0; i < 9; i++) {
-                    answer_list[i] = answer_list[i + 1];
-                }
-                answer_list[9] = "";
-                answer_list_num = 9;
-            }
+            // stttext.replace("\n", "");
+            // answer_list[answer_list_num] = stttext;
+            // answer_list_num++;
+            // if (answer_list_num > 9) {
+            //     for (int i = 0; i < 9; i++) {
+            //         answer_list[i] = answer_list[i + 1];
+            //     }
+            //     answer_list[9] = "";
+            //     answer_list_num = 9;
+            // }
 
             // for (int i = 0; i < answer_list_num + 1; i++) {
             //     Serial.print("answer_list_num: ");
@@ -559,9 +633,9 @@ void speakTask(void *pvParameter)
 
             while (answer == "" || answer == "Error") {
                 if (useAIMode) {
-                    answer = postDouBaoAnswer(answer_list, answer_list_num);
+                    answer = getDoubaoAnswer(stttext);
                 } else {
-                    answer = getMiniMaxAnswer(stttext);
+                    answer = getXunfeiAnswer(stttext);
                 }
                 Serial.printf("anwer : %s mdoe: %d", answer, useAIMode);
                 if (answer == "Error") {
@@ -570,18 +644,19 @@ void speakTask(void *pvParameter)
             }
             Serial.printf("answer : %s\n", answer);
             // 保存最近的5次对话到列表中
-            answer.replace("\n", "");
-            answer_list[answer_list_num] = answer;
-            answer_list_num++;
-            if (answer_list_num > 9) {
-                for (int i = 0; i < 9; i++) {
-                    answer_list[i] = answer_list[i + 1];
-                }
-                answer_list[9] = "";
-                answer_list_num = 9;
-            }
-
+            // answer.replace("\n", "");
+            // answer_list[answer_list_num] = answer;
+            // answer_list_num++;
+            // if (answer_list_num > 9) {
+            //     for (int i = 0; i < 9; i++) {
+            //         answer_list[i] = answer_list[i + 1];
+            //     }
+            //     answer_list[9] = "";
+            //     answer_list_num = 9;
+            // }
+            lv_speakState(SpeakState_t::SPEAKING);
             if (!answer.isEmpty()) {
+                audio.connecttospeech(answer.c_str(), "zh");
                 // if (1) {
                 //     postTTS(answer);
                 // } else {
@@ -593,10 +668,10 @@ void speakTask(void *pvParameter)
                 //}
             } else {
                 Serial.println("回答内容为空,取消TTS发送。");
+                audio.connecttospeech("回答未响应", "zh");
             }
 
-            lv_setSpeechinfo(" ");
-            speakState = NO_DIALOGUE;
+            lv_speakState(SpeakState_t::NO_DIALOGUE);
         }
         vTaskDelay(100);
     }

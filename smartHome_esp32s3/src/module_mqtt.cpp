@@ -13,6 +13,7 @@ String mqtt_pub = "";
 String mqtt_app_pub = "";
 String mqtt_qt_pub = "";
 String mqtt_cam_pub = "";
+String mqtt_wroom_pub = "";
 const uint16_t mqtt_broker_port = 8883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "esp32";
@@ -46,6 +47,8 @@ CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
 
 WiFiClientSecure net;
 PubSubClient mqttClient;
+extern lampButtonData mqttSwitchState;
+extern detectionDate detectiondatas;
 
 bool enable_mqtt;
 extern bool loginState;
@@ -71,6 +74,7 @@ bool initMQTTConfig(void)
             Serial.printf("userlogin : %s\n", userlogin);
             mqtMontage(userlogin);
             loginState = true;
+            lv_setUser(userlogin);
             lv_setMQTTSwitchState(true);
             return firstConnectMQTT();
         }
@@ -164,9 +168,43 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
     if (root == NULL) {
         Serial.println("Failed to parse JSON!");
     } else {
-
         cJSON *datas = cJSON_GetObjectItem(root, "datas");
         if (datas) {
+            cJSON *priState_j = cJSON_GetObjectItem(datas, "priState");
+            if (priState_j != NULL) {
+                detectiondatas.pri = priState_j->valueint;
+                lv_setPriState(detectiondatas.pri);
+            }
+            cJSON *voiceState_j = cJSON_GetObjectItem(datas, "voiceState");
+            if (voiceState_j != NULL) {
+                detectiondatas.voice = voiceState_j->valueint;
+                lv_setVoiceState(detectiondatas.voice);
+            }
+            cJSON *rainState_j = cJSON_GetObjectItem(datas, "rainState");
+            if (rainState_j != NULL) {
+                detectiondatas.rain = rainState_j->valueint;
+                lv_setRainState(detectiondatas.rain);
+            }
+        }
+        cJSON *switches = cJSON_GetObjectItem(root, "switches");
+        if (switches) {
+            cJSON *lampButton1_j = cJSON_GetObjectItem(switches, "lampButton1");
+            if (lampButton1_j != NULL) {
+                mqttSwitchState.lampButton1 = lampButton1_j->valueint;
+            }
+            cJSON *lampButton2_j = cJSON_GetObjectItem(switches, "lampButton2");
+            if (lampButton2_j != NULL) {
+                mqttSwitchState.lampButton2 = lampButton2_j->valueint;
+            }
+            cJSON *pri_j = cJSON_GetObjectItem(switches, "pri");
+            if (pri_j != NULL) {
+                mqttSwitchState.priButton = pri_j->valueint;
+            }
+            cJSON *voice_j = cJSON_GetObjectItem(switches, "voiceControl");
+            if (voice_j != NULL) {
+                mqttSwitchState.voiceButton = voice_j->valueint;
+            }
+            lv_updateSiwtech();
         }
     }
 
@@ -210,21 +248,65 @@ void publishSensorData(const SensorData &data)
 }
  */
 
-void pulishSwitchDatas(const lampButtonData &data)
+bool pulishSwitchDatas(const lampButtonData &data)
 {
-    cJSON *root = cJSON_CreateObject();
-    cJSON *datas = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "switches", datas);
-    cJSON_AddBoolToObject(datas, "lampButton1", data.lampButton1);
-    cJSON_AddBoolToObject(datas, "lampButton2", data.lampButton2);
-    cJSON_AddBoolToObject(datas, "lampButton3", data.lampButton3);
-    cJSON_AddBoolToObject(datas, "lampButton4", data.lampButton4);
+    if (mqttClient.state() == MQTT_CONNECTED) {
+        cJSON *root = cJSON_CreateObject();
+        cJSON *datas = cJSON_CreateObject();
+        cJSON_AddItemToObject(root, "switches", datas);
+        cJSON_AddBoolToObject(datas, "lampButton1", data.lampButton1);
+        cJSON_AddBoolToObject(datas, "lampButton2", data.lampButton2);
 
-    char *jsonStr = cJSON_PrintUnformatted(root);
+        char *jsonStr = cJSON_PrintUnformatted(root);
+        Serial.println(jsonStr);
+        mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        cJSON_Delete(root);
+        return true;
+    } else {
+        Serial.printf("lampButton1:%d,lampButton2:%d\n", data.lampButton1, data.lampButton2);
+        Serial.println("mqtt disconnect");
+        return false;
+    }
+}
 
-    mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
-    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
-    cJSON_Delete(root);
+bool pulishState(const String &object, const bool &state, const String &item)
+{
+    if (mqttClient.state() == MQTT_CONNECTED) {
+        cJSON *root = cJSON_CreateObject();
+        cJSON *datas = cJSON_CreateObject();
+        cJSON_AddItemToObject(root, item.c_str(), datas);
+        cJSON_AddBoolToObject(datas, object.c_str(), state);
+        char *jsonStr = cJSON_PrintUnformatted(root);
+
+        Serial.println(jsonStr);
+        // mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+        // mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        cJSON_Delete(root);
+        return true;
+    } else {
+        Serial.println("mqtt disconnect");
+        return false;
+    }
+}
+
+bool sendRePW()
+{
+    if (mqttClient.state() == MQTT_CONNECTED) {
+        cJSON *root = cJSON_CreateObject();
+        cJSON_AddBoolToObject(root, "getdatas", true);
+        char *jsonStr = cJSON_PrintUnformatted(root);
+
+        Serial.println(jsonStr);
+        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        cJSON_Delete(root);
+        return true;
+    } else {
+        Serial.println("mqtt disconnect");
+        return false;
+    }
 }
 
 void publishGetImage()
@@ -282,9 +364,11 @@ void mqtMontage(const String &user)
     mqtt_app_pub = "/smartHome/" + user + "/esp32_app_pub";
     mqtt_qt_pub = "/smartHome/" + user + "/esp32_qt_pub";
     mqtt_cam_pub = "/smartHome/" + user + "/esp32_cam_pub";
+    mqtt_wroom_pub = "/smartHome/" + user + "/esp32_wroom_pub";
     Serial.printf("mqtt_sub:%s\n", mqtt_sub.c_str());
     Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
     Serial.printf("mqtt_app_pub:%s\n", mqtt_app_pub.c_str());
     Serial.printf("mqtt_qt_pub:%s\n", mqtt_qt_pub.c_str());
     Serial.printf("mqtt_cam_pub:%s\n", mqtt_cam_pub.c_str());
+    Serial.printf("mqtt_wroom_pub:%s\n", mqtt_wroom_pub.c_str());
 }
