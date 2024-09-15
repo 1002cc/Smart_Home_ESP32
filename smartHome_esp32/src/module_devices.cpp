@@ -98,7 +98,7 @@ void sg90_setAngle(int angle)
 void sensorTask(void *pt)
 {
     unsigned long lastPrintTime = 0;
-    unsigned long autoLampTime = 0, rainTime = 0, priTime = 0, voiceTime = 0;
+    unsigned long autoLampTime = 0, rainTime = 0, priLongTime = 0, priTime = 0, voiceTime = 0;
     bool rainFlag = 0, isRain = 0;
     while (1) {
         rainState = map(analogRead(RAIN_CHANNL), 0, 4095, 235, 0);
@@ -126,26 +126,41 @@ void sensorTask(void *pt)
         if (enable_pri) {
             pirState = analogRead(PIR_CHANNL);
             if (pirState > 0) {
-                mqttPri = true;
                 priTime = millis();
-                pulishState("priState", true);
+                if (millis() - priLongTime >= DETECTIONLONGTIME) {
+                    playAudio(AUDIO_NAME::LT);
+                }
+
+                if (!mqttPri) {
+                    mqttPri = true;
+                    priLongTime = millis();
+                    pulishState("priState", true);
+                }
                 Serial.println("has people");
             } else {
                 if (mqttPri && millis() - priTime >= DETECTIONTIME) {
                     mqttPri = false;
                     pulishState("priState", false);
                 }
+                priLongTime = millis();
             }
+
         } else {
+            if (mqttPri) {
+                mqttPri = false;
+                pulishState("priState", false);
+            }
             pirState = 0;
         }
 
         if (enable_VoiceControl) {
             soundState = digitalRead(SOUND_PIN);
             if (!soundState) {
-                mqttVoice = true;
-                voiceTime = millis();
-                pulishState("voiceState", true);
+                if (!mqttVoice) {
+                    mqttVoice = true;
+                    voiceTime = millis();
+                    pulishState("voiceState", true);
+                }
                 Serial.println("has sound");
             } else {
                 if (mqttVoice && millis() - voiceTime >= DETECTIONTIME) {
@@ -154,6 +169,10 @@ void sensorTask(void *pt)
                 }
             }
         } else {
+            if (mqttVoice) {
+                mqttVoice = false;
+                pulishState("voiceState", false);
+            }
             soundState = 1;
         }
 
@@ -161,19 +180,19 @@ void sensorTask(void *pt)
             autoLampTime = millis();
             if (!autoled_state()) {
                 autoled_on();
-                mqttSwitchState.lampButton1 = true;
-                pulishState("lampButton1", mqttSwitchState.lampButton1, "switches");
+                // mqttSwitchState.lampButton2 = true;
+                //  pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
             }
         } else {
             if (autoled_state() && millis() - autoLampTime >= AUTOLAMPTIME) {
                 autoled_off();
-                mqttSwitchState.lampButton2 = false;
-                pulishState("lampButton2", mqttSwitchState.lampButton1, "switches");
+                // mqttSwitchState.lampButton2 = false;
+                //  pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
             }
         }
 
         if (millis() - lastPrintTime > 2000) {
-            Serial.printf("rainState = %d  soundState = %d  pirState = %d\n", rainState, soundState, pirState);
+            Serial.printf("rainState = %d  soundState = %d  pirState = %d  activeEnableAutoLamp = %d\n", rainState, soundState, pirState, activeEnableAutoLamp);
             lastPrintTime = millis();
         }
 
@@ -224,4 +243,17 @@ void initDevices()
     sensor_init();
     sg90_init();
     audio_init();
+}
+
+void initDevicesDatas()
+{
+    int priData = ReadintData("pri");
+    if (priData != 1000) {
+        enable_pri = priData;
+    }
+
+    int voiceControlData = ReadintData("voiceControl");
+    if (voiceControlData != 1000) {
+        enable_VoiceControl = voiceControlData;
+    }
 }

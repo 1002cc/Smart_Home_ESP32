@@ -12,6 +12,9 @@ void setup()
     // 初始化led
     initLED();
 
+    // 初始化servo
+    initServo();
+
     // 初始化摄像头
     initCamera();
 

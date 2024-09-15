@@ -164,8 +164,8 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_align(ui_MQArc, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_MQArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK |
                       LV_OBJ_FLAG_CLICK_FOCUSABLE);      /// Flags
-    lv_arc_set_range(ui_MQArc, -36, 70);
-    lv_arc_set_value(ui_MQArc, 0);
+    lv_arc_set_range(ui_MQArc, 0, 120);
+    lv_arc_set_value(ui_MQArc, 20);
     lv_arc_set_bg_angles(ui_MQArc, 180, 0);
 
     lv_obj_set_style_bg_color(ui_MQArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);

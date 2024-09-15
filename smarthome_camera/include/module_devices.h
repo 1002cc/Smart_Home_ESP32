@@ -24,10 +24,18 @@
 
 #define LED_RED_NUM 33
 
+#define SERVO_NUM 15
+
 #define CONNECTTIMEOUT 15
 
 void initLED();
 void led_off();
 void led_on();
 void blinkLED(int n, int t);
+
+void initServo();
+
+void ServoLeft();
+void ServoRight();
+
 #endif

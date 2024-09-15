@@ -63,6 +63,20 @@ void StoreData(const char *key, const char *val)
     preferences.end();
 }
 
+void StoreintData(const char *key, int val)
+{
+    preferences.begin("config", false);
+    preferences.putInt(key, val);
+    preferences.end();
+}
+int ReadintData(const char *val)
+{
+    preferences.begin("config", false);
+    int ret = preferences.getInt(val, 1000);
+    preferences.end();
+    return ret;
+}
+
 void printPSRAM(void)
 {
     Serial.println("-----------------------------printPSRAM-----------------------------");
@@ -144,6 +158,9 @@ void playAudio(const AUDIO_NAME &index)
         break;
     case AUDIO_NAME::WC:
         audio.connecttoFS(LittleFS, "/wc.mp3");
+        break;
+    case AUDIO_NAME::LT:
+        audio.connecttoFS(LittleFS, "/LT.mp3");
         break;
     default:
         break;

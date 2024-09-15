@@ -13,10 +13,8 @@
 void ui_StartupScreen_screen_init(void);
 void ui_event_StartupScreen(lv_event_t * e);
 lv_obj_t * ui_StartupScreen;
-lv_obj_t * ui_Image5;
 lv_obj_t * ui_tipLabel;
 lv_obj_t * ui_Spinner2;
-lv_obj_t * ui_Label7;
 
 
 // SCREEN: ui_MainScreen
@@ -51,6 +49,10 @@ lv_obj_t * ui_Button4;
 lv_obj_t * ui_Image6;
 lv_obj_t * ui_Label29;
 lv_obj_t * ui_Panel2;
+void ui_event_Button7(lv_event_t * e);
+lv_obj_t * ui_Button7;
+lv_obj_t * ui_Image14;
+lv_obj_t * ui_Label37;
 lv_obj_t * ui_cityLabel;
 lv_obj_t * ui_statusbarLabel;
 
@@ -245,14 +247,16 @@ lv_obj_t * ui____initial_actions0;
 const lv_img_dsc_t * ui_imgset_a[1] = {&ui_img_a1_png};
 const lv_img_dsc_t * ui_imgset_c[1] = {&ui_img_c1_png};
 const lv_img_dsc_t * ui_imgset_cc[1] = {&ui_img_cc1_png};
+const lv_img_dsc_t * ui_imgset_dd[2] = {&ui_img_dd1_png, &ui_img_dd2_png};
+const lv_img_dsc_t * ui_imgset_h[2] = {&ui_img_h1_png, &ui_img_h2_png};
+const lv_img_dsc_t * ui_imgset_hh[2] = {&ui_img_hh1_png, &ui_img_hh2_png};
 const lv_img_dsc_t * ui_imgset_l[2] = {&ui_img_l1_png, &ui_img_l2_png};
+const lv_img_dsc_t * ui_imgset_mm[1] = {&ui_img_mm2_png};
 const lv_img_dsc_t * ui_imgset_s[1] = {&ui_img_s1_png};
 const lv_img_dsc_t * ui_imgset_t[1] = {&ui_img_t2_png};
 const lv_img_dsc_t * ui_imgset_vv[1] = {&ui_img_vv1_png};
 const lv_img_dsc_t * ui_imgset_w[1] = {&ui_img_w1_png};
-const lv_img_dsc_t * ui_imgset_h[2] = {&ui_img_h1_png, &ui_img_h2_png};
-const lv_img_dsc_t * ui_imgset_hh[2] = {&ui_img_hh1_png, &ui_img_hh2_png};
-const lv_img_dsc_t * ui_imgset_dd[2] = {&ui_img_dd1_png, &ui_img_dd2_png};
+const lv_img_dsc_t * ui_imgset_ww[2] = {&ui_img_ww2_png, &ui_img_ww3_png};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -289,6 +293,7 @@ void ui_event_weathericonImage(lv_event_t * e)
         _ui_image_set_property(ui_weathericonImage, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_1282432712);
         _ui_image_set_property(ui_weathericonImage, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_1809401540);
         _ui_image_set_property(ui_weathericonImage, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_520433372);
+        _ui_image_set_property(ui_weathericonImage, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_l2_png);
     }
 }
 void ui_event_Button6(lv_event_t * e)
@@ -324,6 +329,14 @@ void ui_event_Button2(lv_event_t * e)
     }
 }
 void ui_event_Button4(lv_event_t * e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+    if(event_code == LV_EVENT_CLICKED) {
+        speakScreenCD(e);
+    }
+}
+void ui_event_Button7(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
@@ -410,14 +423,7 @@ void ui_event_lampButton3(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_VALUE_CHANGED &&  lv_obj_has_state(target, LV_STATE_CHECKED)) {
-        _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_l2_png);
-        _ui_label_set_property(ui_stateLabel1, _UI_LABEL_PROPERTY_TEXT, "ON");
-        lampButtonCB(e);
-    }
-    if(event_code == LV_EVENT_VALUE_CHANGED &&  !lv_obj_has_state(target, LV_STATE_CHECKED)) {
-        _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_l1_png);
-        _ui_label_set_property(ui_stateLabel1, _UI_LABEL_PROPERTY_TEXT, "OFF");
+    if(event_code == LV_EVENT_CLICKED) {
         lampButtonCB(e);
     }
 }
@@ -425,14 +431,7 @@ void ui_event_lampButton2(lv_event_t * e)
 {
     lv_event_code_t event_code = lv_event_get_code(e);
     lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_VALUE_CHANGED &&  lv_obj_has_state(target, LV_STATE_CHECKED)) {
-        _ui_image_set_property(ui_stateImage3, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_l2_png);
-        _ui_label_set_property(ui_stateLabel3, _UI_LABEL_PROPERTY_TEXT, "ON");
-        lampButtonCB(e);
-    }
-    if(event_code == LV_EVENT_VALUE_CHANGED &&  !lv_obj_has_state(target, LV_STATE_CHECKED)) {
-        _ui_image_set_property(ui_stateImage3, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_l1_png);
-        _ui_label_set_property(ui_stateLabel3, _UI_LABEL_PROPERTY_TEXT, "OFF");
+    if(event_code == LV_EVENT_CLICKED) {
         lampButtonCB(e);
     }
 }

@@ -106,7 +106,7 @@ void ui_set1Screen_screen_init(void)
     ui_mqttStateLabel = lv_label_create(ui_w2);
     lv_obj_set_width(ui_mqttStateLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_mqttStateLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_mqttStateLabel, -56);
+    lv_obj_set_x(ui_mqttStateLabel, -32);
     lv_obj_set_y(ui_mqttStateLabel, -64);
     lv_obj_set_align(ui_mqttStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_mqttStateLabel, "未连接");
@@ -208,7 +208,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label23, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label23, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label23, -120);
-    lv_obj_set_y(ui_Label23, -36);
+    lv_obj_set_y(ui_Label23, -33);
     lv_obj_set_align(ui_Label23, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label23, "校时时长");
     ui_object_set_themeable_style_property(ui_Label23, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -221,7 +221,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label10, -120);
-    lv_obj_set_y(ui_Label10, -4);
+    lv_obj_set_y(ui_Label10, 0);
     lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label10, "天气城市");
     ui_object_set_themeable_style_property(ui_Label10, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -252,7 +252,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label31, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label31, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label31, -120);
-    lv_obj_set_y(ui_Label31, 30);
+    lv_obj_set_y(ui_Label31, 34);
     lv_obj_set_align(ui_Label31, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label31, "深色主题");
     ui_object_set_themeable_style_property(ui_Label31, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -265,7 +265,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_themeSwitch, 50);
     lv_obj_set_height(ui_themeSwitch, 25);
     lv_obj_set_x(ui_themeSwitch, -44);
-    lv_obj_set_y(ui_themeSwitch, 30);
+    lv_obj_set_y(ui_themeSwitch, 34);
     lv_obj_set_align(ui_themeSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_themeSwitch, LV_STATE_CHECKED);       /// States
 
@@ -274,7 +274,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label36, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label36, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label36, -120);
-    lv_obj_set_y(ui_Label36, 61);
+    lv_obj_set_y(ui_Label36, 68);
     lv_obj_set_align(ui_Label36, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label36, "屏幕亮度");
     ui_object_set_themeable_style_property(ui_Label36, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -290,7 +290,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Slider1, 170);
     lv_obj_set_height(ui_Slider1, 10);
     lv_obj_set_x(ui_Slider1, 22);
-    lv_obj_set_y(ui_Slider1, 62);
+    lv_obj_set_y(ui_Slider1, 68);
     lv_obj_set_align(ui_Slider1, LV_ALIGN_CENTER);
 
 
@@ -307,7 +307,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_pwLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_pwLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_pwLabel, -83);
-    lv_obj_set_y(ui_pwLabel, 97);
+    lv_obj_set_y(ui_pwLabel, 100);
     lv_obj_set_align(ui_pwLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_pwLabel, "检测设备重新配网");
     ui_object_set_themeable_style_property(ui_pwLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -378,7 +378,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_style_text_font(ui_Label33, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_aimodeDropdown = lv_dropdown_create(ui_W4);
-    lv_dropdown_set_options(ui_aimodeDropdown, "Xunfei\nDoubao\n");
+    lv_dropdown_set_options(ui_aimodeDropdown, "Xunfei\nDoubao");
     lv_obj_set_width(ui_aimodeDropdown, 150);
     lv_obj_set_height(ui_aimodeDropdown, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_aimodeDropdown, 28);

@@ -12,5 +12,7 @@ void cameraserver_task(void *pvParameter);
 
 void StoreData(const char *key, const char *val);
 String ReadData(const char *val);
+void StoreintData(const char *key, int val);
+int ReadintData(const char *val);
 
 #endif

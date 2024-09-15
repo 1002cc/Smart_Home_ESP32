@@ -22,6 +22,9 @@ void setup()
     // 初始化传感器设备
     initDevices();
 
+    // 加载设备数据
+    initDevicesDatas();
+
     // 开始传感器任务
     startSensorTask();
 

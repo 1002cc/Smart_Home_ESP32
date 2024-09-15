@@ -46,8 +46,8 @@ void ui_speechScreen_screen_init(void)
     ui_speechStateLabel = lv_label_create(ui_s1);
     lv_obj_set_width(ui_speechStateLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_speechStateLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_speechStateLabel, -85);
-    lv_obj_set_y(ui_speechStateLabel, -96);
+    lv_obj_set_x(ui_speechStateLabel, -75);
+    lv_obj_set_y(ui_speechStateLabel, -97);
     lv_obj_set_align(ui_speechStateLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_speechStateLabel, "");
     lv_obj_set_style_text_color(ui_speechStateLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);

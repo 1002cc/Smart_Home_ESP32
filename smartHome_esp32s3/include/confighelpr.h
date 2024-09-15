@@ -25,6 +25,7 @@ void StoreintData(const char *key, int val);
 int ReadintData(const char *val);
 void LittleFS_init();
 bool readfsDirlist(std::vector<String> &musiclist);
+void appendToFile(const char *message, const char *path = "/musiclist.txt");
 String musicSubstring(String str);
 String optionsGet(std::vector<String> musiclist);
 void printPSRAM(void);

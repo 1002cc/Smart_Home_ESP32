@@ -7,6 +7,7 @@
 #include <ArduinoJson.h>
 #include <ArduinoWebsockets.h>
 #include <Base64_Arturo.h>
+#include <LittleFS.h>
 #include <base64.h>
 #include <driver/i2s.h>
 #if USE_AUDIO
@@ -55,8 +56,8 @@ void speakTask(void *pvParameter);
 
 String postDouBaoAnswer(String *answerlist, int listnum);
 String getMiniMaxAnswer(String inputText);
-String getXunfeiAnswer(String inputText);
-String getDoubaoAnswer(String inputText);
+String getXunfeiAnswer(const String &inputText);
+String getDoubaoAnswer(const String &inputText);
 
 /********************************************************************
                          max98357
@@ -210,13 +211,18 @@ void initSpeakConfig()
             stttext += w;
         }
         if (doc["data"]["status"] == 2) { // 收到结束标志
-            lv_speakState(SpeakState_t::ANSWERING);
-            Serial.print("stttext: ");
-            Serial.println(stttext);
+
+            if (stttext.isEmpty()) {
+                lv_speakState(SpeakState_t::NO_DIALOGUE);
+                audio.connecttoFS(LittleFS, "/nosound.mp3");
+            } else {
+                lv_speakState(SpeakState_t::ANSWERING);
+            }
+            Serial.printf("stttext: %s\n", stttext.c_str());
         }
     });
     Serial.println("initSpeakConfig done");
-    startSpeakTask();
+    // startSpeakTask();
 }
 
 // 向讯飞STT发送音频数据
@@ -257,8 +263,8 @@ void sendSTTData()
             String base64audioString = base64::encode((uint8_t *)pcm_data, dataSize);
             input += base64audioString;
             input += "\"}}";
-            Serial.printf("input: %d , status: %d \n", i, status);
-            // Serial.println(input);
+            // Serial.printf("input: %d , status: %d \n", i, status);
+            //  Serial.println(input);
             webSocketClient_stt.send(input);
             status = 1;
         } else if (status == 1) {
@@ -276,7 +282,7 @@ void sendSTTData()
                 String base64audioString = base64::encode((uint8_t *)pcm_data + (i * dataSize), dataSize);
                 input += base64audioString;
                 input += "\"}}";
-                Serial.printf("input: %d , status: %d \n", i, status);
+                // Serial.printf("input: %d , status: %d \n", i, status);
                 webSocketClient_stt.send(input);
             }
             if (lan_end > 0) {
@@ -287,11 +293,11 @@ void sendSTTData()
 
                 input += base64audioString;
                 input += "\"}}";
-                Serial.printf("input: %d , status: %d \n", i, status);
+                // Serial.printf("input: %d , status: %d \n", i, status);
                 webSocketClient_stt.send(input);
             }
         }
-        delay(30);
+        delay(10);
     }
 }
 
@@ -452,7 +458,7 @@ String getMiniMaxAnswer(String inputText)
         String response = http.getString();
         http.end();
         Serial.println(response);
-        DynamicJsonDocument jsonDoc(1024);
+        DynamicJsonDocument jsonDoc(2048);
         deserializeJson(jsonDoc, response);
         String outputText = jsonDoc["choices"][0]["message"]["content"];
         return outputText;
@@ -464,7 +470,7 @@ String getMiniMaxAnswer(String inputText)
     }
 }
 
-String getXunfeiAnswer(String inputText)
+String getXunfeiAnswer(const String &inputText)
 {
     HTTPClient http;
     http.setTimeout(20000);
@@ -474,13 +480,16 @@ String getXunfeiAnswer(String inputText)
     http.addHeader("Content-Type", "application/json");
     String payload = "{\"model\":\"general\",\"messages\":[{\"role\":\"system\",\"content\":\"你是我的AI助手小欧,你必须用中文回答且字数不超过60个\"},{\"role\":\"user\",\"content\":\"" + inputText + "\"}]}";
 
+    Serial.print("payload: ");
+    Serial.println(payload);
+
     int httpResponseCode = http.POST(payload);
     if (httpResponseCode == 200) {
         String response = http.getString();
         http.end();
         Serial.println(response);
 
-        DynamicJsonDocument jsonDoc(1024);
+        DynamicJsonDocument jsonDoc(2048);
         deserializeJson(jsonDoc, response);
         String outputText = jsonDoc["choices"][0]["message"]["content"];
         Serial.println(outputText);
@@ -493,7 +502,7 @@ String getXunfeiAnswer(String inputText)
     }
 }
 
-String getDoubaoAnswer(String inputText)
+String getDoubaoAnswer(const String &inputText)
 {
     HTTPClient http;
     http.setTimeout(20000);
@@ -503,13 +512,16 @@ String getDoubaoAnswer(String inputText)
     http.addHeader("Content-Type", "application/json");
     String payload = "{\"model\":\"ep-20240713-2fgvv\",\"messages\":[{\"role\":\"system\",\"content\":\"你是我的AI助手小欧,你必须用中文回答且字数不超过60个\"},{\"role\":\"user\",\"content\":\"" + inputText + "\"}],\"temperature\": 0.3}";
 
+    Serial.print("payload: ");
+    Serial.println(payload);
+
     int httpResponseCode = http.POST(payload);
     if (httpResponseCode == 200) {
         String response = http.getString();
         http.end();
         Serial.println(response);
 
-        DynamicJsonDocument jsonDoc(1024);
+        DynamicJsonDocument jsonDoc(2048);
         deserializeJson(jsonDoc, response);
         String outputText = jsonDoc["choices"][0]["message"]["content"];
         return outputText;
@@ -571,10 +583,41 @@ int speakPerid(int num)
     }
 }
 
+String instructionRecognition(const String &command)
+{
+    Serial.printf("command: %s\n", command.c_str());
+    String command_f = "";
+
+    if (command.indexOf("打开1号灯") != -1) {
+        Serial.println("打开1号灯");
+        lv_ai_control("lampButton1", true);
+        command_f = "1号灯已打开";
+    } else if (command.indexOf("关闭1号灯") != -1) {
+        Serial.println("关闭1号灯");
+        lv_ai_control("lampButton1", false);
+        command_f = "1号灯已关闭";
+    } else if (command.indexOf("打开2号灯") != -1) {
+        Serial.println("打开2号灯");
+        lv_ai_control("lampButton2", true);
+        command_f = "2号灯已打开";
+    } else if (command.indexOf("关闭2号灯") != -1) {
+        Serial.println("关闭2号灯");
+        lv_ai_control("lampButton2", false);
+        command_f = "2号灯已关闭";
+    }
+
+    return command_f;
+}
+
 void speakTask(void *pvParameter)
 {
     Serial.println("start speakTask");
     while (1) {
+
+        if (webSocketClient_stt.available()) {
+            webSocketClient_stt.poll();
+        }
+
         if (speakState == RECORDING) {
             stttext = "";
             Serial.println("Recording...");
@@ -600,9 +643,6 @@ void speakTask(void *pvParameter)
             free(pcm_data);
         }
 
-        if (webSocketClient_stt.available()) {
-            webSocketClient_stt.poll();
-        }
         // if (webSocketClient_tts.available()) {
         //     webSocketClient_tts.poll();
         // }
@@ -611,63 +651,34 @@ void speakTask(void *pvParameter)
             Serial.println(stttext);
             delay(100);
 
-            // stttext.replace("\n", "");
-            // answer_list[answer_list_num] = stttext;
-            // answer_list_num++;
-            // if (answer_list_num > 9) {
-            //     for (int i = 0; i < 9; i++) {
-            //         answer_list[i] = answer_list[i + 1];
-            //     }
-            //     answer_list[9] = "";
-            //     answer_list_num = 9;
-            // }
-
-            // for (int i = 0; i < answer_list_num + 1; i++) {
-            //     Serial.print("answer_list_num: ");
-            //     Serial.println(i);
-            //     Serial.print("answer_list: ");
-            //     Serial.println(answer_list[i]);
-            // }
+            stttext.replace("\n", "");
 
             String answer = "";
-
-            while (answer == "" || answer == "Error") {
-                if (useAIMode) {
-                    answer = getDoubaoAnswer(stttext);
-                } else {
-                    answer = getXunfeiAnswer(stttext);
-                }
-                Serial.printf("anwer : %s mdoe: %d", answer, useAIMode);
-                if (answer == "Error") {
-                    Serial.println("doupao POST出错重新提交");
-                }
-            }
-            Serial.printf("answer : %s\n", answer);
-            // 保存最近的5次对话到列表中
-            // answer.replace("\n", "");
-            // answer_list[answer_list_num] = answer;
-            // answer_list_num++;
-            // if (answer_list_num > 9) {
-            //     for (int i = 0; i < 9; i++) {
-            //         answer_list[i] = answer_list[i + 1];
-            //     }
-            //     answer_list[9] = "";
-            //     answer_list_num = 9;
-            // }
-            lv_speakState(SpeakState_t::SPEAKING);
-            if (!answer.isEmpty()) {
+            answer = instructionRecognition(stttext);
+            if (answer != "") {
                 audio.connecttospeech(answer.c_str(), "zh");
-                // if (1) {
-                //     postTTS(answer);
-                // } else {
-                // String aduiourl = getvAnswer(answer);
-                // if (aduiourl != "error") {
-                //     audio.stopSong();
-                //     audio.connecttohost(aduiourl.c_str()); //  128k mp3
-                // }
-                //}
+                lv_speakState(SpeakState_t::NO_DIALOGUE);
+                continue;
+            }
+
+            answer = "";
+
+            if (useAIMode) {
+                Serial.println("doubao answer");
+                answer = getDoubaoAnswer(stttext);
             } else {
-                Serial.println("回答内容为空,取消TTS发送。");
+                Serial.println("xunfei answer");
+                answer = getXunfeiAnswer(stttext);
+            }
+            Serial.printf("stttext: %s  anwer : %s mdoe: %d\n", stttext.c_str(), answer.c_str(), useAIMode);
+
+            lv_speakState(SpeakState_t::SPEAKING);
+
+            if (!answer.isEmpty() && answer != "error") {
+                audio.connecttospeech(answer.c_str(), "zh");
+            } else {
+                audio.connecttoFS(LittleFS, "/noResponse.mp3");
+                Serial.println("回答内容为空,取消TTS发送");
                 audio.connecttospeech("回答未响应", "zh");
             }
 
@@ -681,13 +692,14 @@ void speakTask(void *pvParameter)
 void startSpeakTask()
 {
     if (speakTaskHandle == NULL) {
-        xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 10, &speakTaskHandle, 1);
+        xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 12, &speakTaskHandle, 1);
     }
 }
 
 void stopSpeakTask()
 {
     if (speakTaskHandle != NULL) {
+        Serial.println("stop speakTask");
         vTaskDelete(speakTaskHandle);
         speakTaskHandle = NULL;
     }

@@ -104,6 +104,27 @@ bool readfsDirlist(std::vector<String> &musiclist)
     file.close();
     return true;
 }
+
+void appendToFile(const char *message, const char *path)
+{
+    // 打开文件以追加内容
+    File file = LittleFS.open(path, "a");
+    if (!file) {
+        Serial.println("Failed to open file for appending");
+        return;
+    }
+
+    // 追加内容到文件
+    if (file.println(message)) {
+        Serial.println("Message appended successfully");
+    } else {
+        Serial.println("Append failed");
+    }
+
+    // 关闭文件
+    file.close();
+}
+
 String musicSubstring(String str)
 {
     int lastSlashIndex = str.lastIndexOf('/');

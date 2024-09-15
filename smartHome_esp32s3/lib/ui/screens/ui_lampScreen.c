@@ -44,7 +44,7 @@ void ui_lampScreen_screen_init(void)
                                            _ui_theme_color_btn);
     ui_object_set_themeable_style_property(ui_lampButton3, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
                                            _ui_theme_alpha_btn);
-    lv_obj_set_style_bg_color(ui_lampButton3, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_lampButton3, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
     lv_obj_set_style_bg_opa(ui_lampButton3, 255, LV_PART_MAIN | LV_STATE_CHECKED);
     lv_obj_set_style_shadow_color(ui_lampButton3, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
     lv_obj_set_style_shadow_opa(ui_lampButton3, 150, LV_PART_MAIN | LV_STATE_CHECKED);
@@ -105,7 +105,7 @@ void ui_lampScreen_screen_init(void)
                                            _ui_theme_color_btn);
     ui_object_set_themeable_style_property(ui_lampButton2, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
                                            _ui_theme_alpha_btn);
-    lv_obj_set_style_bg_color(ui_lampButton2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_color(ui_lampButton2, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
     lv_obj_set_style_bg_opa(ui_lampButton2, 255, LV_PART_MAIN | LV_STATE_CHECKED);
     lv_obj_set_style_shadow_color(ui_lampButton2, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
     lv_obj_set_style_shadow_opa(ui_lampButton2, 150, LV_PART_MAIN | LV_STATE_CHECKED);

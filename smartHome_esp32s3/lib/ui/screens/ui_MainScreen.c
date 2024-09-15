@@ -290,6 +290,43 @@ void ui_MainScreen_screen_init(void)
     lv_obj_set_style_border_color(ui_Panel2, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_border_opa(ui_Panel2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_Button7 = lv_btn_create(ui_Container1);
+    lv_obj_set_width(ui_Button7, 130);
+    lv_obj_set_height(ui_Button7, 73);
+    lv_obj_set_x(ui_Button7, 230);
+    lv_obj_set_y(ui_Button7, 40);
+    lv_obj_set_align(ui_Button7, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Button7, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_clear_flag(ui_Button7, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    ui_object_set_themeable_style_property(ui_Button7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_Button7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+
+    ui_Image14 = lv_img_create(ui_Button7);
+    lv_img_set_src(ui_Image14, &ui_img_mm2_png);
+    lv_obj_set_width(ui_Image14, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Image14, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Image14, -27);
+    lv_obj_set_y(ui_Image14, 0);
+    lv_obj_set_align(ui_Image14, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Image14, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_Image14, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_img_set_zoom(ui_Image14, 120);
+
+    ui_Label37 = lv_label_create(ui_Button7);
+    lv_obj_set_width(ui_Label37, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label37, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Label37, 30);
+    lv_obj_set_y(ui_Label37, 0);
+    lv_obj_set_align(ui_Label37, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label37, "音乐");
+    ui_object_set_themeable_style_property(ui_Label37, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label37, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_Label37, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ui_cityLabel = lv_label_create(ui_MainScreen);
     lv_obj_set_width(ui_cityLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_cityLabel, LV_SIZE_CONTENT);    /// 1
@@ -312,6 +349,10 @@ void ui_MainScreen_screen_init(void)
     lv_label_set_text(ui_statusbarLabel, "");
     lv_obj_set_style_text_color(ui_statusbarLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_statusbarLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_object_set_themeable_style_property(ui_statusbarLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_boeder);
+    ui_object_set_themeable_style_property(ui_statusbarLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_boeder);
 
     lv_obj_add_event_cb(ui_timeLabel, ui_event_timeLabel, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_weathericonImage, ui_event_weathericonImage, LV_EVENT_ALL, NULL);
@@ -320,5 +361,6 @@ void ui_MainScreen_screen_init(void)
     lv_obj_add_event_cb(ui_Button3, ui_event_Button3, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button2, ui_event_Button2, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_Button4, ui_event_Button4, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_Button7, ui_event_Button7, LV_EVENT_ALL, NULL);
 
 }

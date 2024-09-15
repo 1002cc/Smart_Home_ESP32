@@ -13,7 +13,8 @@ enum class AUDIO_NAME {
     CONNECT_D, // 断开连接
     PW,        // 配网
     WC,        // 欢迎语
-    RAIN
+    RAIN,      // 雨滴
+    LT,        // 长时间停留
 };
 
 void printLocalTime(void);
@@ -22,6 +23,8 @@ void initNtpTime();
 
 void StoreData(const char *key, const char *val);
 String ReadData(const char *val);
+void StoreintData(const char *key, int val);
+int ReadintData(const char *val);
 
 void printPSRAM(void);
 

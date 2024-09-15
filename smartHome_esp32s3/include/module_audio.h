@@ -13,9 +13,11 @@ void audiosetStation(int station);
 void audioPrevious();
 void audioNext();
 void audioPlay();
+void playMusicUrl(const String &url);
 void audioPause();
 void audioSetPer(int per);
 void playStartAudio();
+void playMQAlarm();
 bool getaudioPlayStatus();
 void audioLoop();
 #endif

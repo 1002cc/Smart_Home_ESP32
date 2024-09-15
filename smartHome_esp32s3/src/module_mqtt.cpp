@@ -2,51 +2,56 @@
 #include "confighelpr.h"
 #include "lvgl.h"
 #include "lvglconfig.h"
+#include "module_audio.h"
 #include "module_service.h"
 #include <PubSubClient.h>
 #include <TJpg_Decoder.h>
 #include <WiFiClientSecure.h>
 
-const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
+// const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
+const char *mqtt_url = "47.120.7.163";
 String mqtt_sub = "";
 String mqtt_pub = "";
 String mqtt_app_pub = "";
 String mqtt_qt_pub = "";
 String mqtt_cam_pub = "";
 String mqtt_wroom_pub = "";
-const uint16_t mqtt_broker_port = 8883;
+// const uint16_t mqtt_broker_port = 8883;
+const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "esp32";
 const char *mqtt_password = "1002";
 String mqtt_client_id = "esp32s3SmartHome";
 const int mqtt_keepalive = 60;
-const char *ca_cert = R"EOF(
------BEGIN CERTIFICATE-----
-MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
-MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
-QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
-MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
-b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
-9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
-CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
-nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
-43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
-T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
-gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
-BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
-TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
-DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
-hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
-06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
-PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
-YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
-CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
------END CERTIFICATE-----
-)EOF";
+// const char *ca_cert = R"EOF(
+// -----BEGIN CERTIFICATE-----
+// MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
+// MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
+// d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
+// QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
+// MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
+// b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
+// 9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
+// CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
+// nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
+// 43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
+// T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
+// gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
+// BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
+// TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
+// DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
+// hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
+// 06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
+// PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
+// YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
+// CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
+// -----END CERTIFICATE-----
+// )EOF";
 
-WiFiClientSecure net;
-PubSubClient mqttClient;
+// WiFiClientSecure net;
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
+
 extern lampButtonData mqttSwitchState;
 extern detectionDate detectiondatas;
 
@@ -60,8 +65,8 @@ bool firstConnectMQTT(void);
 bool initMQTTConfig(void)
 {
     Serial.println("Init MQTT Config");
-    net.setCACert(ca_cert);
-    mqttClient.setClient(net);
+    // net.setCACert(ca_cert);
+    // mqttClient.setClient(net);
     mqttClient.setServer(mqtt_url, mqtt_broker_port);
     mqttClient.setBufferSize(mqtt_client_buff_size);
     mqttClient.setCallback(mqtt_callback);
@@ -95,6 +100,7 @@ bool firstConnectMQTT(void)
             lv_setMQTTState("已连接");
             lv_setstatusbarLabel(3);
             enable_mqtt = true;
+            publishGetDatas();
         } else {
             lv_setTipinfo("服务器连接失败");
             lv_setMQTTSwitchState(false);
@@ -126,6 +132,7 @@ bool mqttconnect(void)
         mqttClient.publish(mqtt_pub.c_str(), "ESP32 S3 connect mqtt!");
         mqttClient.subscribe(mqtt_sub.c_str());
         lv_setMQTTState("已连接");
+        publishGetDatas();
         return true;
     } else {
         Serial.print("failed, rc=");
@@ -161,7 +168,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
     for (int i = 0; i < length; i++) {
         Serial.print((char)payload[i]);
     }
-
+    Serial.println("");
     String payloadString(payload, length);
 
     cJSON *root = cJSON_Parse(payloadString.c_str());
@@ -169,7 +176,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         Serial.println("Failed to parse JSON!");
     } else {
         cJSON *datas = cJSON_GetObjectItem(root, "datas");
-        if (datas) {
+        if (datas != NULL) {
             cJSON *priState_j = cJSON_GetObjectItem(datas, "priState");
             if (priState_j != NULL) {
                 detectiondatas.pri = priState_j->valueint;
@@ -187,27 +194,37 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             }
         }
         cJSON *switches = cJSON_GetObjectItem(root, "switches");
-        if (switches) {
+        if (switches != NULL) {
             cJSON *lampButton1_j = cJSON_GetObjectItem(switches, "lampButton1");
             if (lampButton1_j != NULL) {
                 mqttSwitchState.lampButton1 = lampButton1_j->valueint;
+                lv_setLampButton1(mqttSwitchState.lampButton1);
             }
             cJSON *lampButton2_j = cJSON_GetObjectItem(switches, "lampButton2");
             if (lampButton2_j != NULL) {
                 mqttSwitchState.lampButton2 = lampButton2_j->valueint;
+                lv_setLampButton2(mqttSwitchState.lampButton2);
             }
             cJSON *pri_j = cJSON_GetObjectItem(switches, "pri");
             if (pri_j != NULL) {
                 mqttSwitchState.priButton = pri_j->valueint;
+                lv_setPriButtonState(mqttSwitchState.priButton);
             }
             cJSON *voice_j = cJSON_GetObjectItem(switches, "voiceControl");
             if (voice_j != NULL) {
                 mqttSwitchState.voiceButton = voice_j->valueint;
+                lv_setVoiceButtonState(mqttSwitchState.voiceButton);
             }
-            lv_updateSiwtech();
+        }
+        cJSON *playmusic_j = cJSON_GetObjectItem(root, "playmusic");
+        if (playmusic_j != NULL) {
+            String musicUrl = playmusic_j->valuestring;
+            if (!musicUrl.isEmpty()) {
+                Serial.printf("play music url:%s\n", musicUrl.c_str());
+                playMusicUrl(musicUrl);
+            }
         }
     }
-
     Serial.println("\n----------------END----------------");
 }
 
@@ -281,8 +298,8 @@ bool pulishState(const String &object, const bool &state, const String &item)
         char *jsonStr = cJSON_PrintUnformatted(root);
 
         Serial.println(jsonStr);
-        // mqttClient.publish(mqtt_pub.c_str(), jsonStr);
-        // mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
         mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
         cJSON_Delete(root);
         return true;
@@ -296,7 +313,7 @@ bool sendRePW()
 {
     if (mqttClient.state() == MQTT_CONNECTED) {
         cJSON *root = cJSON_CreateObject();
-        cJSON_AddBoolToObject(root, "getdatas", true);
+        cJSON_AddBoolToObject(root, "repw", true);
         char *jsonStr = cJSON_PrintUnformatted(root);
 
         Serial.println(jsonStr);
@@ -324,6 +341,17 @@ void publishGetImage()
     cJSON_Delete(root);
 }
 
+void publishGetDatas()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddBoolToObject(root, "getdatas", true);
+
+    char *jsonStr = cJSON_PrintUnformatted(root);
+
+    mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
 void publishStartVideo(bool isStartVideo)
 {
     cJSON *root = cJSON_CreateObject();
@@ -332,6 +360,20 @@ void publishStartVideo(bool isStartVideo)
     cJSON *dates = cJSON_CreateObject();
     cJSON_AddItemToObject(root, "datas", dates);
     cJSON_AddBoolToObject(dates, "startVideo", isStartVideo);
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    Serial.println(jsonStr);
+    mqttClient.publish(mqtt_cam_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishVideoAbout(int value)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "code", "200");
+
+    cJSON *dates = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "datas", dates);
+    cJSON_AddNumberToObject(dates, "about", value);
     char *jsonStr = cJSON_PrintUnformatted(root);
     Serial.println(jsonStr);
     mqttClient.publish(mqtt_cam_pub.c_str(), jsonStr);

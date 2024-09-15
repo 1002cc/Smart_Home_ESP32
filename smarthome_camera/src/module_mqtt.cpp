@@ -1,50 +1,30 @@
 #include "module_mqtt.h"
+#include "module_devices.h"
 #include "module_server.h"
 #include "module_wifi.h"
 #include <PubSubClient.h>
 #include <WiFiClientSecure.h>
 #include <cJSON.h>
 
-const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
-
+const char *mqtt_url = "47.120.7.163";
 String mqtt_sub = "";
 String mqtt_pub = "";
-const uint16_t mqtt_broker_port = 8883;
+const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "chen";
 const char *mqtt_password = "1002";
 String mqtt_client_id = "SmartHome_esp32_cam";
 const int mqtt_keepalive = 60;
-const char *ca_cert = R"EOF(
------BEGIN CERTIFICATE-----
-MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
-MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
-QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
-MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
-b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
-9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
-CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
-nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
-43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
-T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
-gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
-BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
-TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
-DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
-hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
-06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
-PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
-YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
-CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
------END CERTIFICATE-----
-)EOF";
 
-WiFiClientSecure net;
-PubSubClient mqttClient;
+WiFiClient espClient;
+PubSubClient mqttClient(espClient);
+
 bool enable_mqtt = true;
 
-extern bool enableVideoSteam;
+extern bool mqttControl;
+extern bool videoStreamEnable;
+
+extern int servoPos;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
@@ -52,9 +32,6 @@ extern void sendImgPieces(void);
 
 bool initMQTTConfig(void)
 {
-    net.setCACert(ca_cert);
-
-    mqttClient.setClient(net);
     mqttClient.setServer(mqtt_url, mqtt_broker_port);
     mqttClient.setBufferSize(mqtt_client_buff_size);
     mqttClient.setCallback(mqtt_callback);
@@ -131,11 +108,31 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 cJSON *startVideo = cJSON_GetObjectItem(datas, "startVideo");
                 if (startVideo != NULL) {
                     if (startVideo->valueint == 1) {
-                        enableVideoSteam = true;
+                        mqttControl = true;
                     } else {
-                        enableVideoSteam = false;
+                        mqttControl = false;
                     }
-                    Serial.printf("startVideo: %d  isStartCamera:%d\n", startVideo->valueint, enableVideoSteam);
+                    Serial.printf("startVideo: %d  isStartCamera:%d\n", startVideo->valueint, mqttControl);
+                }
+                cJSON *VideoStream = cJSON_GetObjectItem(datas, "videoStream");
+                if (VideoStream != NULL) {
+                    if (VideoStream->valueint == 1) {
+                        videoStreamEnable = true;
+                    } else {
+                        videoStreamEnable = false;
+                    }
+                    Serial.printf("VideoStream: %d  videoStreamEnable:%d\n", VideoStream->valueint, videoStreamEnable);
+                }
+                cJSON *about_j = cJSON_GetObjectItem(datas, "about");
+                if (about_j != NULL) {
+                    if (about_j->valueint == 1) {
+                        Serial.println("about:Left");
+                        ServoLeft();
+                    } else if (about_j->valueint == 2) {
+                        Serial.println("about:Right");
+                        ServoRight();
+                    }
+                    Serial.printf("about: %d  servoPos:%d\n", about_j->valueint, servoPos);
                 }
             }
         }

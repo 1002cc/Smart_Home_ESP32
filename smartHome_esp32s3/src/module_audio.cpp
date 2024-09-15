@@ -83,6 +83,9 @@ void audiosetStation(int station)
 void audioStation(int station)
 {
     cur_station = station;
+    if (cur_station >= max_stations) {
+        cur_station = 0;
+    }
     StoreintData("station", cur_station);
     audioPlay();
 }
@@ -126,6 +129,29 @@ void audioPlay()
     Serial.printf("cur station %s\n", stations_list[cur_station].c_str());
 }
 
+void playMusicUrl(const String &url)
+{
+    Serial.printf("play music: %s\n", url.c_str());
+    if (audio.isRunning()) {
+        audio.stopSong();
+    }
+    if (audio.connecttohost(url.c_str())) {
+        Serial.println("play music successful");
+        lv_setPlayState(true);
+        appendToFile(url.c_str());
+        stations_list.emplace(stations_list.begin(), url.c_str());
+        lv_setDropdownaddinfo(musicSubstring(url).c_str(), 0);
+        cur_station = 0;
+        lv_setDropdown(cur_station);
+        lv_setMusicinfo(musicSubstring(stations_list[cur_station]).c_str());
+
+    } else {
+        Serial.println("Connect to host failed");
+        lv_setPlayState(false);
+        audio.stopSong();
+    }
+}
+
 void audioPause()
 {
     audio.stopSong();
@@ -141,6 +167,11 @@ void audioSetPer(int per)
 void playStartAudio()
 {
     audio.connecttoFS(LittleFS, "/wc.mp3");
+}
+void playMQAlarm()
+{
+    Serial.println("Smoke alarm!!!");
+    audio.connecttoFS(LittleFS, "/yw.mp3");
 }
 
 void audioTask(void *pt)

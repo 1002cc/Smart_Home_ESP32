@@ -38,10 +38,13 @@ void msgboxTip(const char *text);
 void lv_setPriState(bool state);
 void lv_setVoiceState(bool state);
 void lv_setRainState(bool state);
-void lv_updateSiwtech();
 void lv_setUser(const String &user);
-
+void lv_setLampButton1(bool state);
+void lv_setLampButton2(bool state);
+void lv_setPriButtonState(bool state);
+void lv_setVoiceButtonState(bool state);
 void lv_speakState(const SpeakState_t &state);
+void lv_ai_control(const String &handl, bool state);
 
 void ui_calender_update(void);
 void startCameraTask();

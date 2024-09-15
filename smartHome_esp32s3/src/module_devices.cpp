@@ -1,5 +1,6 @@
 #include "module_devices.h"
 #include "DHT.h"
+#include "module_audio.h"
 #include "module_mqtt.h"
 #include "ui.h"
 #include <FastLED.h>
@@ -160,7 +161,7 @@ void sensor_task(void *pvParameter)
 {
     float temperature, humidity, mq2sensorValue;
     char temp_char[12];
-    unsigned long int lastPrintTime;
+    unsigned long int lastPrintTime, lastMQTime;
     while (1) {
         temperature = dht.readTemperature();
         humidity = dht.readHumidity();
@@ -183,6 +184,11 @@ void sensor_task(void *pvParameter)
             mq2sensorValue = 0;
             Serial.println("Failed to read from MQ2 sensor!");
         } else {
+            mq2sensorValue = map(mq2sensorValue, 0, 360, 0, 100);
+            if (mq2sensorValue >= 30 && millis() - lastMQTime > 6000) {
+                lastPrintTime = millis();
+                playMQAlarm();
+            }
             lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
             snprintf(temp_char, sizeof(temp_char), "%.0f%%", mq2sensorValue);
             lv_label_set_text(ui_MQLabel, temp_char);
@@ -192,14 +198,16 @@ void sensor_task(void *pvParameter)
         //     Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
         //     lastPrintTime = millis();
         // }
-
-        if (getMqttStart()) {
-            SensorData sensorData = {
-                .temp = temperature,
-                .humidity = humidity,
-                .mq = mq2sensorValue,
-            };
-            publishSensorData(sensorData);
+        if (millis() - lastPrintTime > 5000) {
+            if (getMqttStart()) {
+                SensorData sensorData = {
+                    .temp = temperature,
+                    .humidity = humidity,
+                    .mq = mq2sensorValue,
+                };
+                publishSensorData(sensorData);
+                lastPrintTime = millis();
+            }
         }
         vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
@@ -214,9 +222,6 @@ void initDevices()
 {
     Serial.println("Init Devices ...");
     initWSrgbled();
-    // rgbled_init();
-    // pinMode(BUTTON_PIN, INPUT);
-    // pinMode(BUTTON_PIN1, INPUT);
     Serial.println("Init Devices Done");
 }
 

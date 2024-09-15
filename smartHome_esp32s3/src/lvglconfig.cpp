@@ -33,7 +33,7 @@ std::vector<String> foundWifiList;
 
 // web camera
 using namespace websockets;
-String websockets_server_host = "172.20.10.4";
+String websockets_server_host = "47.120.7.163";
 uint16_t websockets_server_port = 3000;
 WebsocketsClient cameraClient;
 uint16_t *image_buffer;
@@ -43,7 +43,6 @@ extern bool enable_mqtt;
 bool isStartCamera = false;
 
 static lv_style_t main_black_style;
-static lv_timer_t *chartTimer = NULL;
 
 static const int chartSize = 200;
 lv_coord_t pos_array[5][5] = {
@@ -79,6 +78,10 @@ static lv_obj_t *weatherTextarea;
 static lv_obj_t *ntpTimeTextarea;
 static lv_obj_t *inputKeyboard;
 static lv_obj_t *videoImage;
+static lv_obj_t *videoLeft;
+static lv_obj_t *videoRight;
+static lv_obj_t *videoLeftlabel;
+static lv_obj_t *videoRightlabel;
 static lv_obj_t *ipTextarea;
 static lv_obj_t *portTextarea;
 static lv_obj_t *deviceRePwButton;
@@ -107,7 +110,7 @@ bool startCameraServer();
 void closeCameraServer();
 static void drawing_screen(void);
 static void lv_deviceRepwCD(lv_event_t *e);
-
+void monitorAboutCD(lv_event_t *e);
 /********************************************************************
                          TFT INIT
 ********************************************************************/
@@ -185,6 +188,9 @@ void initLVGLConfig(void)
     ui_timer_init();
     my_ui_init();
 
+    lv_obj_clear_flag(lv_tabview_get_content(ui_TabView4), LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(lv_tabview_get_content(ui_chooseTabView), LV_OBJ_FLAG_SCROLLABLE);
+
     lvglSemaphore = xSemaphoreCreateMutex();
     xnetworkStatusSemaphore = xSemaphoreCreateMutex();
 
@@ -217,20 +223,13 @@ void startLVGLTask(void)
 ********************************************************************/
 void lampButtonCB(lv_event_t *e)
 {
-    mqttSwitchState.lampButton1 = lv_obj_has_state(ui_lampButton3, LV_STATE_CHECKED);
-    mqttSwitchState.lampButton2 = lv_obj_has_state(ui_lampButton2, LV_STATE_CHECKED);
-    if (!pulishSwitchDatas(mqttSwitchState)) {
-        if (mqttSwitchState.lampButton1) {
-            lv_obj_clear_flag(ui_lampButton3, LV_STATE_CHECKED);
-        } else {
-            lv_obj_add_flag(ui_lampButton3, LV_STATE_CHECKED);
-        }
-        if (mqttSwitchState.lampButton2) {
-            lv_obj_clear_flag(ui_lampButton2, LV_STATE_CHECKED);
-        } else {
-            lv_obj_add_flag(ui_lampButton2, LV_STATE_CHECKED);
-        }
-        msgboxTip("请登录账号!!!");
+    lv_obj_t *btn = lv_event_get_target(e);
+    bool is_on = lv_obj_has_state(btn, LV_STATE_CHECKED);
+    if (btn == ui_lampButton3) {
+        lv_ai_control("lampButton1", is_on);
+    }
+    if (btn == ui_lampButton2) {
+        lv_ai_control("lampButton2", is_on);
     }
 }
 
@@ -447,9 +446,9 @@ void lv_setstatusbarLabel(int status)
     } else if (status == 1) {
         lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_WIFI);
     } else if (status == 2) {
-        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_DRIVE);
+        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_SHUFFLE);
     } else if (status == 3) {
-        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_WIFI LV_SYMBOL_DRIVE);
+        lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_WIFI LV_SYMBOL_SHUFFLE);
     } else if (status == 4) {
         lv_label_set_text(ui_statusbarLabel, LV_SYMBOL_WARNING);
     }
@@ -464,7 +463,6 @@ static void mboxevent_cb(lv_event_t *e)
 
 void msgboxTip(const char *text)
 {
-
     static const char *btn_str[] = {"确定", ""};
     lv_obj_t *mbox2 = lv_msgbox_create(lv_scr_act(), "Tip", text, btn_str, false);
     lv_obj_set_style_text_font(mbox2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -475,6 +473,7 @@ void msgboxTip(const char *text)
 void lv_speakState(const SpeakState_t &state)
 {
     speakState = state;
+
     switch (state) {
     case SpeakState_t::NO_DIALOGUE:
         lv_obj_clear_state(ui_speakButton, LV_STATE_DISABLED);
@@ -509,6 +508,9 @@ void lv_speakState(const SpeakState_t &state)
     default:
         break;
     }
+    lv_chart_set_ext_y_array(ui_expressionChart, lv_chart_get_series_next(ui_expressionChart, NULL), pos_array[speakState]);
+    lv_chart_refresh(ui_expressionChart);
+    Serial.printf("speakState: %d\n", speakState);
 }
 
 void lv_setPriState(bool state)
@@ -537,36 +539,75 @@ void lv_setRainState(bool state)
     }
 }
 
-void lv_updateSiwtech()
-{
-    if (mqttSwitchState.lampButton1) {
-        lv_obj_add_state(ui_lampButton3, LV_STATE_CHECKED);
-    } else {
-        lv_obj_clear_state(ui_lampButton3, LV_STATE_CHECKED);
-    }
-    if (mqttSwitchState.lampButton2) {
-        lv_obj_add_state(ui_lampButton2, LV_STATE_CHECKED);
-    } else {
-        lv_obj_clear_state(ui_lampButton2, LV_STATE_CHECKED);
-    }
-    if (mqttSwitchState.priButton) {
-        lv_obj_add_state(ui_Switch1, LV_STATE_CHECKED);
-    } else {
-        lv_obj_clear_state(ui_Switch1, LV_STATE_CHECKED);
-    }
-    if (mqttSwitchState.voiceButton) {
-        lv_obj_add_state(ui_Switch3, LV_STATE_CHECKED);
-    } else {
-        lv_obj_clear_state(ui_Switch3, LV_STATE_CHECKED);
-    }
-}
-
 void lv_setUser(const String &user)
 {
     lv_textarea_set_placeholder_text(subTextarea, user.c_str());
     lv_textarea_set_text(subTextarea, "");
     lv_textarea_set_placeholder_text(pubTextarea, "******");
     lv_textarea_set_text(pubTextarea, "");
+}
+
+void lv_setLampButton1(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_lampButton3, LV_STATE_CHECKED);
+        lv_label_set_text(ui_stateLabel1, "ON");
+        lv_img_set_src(ui_stateImage1, &ui_img_l2_png);
+    } else {
+        lv_obj_clear_state(ui_lampButton3, LV_STATE_CHECKED);
+        lv_label_set_text(ui_stateLabel1, "OFF");
+        lv_img_set_src(ui_stateImage1, &ui_img_l1_png);
+    }
+}
+void lv_setLampButton2(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_lampButton2, LV_STATE_CHECKED);
+        lv_label_set_text(ui_stateLabel3, "ON");
+        lv_img_set_src(ui_stateImage3, &ui_img_l2_png);
+    } else {
+        lv_obj_clear_state(ui_lampButton2, LV_STATE_CHECKED);
+        lv_label_set_text(ui_stateLabel3, "OFF");
+        lv_img_set_src(ui_stateImage3, &ui_img_l1_png);
+    }
+}
+void lv_setPriButtonState(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_Switch1, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(ui_Switch1, LV_STATE_CHECKED);
+    }
+}
+void lv_setVoiceButtonState(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_Switch3, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(ui_Switch3, LV_STATE_CHECKED);
+    }
+}
+
+void lv_ai_control(const String &handl, bool state)
+{
+    Serial.printf("handl:%s  state:%d\n", handl.c_str(), state);
+    bool isSuccess = pulishState(handl, state, "switches");
+
+    if (handl == "lampButton1") {
+        if (isSuccess) {
+            mqttSwitchState.lampButton1 = state;
+        } else {
+            msgboxTip("请登录账号!!!");
+        }
+        lv_setLampButton1(mqttSwitchState.lampButton1);
+    } else if (handl == "lampButton2") {
+        if (isSuccess) {
+            mqttSwitchState.lampButton2 = state;
+        } else {
+            msgboxTip("请登录账号!!!");
+        }
+        lv_setLampButton2(mqttSwitchState.lampButton2);
+    }
 }
 
 /********************************************************************
@@ -943,7 +984,7 @@ void initSetConfigUI()
     lv_obj_set_width(deviceRePwLabel, LV_SIZE_CONTENT);
     lv_obj_set_height(deviceRePwLabel, LV_SIZE_CONTENT);
     lv_obj_set_align(deviceRePwLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(deviceRePwLabel, "重启");
+    lv_label_set_text(deviceRePwLabel, "重置");
     lv_obj_set_style_text_color(deviceRePwLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(deviceRePwLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(deviceRePwLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -1215,7 +1256,9 @@ void cameraScreenCD(lv_event_t *e)
 
 void monitorScreenOCD(lv_event_t *e)
 {
-    vTaskSuspend(speakTaskHandle);
+    if (speakTaskHandle != nullptr && eTaskGetState(speakTaskHandle) != eTaskState::eSuspended) {
+        vTaskSuspend(speakTaskHandle);
+    }
     lv_scr_load_anim(ui_monitorScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
 }
 
@@ -1226,11 +1269,22 @@ void monitorScreenFCD(lv_event_t *e)
     lv_label_set_text(ui_cameraLabel, "连接");
     lv_label_set_text(ui_cameraStateLabel, "未连接");
     closeCameraServer();
-    if (eTaskGetState(speakTaskHandle) == eTaskState::eSuspended) {
+    if (speakTaskHandle != nullptr && eTaskGetState(speakTaskHandle) == eTaskState::eSuspended) {
         Serial.println("vTaskResume speakTaskHandle");
         vTaskResume(speakTaskHandle);
     }
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
+}
+
+void monitorAboutCD(lv_event_t *e)
+{
+    lv_obj_t *btn = lv_event_get_target(e);
+    Serial.println("monitorAboutCD");
+    if (btn == videoLeft) {
+        publishVideoAbout(1);
+    } else if (btn == videoRight) {
+        publishVideoAbout(2);
+    }
 }
 
 bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t *bitmap)
@@ -1276,7 +1330,7 @@ void closeCameraServer()
     lv_label_set_text(ui_cameraStateLabel, "未连接");
 
     if (isStartCamera) {
-        publishStartVideo(false);
+        // publishStartVideo(false);
         isStartCamera = false;
     }
 
@@ -1294,6 +1348,27 @@ void initCameraUI()
     lv_obj_set_size(videoImage, 320, 240);
     lv_obj_move_foreground(ui_connectCameraButton);
     lv_obj_move_foreground(ui_cameraStateLabel);
+
+    videoLeft = lv_btn_create(ui_monitorScreen);
+    lv_obj_set_width(videoLeft, 35);
+    lv_obj_set_height(videoLeft, 35);
+    lv_obj_align(videoLeft, LV_ALIGN_LEFT_MID, 10, 0);
+
+    videoLeftlabel = lv_label_create(videoLeft);
+    lv_obj_set_align(videoLeftlabel, LV_ALIGN_CENTER);
+    lv_label_set_text(videoLeftlabel, LV_SYMBOL_LEFT);
+
+    videoRight = lv_btn_create(ui_monitorScreen);
+    lv_obj_set_width(videoRight, 35);
+    lv_obj_set_height(videoRight, 35);
+    lv_obj_align(videoRight, LV_ALIGN_RIGHT_MID, -10, 0);
+
+    videoRightlabel = lv_label_create(videoRight);
+    lv_obj_set_align(videoRightlabel, LV_ALIGN_CENTER);
+    lv_label_set_text(videoRightlabel, LV_SYMBOL_RIGHT);
+
+    lv_obj_add_event_cb(videoLeft, monitorAboutCD, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(videoRight, monitorAboutCD, LV_EVENT_CLICKED, NULL);
 
     TJpgDec.setJpgScale(1);
     TJpgDec.setSwapBytes(false);
@@ -1335,11 +1410,15 @@ void startCameraTask()
             isStartCamera = false;
             return;
         }
-        publishStartVideo(true);
+        // publishStartVideo(true);
         xTaskCreatePinnedToCore(&videocameratask, "videocamera_task", 5 * 1024, NULL, 3, &cameraTaskHandle, 1);
     } else {
         Serial.println("cameraTaskHandle is not NULL");
     }
+}
+
+void stopCameraTask()
+{
 }
 
 /********************************************************************
@@ -1352,8 +1431,12 @@ void speakScreenCD(lv_event_t *e)
     lv_obj_t *btn = lv_event_get_target(e);
     if (code == LV_EVENT_CLICKED) {
         if (btn == ui_Button4) {
+            startSpeakTask();
+            lv_tabview_set_act(ui_TabView4, 0, LV_ANIM_OFF);
             lv_scr_load_anim(ui_speechScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
-            drawing_screen();
+        } else if (btn == ui_Button7) {
+            lv_tabview_set_act(ui_TabView4, 1, LV_ANIM_OFF);
+            lv_scr_load_anim(ui_speechScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
         } else if (btn == ui_speakButton) {
             if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
                 lv_speakState(SpeakState_t::RECORDING);
@@ -1367,28 +1450,8 @@ void speakScreenCD(lv_event_t *e)
 
 void speakScreenFCD(lv_event_t *e)
 {
-    if (chartTimer != NULL) {
-        lv_timer_del(chartTimer);
-        chartTimer = NULL;
-    }
-
+    stopSpeakTask();
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
-}
-
-static void update_particle_effect(lv_timer_t *timer)
-{
-    LV_UNUSED(timer);
-    // Serial.println("updata particle");
-    lv_chart_set_ext_y_array(ui_expressionChart, lv_chart_get_series_next(ui_expressionChart, NULL), pos_array[speakState]);
-    lv_chart_refresh(ui_expressionChart);
-}
-
-static void drawing_screen(void)
-{
-    if (chartTimer == NULL) {
-        chartTimer = lv_timer_create(update_particle_effect, 1000, NULL);
-        update_particle_effect(chartTimer);
-    }
 }
 
 /********************************************************************
@@ -1417,6 +1480,7 @@ void initDataUI()
     if (speech_ai_mode != 1000) {
         lv_dropdown_set_selected(ui_aimodeDropdown, speech_ai_mode);
         useAIMode = speech_ai_mode;
+        Serial.printf("speech_ai_mode: %d\n", useAIMode);
     }
 
     String camera_ip = ReadData("cameraip");
@@ -1431,7 +1495,6 @@ void initDataUI()
     if (camera_port != "null") {
         lv_textarea_set_placeholder_text(portTextarea, camera_port.c_str());
         websockets_server_port = camera_port.toInt();
-
     } else {
         lv_textarea_set_placeholder_text(portTextarea, String(websockets_server_port).c_str());
         StoreData("cameraport", String(websockets_server_port).c_str());
@@ -1444,17 +1507,25 @@ void initDataUI()
         } else {
             _ui_switch_theme(UI_THEME_DARKTHEME);
         }
+        Serial.printf("theme_id: %d\n", theme_id);
     }
 
     int startA = ReadintData("startaudio");
     if (startA != 1000) {
         enble_startAudio = startA;
+        if (enble_startAudio) {
+            lv_obj_add_state(ui_startAudioSwitch, LV_STATE_CHECKED);
+        } else {
+            lv_obj_clear_state(ui_startAudioSwitch, LV_STATE_CHECKED);
+        }
+        Serial.printf("startAudio: %d\n", enble_startAudio);
     }
 
     int brightness = ReadintData("brightness");
     if (brightness != 1000) {
         analogWrite(TFT_BL, brightness);
         lv_slider_set_value(ui_Slider1, brightness, LV_ANIM_OFF);
+        Serial.printf("brightness: %d\n", brightness);
     }
 }
 

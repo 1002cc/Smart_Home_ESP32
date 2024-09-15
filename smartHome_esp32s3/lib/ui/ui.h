@@ -21,10 +21,8 @@ extern "C" {
 void ui_StartupScreen_screen_init(void);
 void ui_event_StartupScreen(lv_event_t * e);
 extern lv_obj_t * ui_StartupScreen;
-extern lv_obj_t * ui_Image5;
 extern lv_obj_t * ui_tipLabel;
 extern lv_obj_t * ui_Spinner2;
-extern lv_obj_t * ui_Label7;
 // SCREEN: ui_MainScreen
 void ui_MainScreen_screen_init(void);
 extern lv_obj_t * ui_MainScreen;
@@ -57,6 +55,10 @@ extern lv_obj_t * ui_Button4;
 extern lv_obj_t * ui_Image6;
 extern lv_obj_t * ui_Label29;
 extern lv_obj_t * ui_Panel2;
+void ui_event_Button7(lv_event_t * e);
+extern lv_obj_t * ui_Button7;
+extern lv_obj_t * ui_Image14;
+extern lv_obj_t * ui_Label37;
 extern lv_obj_t * ui_cityLabel;
 extern lv_obj_t * ui_statusbarLabel;
 // SCREEN: ui_DateScreen
@@ -241,18 +243,19 @@ LV_IMG_DECLARE(ui_img_31831977);    // assets/5@1x.png
 LV_IMG_DECLARE(ui_img_1282432712);    // assets/0@1x.png
 LV_IMG_DECLARE(ui_img_1809401540);    // assets/13@1x.png
 LV_IMG_DECLARE(ui_img_520433372);    // assets/4@1x.png
+LV_IMG_DECLARE(ui_img_l2_png);    // assets/l2.png
 LV_IMG_DECLARE(ui_img_configure_png);    // assets/configure.png
 LV_IMG_DECLARE(ui_img_lamps_png);    // assets/lamps.png
 LV_IMG_DECLARE(ui_img_s1_png);    // assets/s1.png
 LV_IMG_DECLARE(ui_img_data_png);    // assets/data.png
 LV_IMG_DECLARE(ui_img_chat_png);    // assets/chat.png
+LV_IMG_DECLARE(ui_img_mm2_png);    // assets/mm2.png
 LV_IMG_DECLARE(ui_img_h2_png);    // assets/h2.png
 LV_IMG_DECLARE(ui_img_h1_png);    // assets/h1.png
 LV_IMG_DECLARE(ui_img_hh2_png);    // assets/hh2.png
 LV_IMG_DECLARE(ui_img_hh1_png);    // assets/hh1.png
 LV_IMG_DECLARE(ui_img_dd2_png);    // assets/dd2.png
 LV_IMG_DECLARE(ui_img_dd1_png);    // assets/dd1.png
-LV_IMG_DECLARE(ui_img_l2_png);    // assets/l2.png
 LV_IMG_DECLARE(ui_img_l1_png);    // assets/l1.png
 LV_IMG_DECLARE(ui_img_vv1_png);    // assets/vv1.png
 LV_IMG_DECLARE(ui_img_a1_png);    // assets/a1.png
@@ -261,6 +264,8 @@ LV_IMG_DECLARE(ui_img_w1_png);    // assets/w1.png
 LV_IMG_DECLARE(ui_img_wifi_png);    // assets/wifi.png
 LV_IMG_DECLARE(ui_img_c1_png);    // assets/c1.png
 LV_IMG_DECLARE(ui_img_cc1_png);    // assets/cc1.png
+LV_IMG_DECLARE(ui_img_ww2_png);    // assets/ww2.png
+LV_IMG_DECLARE(ui_img_ww3_png);    // assets/ww3.png
 
 
 

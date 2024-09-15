@@ -25,6 +25,8 @@ Preferences preferences;
 static int printf_num = 0;
 
 bool enableVideoSteam = false;
+bool mqttControl = false;
+bool videoStreamEnable = false;
 /********************************************************************
                          NTP SERVER
 *********************************************************************/
@@ -65,6 +67,20 @@ void StoreData(const char *key, const char *val)
     preferences.begin("config", false);
     preferences.putString(key, val);
     preferences.end();
+}
+
+void StoreintData(const char *key, int val)
+{
+    preferences.begin("config", false);
+    preferences.putInt(key, val);
+    preferences.end();
+}
+int ReadintData(const char *val)
+{
+    preferences.begin("config", false);
+    int ret = preferences.getInt(val, 1000);
+    preferences.end();
+    return ret;
 }
 
 /********************************************************************
@@ -111,21 +127,14 @@ void onMessageCallback(WebsocketsMessage message)
 void initWedServer()
 {
     Serial.println("initWedServer");
-    if (!wifitate() || cameraClient.available()) {
+    if (!wifitate()) {
         Serial.printf("initWedServer: wifitate=%d, cameraClient.available=%d\n", wifitate(), cameraClient.available());
         return;
     }
 
-    String cameraip = ReadData("cameraip");
-    if (cameraip != "null") {
-        websockets_server_host = cameraip;
-    }
     cameraClient.onEvent(webSocketEvent);
     cameraClient.onMessage(onMessageCallback);
-    // if (!serverip.isEmpty()) {
-    //     websockets_server_host = serverip;
-    //     serverip = "";
-    // }
+
     Serial.println("connect" + websockets_server_host);
     while (!cameraClient.connect(websockets_server_host.c_str(), websockets_server_port, "/")) {
         delay(500);
@@ -143,7 +152,7 @@ void cameraserver_task(void *pvParameter)
         if (cameraClient.available()) {
             cameraClient.poll();
 
-            if (enableVideoSteam) {
+            if (enableVideoSteam || mqttControl || videoStreamEnable) {
                 camera_fb_t *fb = esp_camera_fb_get();
                 if (!fb) {
                     Serial.println("Camera capture failed");

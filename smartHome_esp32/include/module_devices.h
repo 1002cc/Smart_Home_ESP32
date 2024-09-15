@@ -10,6 +10,8 @@
 #define AUTOLAMPTIME 3000
 // 检测结果保存时长
 #define DETECTIONTIME 3000
+// 检测长时间停留时长
+#define DETECTIONLONGTIME 15000
 
 // RGBLED灯
 #define AUTOLED_PIN 19
@@ -55,5 +57,6 @@ void sg90_setAngle(int angle);
 void startSensorTask();
 
 void initDevices();
+void initDevicesDatas();
 
 #endif

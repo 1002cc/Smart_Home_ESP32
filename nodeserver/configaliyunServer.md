@@ -94,6 +94,9 @@ $service mysql restart  #重启mysql服务
 
 mysql -u root -p
 
+1002chEN*
+
+
 ```
 
 ### 2.mysql使用
@@ -203,10 +206,9 @@ hich
 1002chEN
 
 ## 五.配置MQTT服务器
-### 1.安装mosquitto
-``` shell
-sudo apt install mosquitto mosquitto-clients
-```
+### 1.安装eqmx  
+https://blog.csdn.net/ywt092/article/details/134496250
+
 
 ## 六.安装1panel
 curl -sSL https://resource.fit2cloud.com/1panel/package/quick_start.sh -o quick_start.sh && sudo bash quick_start.sh

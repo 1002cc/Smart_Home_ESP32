@@ -14,17 +14,6 @@ void ui_StartupScreen_screen_init(void)
     ui_object_set_themeable_style_property(ui_StartupScreen, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
                                            _ui_theme_alpha_back);
 
-    ui_Image5 = lv_img_create(ui_StartupScreen);
-    lv_img_set_src(ui_Image5, &ui_img_icon_png);
-    lv_obj_set_width(ui_Image5, LV_SIZE_CONTENT);   /// 128
-    lv_obj_set_height(ui_Image5, LV_SIZE_CONTENT);    /// 128
-    lv_obj_set_x(ui_Image5, -134);
-    lv_obj_set_y(ui_Image5, -98);
-    lv_obj_set_align(ui_Image5, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Image5, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
-    lv_obj_clear_flag(ui_Image5, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_img_set_zoom(ui_Image5, 80);
-
     ui_tipLabel = lv_label_create(ui_StartupScreen);
     lv_obj_set_width(ui_tipLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_tipLabel, LV_SIZE_CONTENT);    /// 1
@@ -46,19 +35,6 @@ void ui_StartupScreen_screen_init(void)
     lv_obj_set_y(ui_Spinner2, 14);
     lv_obj_set_align(ui_Spinner2, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_Spinner2, LV_OBJ_FLAG_CLICKABLE);      /// Flags
-
-    ui_Label7 = lv_label_create(ui_StartupScreen);
-    lv_obj_set_width(ui_Label7, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_Label7, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label7, -72);
-    lv_obj_set_y(ui_Label7, -93);
-    lv_obj_set_align(ui_Label7, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label7, "智能家居");
-    ui_object_set_themeable_style_property(ui_Label7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_font);
-    ui_object_set_themeable_style_property(ui_Label7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_alpha_font);
-    lv_obj_set_style_text_font(ui_Label7, &ui_font_smartsystem, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_StartupScreen, ui_event_StartupScreen, LV_EVENT_ALL, NULL);
 

@@ -29,6 +29,7 @@ void mqttLoop(void);
 bool publishMQTT(const char payload[]);
 bool subscribeMQTT(const char topic[]);
 void publishSensorData(const SensorData &data);
+void publishGetDatas();
 bool pulishSwitchDatas(const lampButtonData &data);
 void publishGetImage();
 void publishStartVideo(bool isStartVideo);
@@ -36,6 +37,7 @@ void mqtt_disconnect(void);
 bool getMqttStart();
 void mqtMontage(const String &user);
 bool pulishState(const String &object, const bool &state, const String &item);
+void publishVideoAbout(int value);
 bool sendRePW();
 
 #endif
