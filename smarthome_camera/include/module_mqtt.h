@@ -23,5 +23,6 @@ void mqtt_disconnect(void);
 bool getMqttStart();
 void sendCameraState(bool state);
 void mqttMontage(const String &user);
+void pulishAllDatas();
 
 #endif

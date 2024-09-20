@@ -45617,6 +45617,7 @@
                       },
                       {
                         "nid": -1786496785,
+                        "flags": 1048576,
                         "strtype": "CHART/Chart",
                         "InheritedType": 1
                       },
@@ -45683,7 +45684,7 @@
                       {
                         "nid": 1485909807,
                         "strtype": "CHART/Font_size_on_X_axis",
-                        "integer": 50,
+                        "integer": 60,
                         "InheritedType": 6
                       },
                       {
@@ -45733,7 +45734,6 @@
                       },
                       {
                         "nid": 374613353,
-                        "flags": 1048576,
                         "strtype": "CHART/Secondary_Y_Axis",
                         "InheritedType": 1
                       },
@@ -45751,7 +45751,7 @@
                         "strtype": "CHART/SecondaryYMajor",
                         "intarray": [
                           0,
-                          0
+                          5
                         ],
                         "InheritedType": 7
                       },
@@ -46118,8 +46118,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "TABPAGE",
-                "tree_closed": true
+                "saved_objtypeKey": "TABPAGE"
               },
               {
                 "guid": "GUID4381560-805434S195903159",
@@ -51689,7 +51688,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
-    "backup_cnt": 2829,
+    "backup_cnt": 2866,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

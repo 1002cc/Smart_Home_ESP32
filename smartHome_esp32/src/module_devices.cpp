@@ -216,7 +216,7 @@ void sensorTask(void *pt)
             }
         }
 
-        vTaskDelay(200);
+        vTaskDelay(100);
     }
     vTaskDelete(NULL);
 }

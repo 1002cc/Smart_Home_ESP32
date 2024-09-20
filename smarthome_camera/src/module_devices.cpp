@@ -55,7 +55,7 @@ void ServoLeft()
         value = 180;
     }
 
-    for (; servoPos >= value; servoPos -= 1) {
+    for (; servoPos > value; servoPos -= 1) {
         myservo.write(servoPos);
         delay(15);
     }
@@ -71,7 +71,7 @@ void ServoRight()
     if (value >= 180) {
         value = 180;
     }
-    for (; servoPos <= value; servoPos += 1) {
+    for (; servoPos < value; servoPos += 1) {
         myservo.write(servoPos);
         delay(15);
     }

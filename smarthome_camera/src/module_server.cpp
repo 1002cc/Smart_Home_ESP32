@@ -141,6 +141,13 @@ void initWedServer()
         Serial.print(".");
     }
 
+    int value = ReadintData("S");
+    if (value != 1000) {
+        videoStreamEnable = value;
+        Serial.printf("videoStreamEnable=%d\n", videoStreamEnable);
+    }
+    pulishAllDatas();
+
     cameraClient.send("{camera:true}");
     Serial.println("server connect successful");
 }
@@ -149,7 +156,14 @@ void cameraserver_task(void *pvParameter)
 {
     Serial.println("camera server task start");
     while (1) {
-        if (cameraClient.available()) {
+        if (!cameraClient.available()) {
+            Serial.println("Connection lost, attempting to reconnect...");
+            while (!cameraClient.connect(websockets_server_host.c_str(), websockets_server_port, "/")) {
+                delay(500);
+                Serial.print(".");
+            }
+            Serial.println("Reconnected successfully");
+        } else {
             cameraClient.poll();
 
             if (enableVideoSteam || mqttControl || videoStreamEnable) {
@@ -170,6 +184,10 @@ void cameraserver_task(void *pvParameter)
 
                 // 返回内存
                 esp_camera_fb_return(fb);
+
+                if (!enableVideoSteam && !mqttControl && videoStreamEnable) {
+                    vTaskDelay(1000);
+                }
             }
         }
         // vTaskDelay(100);

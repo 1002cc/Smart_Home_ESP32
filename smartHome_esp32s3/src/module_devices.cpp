@@ -184,9 +184,9 @@ void sensor_task(void *pvParameter)
             mq2sensorValue = 0;
             Serial.println("Failed to read from MQ2 sensor!");
         } else {
-            mq2sensorValue = map(mq2sensorValue, 0, 360, 0, 100);
-            if (mq2sensorValue >= 30 && millis() - lastMQTime > 6000) {
-                lastPrintTime = millis();
+            mq2sensorValue = map(mq2sensorValue, 0, 400, 0, 100);
+            if (mq2sensorValue >= 40 && millis() - lastMQTime > 6000) {
+                lastMQTime = millis();
                 playMQAlarm();
             }
             lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);

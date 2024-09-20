@@ -1256,8 +1256,8 @@ void cameraScreenCD(lv_event_t *e)
 
 void monitorScreenOCD(lv_event_t *e)
 {
-    if (speakTaskHandle != nullptr && eTaskGetState(speakTaskHandle) != eTaskState::eSuspended) {
-        vTaskSuspend(speakTaskHandle);
+    if (cameraTaskHandle != nullptr && eTaskGetState(cameraTaskHandle) != eTaskState::eSuspended) {
+        vTaskSuspend(cameraTaskHandle);
     }
     lv_scr_load_anim(ui_monitorScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
 }
@@ -1269,9 +1269,9 @@ void monitorScreenFCD(lv_event_t *e)
     lv_label_set_text(ui_cameraLabel, "连接");
     lv_label_set_text(ui_cameraStateLabel, "未连接");
     closeCameraServer();
-    if (speakTaskHandle != nullptr && eTaskGetState(speakTaskHandle) == eTaskState::eSuspended) {
-        Serial.println("vTaskResume speakTaskHandle");
-        vTaskResume(speakTaskHandle);
+    if (cameraTaskHandle != nullptr && eTaskGetState(cameraTaskHandle) == eTaskState::eSuspended) {
+        Serial.println("vTaskResume cameraTaskHandle");
+        vTaskResume(cameraTaskHandle);
     }
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
 }
@@ -1442,6 +1442,7 @@ void speakScreenCD(lv_event_t *e)
                 lv_speakState(SpeakState_t::RECORDING);
             } else {
                 lv_speakState(SpeakState_t::RECORDED);
+                xTaskNotify(speakTaskHandle, 1, eSetBits);
             }
             Serial.println("speakState = " + String(speakState));
         }
@@ -1451,6 +1452,7 @@ void speakScreenCD(lv_event_t *e)
 void speakScreenFCD(lv_event_t *e)
 {
     stopSpeakTask();
+    lv_speakState(SpeakState_t::NO_DIALOGUE);
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
 }
 

@@ -219,6 +219,7 @@ void initSpeakConfig()
                 lv_speakState(SpeakState_t::ANSWERING);
             }
             Serial.printf("stttext: %s\n", stttext.c_str());
+            xTaskNotify(speakTaskHandle, 1, eSetBits);
         }
     });
     Serial.println("initSpeakConfig done");
@@ -614,10 +615,6 @@ void speakTask(void *pvParameter)
     Serial.println("start speakTask");
     while (1) {
 
-        if (webSocketClient_stt.available()) {
-            webSocketClient_stt.poll();
-        }
-
         if (speakState == RECORDING) {
             stttext = "";
             Serial.println("Recording...");
@@ -641,6 +638,10 @@ void speakTask(void *pvParameter)
             Serial.printf("Recorded done. recordingSize: %d\n", recordingSize);
             sendSTTData();
             free(pcm_data);
+        }
+
+        if (webSocketClient_stt.available()) {
+            webSocketClient_stt.poll();
         }
 
         // if (webSocketClient_tts.available()) {
@@ -684,7 +685,7 @@ void speakTask(void *pvParameter)
 
             lv_speakState(SpeakState_t::NO_DIALOGUE);
         }
-        vTaskDelay(100);
+        vTaskDelay(80);
     }
     vTaskDelete(NULL);
 }

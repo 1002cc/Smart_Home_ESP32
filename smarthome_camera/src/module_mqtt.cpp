@@ -9,6 +9,7 @@
 const char *mqtt_url = "47.120.7.163";
 String mqtt_sub = "";
 String mqtt_pub = "";
+String mqtt_qt_pub = "";
 const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "chen";
@@ -52,9 +53,10 @@ void mqttMontage(const String &user)
 {
     mqtt_sub = "/smartHome/" + user + "/esp32_cam_pub";
     mqtt_pub = "/smartHome/" + user + "/esp32_sub";
-
+    mqtt_qt_pub = "/smartHome/" + user + "/esp32_qt_pub";
     Serial.printf("mqtt_sub:%s\n", mqtt_sub.c_str());
     Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
+    Serial.printf("mqtt_qt_pub:%s\n", mqtt_qt_pub.c_str());
 
     if (mqttClient.connected()) {
         mqttClient.subscribe(mqtt_sub.c_str());
@@ -114,13 +116,14 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                     }
                     Serial.printf("startVideo: %d  isStartCamera:%d\n", startVideo->valueint, mqttControl);
                 }
-                cJSON *VideoStream = cJSON_GetObjectItem(datas, "videoStream");
+                cJSON *VideoStream = cJSON_GetObjectItem(datas, "Stream");
                 if (VideoStream != NULL) {
                     if (VideoStream->valueint == 1) {
                         videoStreamEnable = true;
                     } else {
                         videoStreamEnable = false;
                     }
+                    StoreintData("S", videoStreamEnable);
                     Serial.printf("VideoStream: %d  videoStreamEnable:%d\n", VideoStream->valueint, videoStreamEnable);
                 }
                 cJSON *about_j = cJSON_GetObjectItem(datas, "about");
@@ -134,10 +137,14 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                     }
                     Serial.printf("about: %d  servoPos:%d\n", about_j->valueint, servoPos);
                 }
+                cJSON *getStream = cJSON_GetObjectItem(datas, "getStream");
+                if (getStream != NULL) {
+                    pulishAllDatas();
+                    Serial.printf("getStream: %d  videoStreamEnable:%d\n", getStream->valueint, videoStreamEnable);
+                }
             }
         }
     }
-
     cJSON_Delete(root);
     Serial.println("\n----------------END----------------");
 }
@@ -149,6 +156,19 @@ void sendCameraState(bool state)
     char *jsonStr = cJSON_PrintUnformatted(root);
 
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
+void pulishAllDatas()
+{
+    Serial.println("updata datas");
+    cJSON *root = cJSON_CreateObject();
+    cJSON *switches = cJSON_CreateObject();
+    cJSON_AddItemToObject(root, "switches", switches);
+    cJSON_AddBoolToObject(switches, "Stream", videoStreamEnable);
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    Serial.println(jsonStr);
+    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 

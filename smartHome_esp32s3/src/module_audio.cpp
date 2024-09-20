@@ -21,6 +21,8 @@ String stations[] = {
     "www.surfmusic.de/m3u/100-5-das-hitradio,4529.m3u",
 };
 
+TaskHandle_t audiokHandle;
+
 #endif
 
 // https://console.bce.baidu.com/support/#/api?product=AI&project=%E8%AF%AD%E9%9F%B3%E6%8A%80%E6%9C%AF&parent=%E8%AF%AD%E9%9F%B3%E5%90%88%E6%88%90&api=text2audio&method=post
@@ -121,6 +123,8 @@ void audioPlay()
     if (audio.connecttohost(stations_list[cur_station].c_str())) {
         Serial.println("Connect to host");
         lv_setPlayState(true);
+        xTaskNotify(audiokHandle, 1, eSetBits);
+
     } else {
         Serial.println("Connect to host failed");
         lv_setPlayState(false);
@@ -144,7 +148,7 @@ void playMusicUrl(const String &url)
         cur_station = 0;
         lv_setDropdown(cur_station);
         lv_setMusicinfo(musicSubstring(stations_list[cur_station]).c_str());
-
+        xTaskNotify(audiokHandle, 1, eSetBits);
     } else {
         Serial.println("Connect to host failed");
         lv_setPlayState(false);
@@ -198,7 +202,7 @@ void startAudioTack()
 {
     Serial.println("start Audio Tack");
     audio_init();
-    xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, NULL, 10, NULL, 1);
+    xTaskCreatePinnedToCore(audioTask, "audio_task", 5 * 1024, &audiokHandle, 10, NULL, 1);
 }
 
 #endif
