@@ -189,6 +189,7 @@ AudioHelpr::AudioHelpr(bool internalDAC /* = false */, uint8_t channelEnabled /*
     m_lastHost = (char *)__malloc_heap_psram(512);
     m_outBuff = (int16_t *)__malloc_heap_psram(2048 * 2 * sizeof(int16_t));
     m_chbuf = (char *)__malloc_heap_psram(m_chbufSize);
+    token = (char *)__malloc_heap_psram(200);
 
     if (!m_chbuf || !m_lastHost || !m_outBuff || !m_ibuff)
         log_e("oom");
@@ -981,11 +982,13 @@ bool AudioHelpr::connecttospeech(const char *speech, const char *lang)
 
     char perid_str[2];
     sprintf(perid_str, "%d", m_perid);
+    char tok_str[100];
+    sprintf(tok_str, "&tok=%s&", token);
 
     char resp[strlen(speechBuff) + 200] = "";
     strcat(resp, "tex=");
     strcat(resp, speechBuff);
-    strcat(resp, "&tok=24.75ea20bda8efbf7601cb62eab8ce6924.2592000.1726856129.282335-109052759&");
+    strcat(resp, tok_str);
     strcat(resp, "cuid=aAzA4gBN5mmIViCqofGDaMUseHsVs4AS&");
     strcat(resp, "ctp=1&");
     strcat(resp, "lan=zh&");
@@ -5862,6 +5865,15 @@ void AudioHelpr::setPerid(int perid)
 int AudioHelpr::getPerid()
 {
     return m_perid;
+}
+void AudioHelpr::setTok(const char *tok)
+{
+    strcpy(token, tok);
+}
+
+char *AudioHelpr::getTok()
+{
+    return token;
 }
 
 //---------------------------------------------------------------------------------------------------------------------

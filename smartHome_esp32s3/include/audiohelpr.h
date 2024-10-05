@@ -149,6 +149,9 @@ public:
     void setPerid(int perid);
     int getPerid();
 
+    void setTok(const char *tok);
+    char *getTok();
+
     uint32_t getAudioDataStartPos();
     uint32_t getFileSize();
     uint32_t getFilePos();
@@ -656,6 +659,7 @@ private:
     int16_t m_pesDataLength = 0;
 
     int m_perid = 0;
+    char *token = NULL;
 };
 
 //----------------------------------------------------------------------------------------------------------------------

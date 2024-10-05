@@ -1,6 +1,7 @@
 #include "module_service.h"
 #include "lvglconfig.h"
 #include "wificonfig.h"
+#include <ArduinoJson.h>
 #include <HTTPClient.h>
 #include <NTPClient.h>
 #include <WiFiUdp.h>
@@ -20,6 +21,10 @@ const char *loginurl = "http://hichchen.top:3002/userlogin";
 String username;
 String upassword;
 bool loginState = false;
+
+const char *API_KEY = "P9SYyz2QOA4lsXjFLv8DRv8p";
+const char *SECRET_KEY = "rKFhtw5D3H3pRUPY44jrvsb46Qr3prSr";
+
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
     // if (ntpxHandle != NULL) {
@@ -264,4 +269,23 @@ void startLoginReequestTask(void)
 {
     Serial.println("Starting Login Request task");
     xTaskCreatePinnedToCore(LoginRRequestTask, "httpRequestTask", 4096, NULL, 1, NULL, 0);
+}
+
+String getAccessToken()
+{
+    HTTPClient http;
+    String url = "https://aip.baidubce.com/oauth/2.0/token";
+    http.begin(url);
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    String params = "grant_type=client_credentials&client_id=" + String(API_KEY) + "&client_secret=" + String(SECRET_KEY);
+    int httpResponseCode = http.POST(params);
+    if (httpResponseCode > 0) {
+        String response = http.getString();
+        DynamicJsonDocument doc(1024);
+        deserializeJson(doc, response);
+        return doc["access_token"].as<String>();
+    } else {
+        return "";
+    }
+    http.end();
 }

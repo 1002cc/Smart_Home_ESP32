@@ -223,6 +223,21 @@ void initSpeakConfig()
         }
     });
     Serial.println("initSpeakConfig done");
+
+    String tok = getAccessToken();
+    Serial.printf("token:%s\n", tok.c_str());
+    if (tok.isEmpty()) {
+        tok = "";
+        tok = ReadData("tok");
+        if (tok != "null") {
+            audio.setTok(tok.c_str());
+        } else {
+            audio.setTok("24.017479ced7b186950560c8d42fea6dc4.2592000.1730713769.282335-109052759");
+        }
+    } else {
+        StoreData("tok", tok.c_str());
+        audio.setTok(tok.c_str());
+    }
     // startSpeakTask();
 }
 
@@ -680,7 +695,6 @@ void speakTask(void *pvParameter)
             } else {
                 audio.connecttoFS(LittleFS, "/noResponse.mp3");
                 Serial.println("回答内容为空,取消TTS发送");
-                audio.connecttospeech("回答未响应", "zh");
             }
 
             lv_speakState(SpeakState_t::NO_DIALOGUE);

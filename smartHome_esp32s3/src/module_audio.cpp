@@ -2,6 +2,7 @@
 #include "confighelpr.h"
 #include "lvglconfig.h"
 #include "module_devices.h"
+#include "module_service.h"
 #include <LittleFS.h>
 
 #if USE_AUDIO
