@@ -124,8 +124,6 @@ void audioPlay()
     if (audio.connecttohost(stations_list[cur_station].c_str())) {
         Serial.println("Connect to host");
         lv_setPlayState(true);
-        xTaskNotify(audiokHandle, 1, eSetBits);
-
     } else {
         Serial.println("Connect to host failed");
         lv_setPlayState(false);
@@ -149,7 +147,6 @@ void playMusicUrl(const String &url)
         cur_station = 0;
         lv_setDropdown(cur_station);
         lv_setMusicinfo(musicSubstring(stations_list[cur_station]).c_str());
-        xTaskNotify(audiokHandle, 1, eSetBits);
     } else {
         Serial.println("Connect to host failed");
         lv_setPlayState(false);

@@ -5,6 +5,7 @@
 // RGB_LED
 #define RGBLEDPIN 48
 
+#define USE_MQU 1
 #define MQ2PIN 8
 #define DHTPIN 7
 #define DHTTYPE DHT11

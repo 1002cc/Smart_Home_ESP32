@@ -357,6 +357,11 @@ AudioHelpr::~AudioHelpr()
         free(m_ibuff);
         m_ibuff = NULL;
     }
+    if (token) {
+        free(token);
+        token = NULL;
+    }
+
     vSemaphoreDelete(mutex_audio);
 }
 //---------------------------------------------------------------------------------------------------------------------
