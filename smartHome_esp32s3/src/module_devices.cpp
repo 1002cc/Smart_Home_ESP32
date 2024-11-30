@@ -203,7 +203,7 @@ void sensor_task(void *pvParameter)
                     MQSure = 0;
                     // if (millis() - lastMQTime > 6000) {
                     //     lastMQTime = millis();
-                    playMQAlarm();
+                    // playMQAlarm();
                     //}
                 }
             } else {

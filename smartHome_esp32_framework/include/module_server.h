@@ -1,0 +1,41 @@
+#ifndef _MODULE_SERVCE_H_
+#define _MODULE_SERVCE_H_
+#include <Arduino.h>
+
+// MAX98357
+#define PIN_I2S_MAX98357_BCLK 22
+#define PIN_I2S_MAX98357_LRC 23
+#define PIN_I2S_MAX98357_DOUT 21
+
+#define CONNECTTIMEOUT 10
+
+enum class AUDIO_NAME {
+    CONNECT_Y, // 连接成功
+    CONNECT_N, // 连接失败
+    CONNECT_D, // 断开连接
+    PW,        // 配网
+    WC,        // 欢迎语
+    RAIN,      // 雨滴
+    LT,        // 长时间停留
+};
+
+void printLocalTime(void);
+void timeAvailable(struct timeval *t);
+void initNtpTime();
+
+void StoreData(const char *key, const char *val);
+String ReadData(const char *val);
+void StoreintData(const char *key, int val);
+int ReadintData(const char *val);
+
+void printPSRAM(void);
+
+void littlefs_init();
+
+void audio_init();
+void startAudioTack();
+void audioPause();
+void audioSpeak(const String &text);
+void playAudio(const AUDIO_NAME &index);
+
+#endif

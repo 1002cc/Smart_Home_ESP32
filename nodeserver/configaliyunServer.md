@@ -2,7 +2,7 @@
 
 ## 常用命令
 ``` shell
-# 检测断开是否被使用
+# 检测端口是否被使用
 netstat -apn | grep 1883
 ```
 
@@ -69,9 +69,7 @@ sudo chmod -w /etc/sudoers
 sudo chmod 777 filename
 ```
 
-
-
-## 三.配置MYSQL(暂不需要，现使用sqlite)
+## 三.配置MYSQL
 --------------------------------------
 ### 1.安装mysql
 ``` shell
@@ -86,17 +84,22 @@ sudo mysql
 >>select user, plugin from mysql.user;  #root用户plugin为auth_socket，之后会出现错误
 >>update mysql.user set plugin='mysql_native_password' where user='root';  #修改plugin
 >>update user set host = '%' where user = 'root';  #给root用户授权使之可以在任何网络中访问
->>alter user 'root'@'%' IDENTIFIED WITH mysql_native_password BY '修改的密码';  #修改密码
+>>alter user 'root'@'%' IDENTIFIED WITH mysql_native_password BY '1002chEN*';  #修改密码
 >>FLUSH PRIVILEGES;  #更新配置
 >> exit #退出
 
-$service mysql restart  #重启mysql服务
+service mysql restart  #重启mysql服务
 
 mysql -u root -p
 
 1002chEN*
 
-
+```
+#配置远程连接 解除地址绑定
+sudo vim /etc/mysql/mysql.conf.d/mysqld.cnf 
+``` shell
+#bind-address           = 127.0.0.1
+mysqlx-bind-address     = 127.0.0.1
 ```
 
 ### 2.mysql使用
@@ -118,21 +121,27 @@ sudo service mysql restart
 CREATE DATABASE smarthome_flow
 # 使用数据库
 USE smarthome_flow;
-# 创建表
+# 创建用户表
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     password VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS devicedata ("
-        "id  INT AUTO_INCREMENT PRIMARY KEY,"
-        "type VARCHAR(50) NOT NULL,"
-        "handle VARCHAR(50) NOT NULL,"
-        "text VARCHAR(50) NOT NULL,"
-        "unit VARCHAR(10) NOT NULL,"
-        "value INT NOT NULL,"
-        ");
+# 创建设备表（由软件自动生成）
+CREATE TABLE IF NOT EXISTS devicedata (
+    id  INT AUTO_INCREMENT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    handle VARCHAR(50) NOT NULL,
+    text VARCHAR(50) NOT NULL,
+    unit VARCHAR(10) NOT NULL,
+    value INT NOT NULL,
+);
+# 创建设备数据表（由软件自动生成）
+CREATE TABLE IF NOT EXISTS %1 (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    update_time timestamp not null default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP
+);
 
 # 查询表列表  
 SHOW TABLES;
@@ -147,7 +156,65 @@ VALUES ('switch','lampButton1','灯1',0,20);
 ```
 
 --------------------------------------
-## 四.配置home-Assistant
+## 四.配置MQTT服务器
+### 1.安装eqmx  
+``` shell
+1.配置 EMQX Apt源
+curl -s https://assets.emqx.com/scripts/install-emqx-deb.sh | sudo bash
+2. 安装 EMQX
+sudo apt-get install emqx
+3. 启动 EMQX
+sudo systemctl start emqx
+4. 启动激活
+emqx start
+``` 
+### 2.配置证书
+
+https://blog.csdn.net/ywt092/article/details/134496250
+
+
+--------------------------------------
+## 五.配置NODEJS服务
+## 1.安装nodejs
+``` shell
+sudo apt update
+sudo apt install nodejs npm
+node -v
+npm -v
+``` 
+## 2.配置项目
+配置视频流服务器
+``` shell
+npm install ws
+npm install fs
+npm install http-server
+#配置https证书
+#复制证书到ssl路径下
+#运行
+node cameraserver.js
+``` 
+配置MYSQL服务
+``` shell
+npm install express
+npm install mysql
+
+node appmysql.js
+``` 
+
+配置pm2后台运行
+``` shell
+npm install pm2 -g
+pm2 start 项目名
+pm2 show 0
+pm2 startup systemd
+pm2 list
+pm2 reload
+pm2 delete
+```
+
+
+--------------------------------------
+## 五.配置home-Assistant
 ### 1.安装Docker
 ``` shell
 sudo apt update
@@ -205,12 +272,7 @@ docker exec -it home-assistants /bin/bash
 hich  
 1002chEN
 
-## 五.配置MQTT服务器
-### 1.安装eqmx  
-https://blog.csdn.net/ywt092/article/details/134496250
-
-
-## 六.安装1panel
+## 六.安装1panel（选）
 curl -sSL https://resource.fit2cloud.com/1panel/package/quick_start.sh -o quick_start.sh && sudo bash quick_start.sh
 
 http://47.120.7.163:16300/afa8d106c1
@@ -226,13 +288,3 @@ http://47.120.7.163:16300/afa8d106c1
 微信小程序开发：https://mp.weixin.qq.com/wxamp/index/index?lang=zh_CN&token=1246640891
 参考博客：https://blog.csdn.net/qq_33973359/article/details/105537568     
  sudo apt-get purge nginx nginx-common # 卸载nginx，包括删除配置文件。
-## 八.配置后台运行
-``` shell
-npm install pm2 -g
-pm2 start 项目名
-pm2 show 0
-pm2 startup systemd
-pm2 list
-pm2 reload
-pm2 delete
-```

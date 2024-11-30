@@ -6,7 +6,7 @@
 #include <WiFiClientSecure.h>
 #include <cJSON.h>
 
-const char *mqtt_url = "47.120.7.163";
+const char *mqtt_url = "47.115.139.166";
 String mqtt_sub = "";
 String mqtt_pub = "";
 String mqtt_qt_pub = "";
@@ -14,7 +14,7 @@ const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "chen";
 const char *mqtt_password = "1002";
-String mqtt_client_id = "SmartHome_esp32_cam";
+String mqtt_client_id = "esp32_cam_";
 const int mqtt_keepalive = 60;
 
 WiFiClient espClient;

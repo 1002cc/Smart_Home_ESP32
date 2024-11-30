@@ -14,8 +14,8 @@ const BOUNDARY = '123456789000000000000987654321';
 const VIDEO_STREAM_PATH = path.join(__dirname, 'videoStream.jpg');
 
 const options = {
-    key: fs.readFileSync('/home/hich/ssl/hichchen.top.key', 'utf8'),
-    cert: fs.readFileSync('/home/hich/ssl/hichchen.top.pem', 'utf8')
+    key: fs.readFileSync('/home/hich/smarthome/ssl/hichchen.top.key', 'utf8'),
+    cert: fs.readFileSync('/home/hich/smarthome/ssl/hichchen.top.pem', 'utf8')
 };
 
 // HTTP 服务器

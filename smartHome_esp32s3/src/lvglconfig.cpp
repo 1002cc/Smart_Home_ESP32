@@ -152,6 +152,7 @@ void initLVGLConfig(void)
     // lv_png_init();
 
     tft.begin();
+    // 屏幕旋转方向和触摸点校正
     tft.setRotation(1);
     // tft.setRotation(3);
     tft.setTextColor(0xFFFF, 0x0000);
@@ -183,6 +184,20 @@ void initLVGLConfig(void)
     indev_drv.type = LV_INDEV_TYPE_POINTER;
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
+
+    lv_font_t *my_font;
+    my_font = lv_font_load("L:/sFont_20.bin")`;
+    if (my_font == NULL) {
+        Serial.println("font load failed");
+    }
+    static lv_style_t font_style;
+    lv_style_init(&font_style);
+    lv_style_set_text_font(&font_style, my_font);
+
+    lv_obj_t *label_zh = lv_label_create(lv_scr_act());
+    lv_obj_align(label_zh, LV_ALIGN_BOTTOM_MID, 0, 0);
+    lv_obj_add_style(label_zh, &font_style, 0);
+    lv_label_set_text(label_zh, "中国智造");
 
     ui_init();
     ui_timer_init();

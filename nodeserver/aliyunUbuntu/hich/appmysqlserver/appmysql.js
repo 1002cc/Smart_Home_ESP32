@@ -10,8 +10,8 @@ const app = express();
 app.use(bodyParser.json());
 
 const options = {
-  key: fs.readFileSync('/home/hich/ssl/hichchen.top.key', 'utf8'),
-  cert: fs.readFileSync('/home/hich/ssl/hichchen.top.pem','utf8')
+  key: fs.readFileSync('/home/hich/smarthome/ssl/hichchen.top.key', 'utf8'),
+  cert: fs.readFileSync('/home/hich/smarthome/ssl/hichchen.top.pem','utf8')
 };
 
 app.get('/', (req, res) => res.send('Hello World!smarthome!'));

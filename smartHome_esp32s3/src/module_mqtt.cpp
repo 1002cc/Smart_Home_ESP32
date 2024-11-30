@@ -9,7 +9,7 @@
 #include <WiFiClientSecure.h>
 
 // const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
-const char *mqtt_url = "47.120.7.163";
+const char *mqtt_url = "47.115.139.166";
 String mqtt_sub = "";
 String mqtt_pub = "";
 String mqtt_app_pub = "";
@@ -21,7 +21,7 @@ const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "esp32";
 const char *mqtt_password = "1002";
-String mqtt_client_id = "esp32s3SmartHome";
+String mqtt_client_id = "esp32_s3_";
 const int mqtt_keepalive = 60;
 // const char *ca_cert = R"EOF(
 // -----BEGIN CERTIFICATE-----
