@@ -32,7 +32,13 @@ images/ui_img_hh1_png.c
 images/ui_img_dd2_png.c
 images/ui_img_dd1_png.c
 images/ui_img_l1_png.c
+images/ui_img_curtain_png.c
+images/ui_img_fan_png.c
+images/ui_img_curtain1_png.c
+images/ui_img_fan1_png.c
+images/ui_img_doorcontact_png.c
 images/ui_img_vv1_png.c
+images/ui_img_sound1_png.c
 images/ui_img_a1_png.c
 images/ui_img_t2_png.c
 images/ui_img_w1_png.c

@@ -27,10 +27,15 @@ bool enable_VoiceControl = true;
 bool activeEnableAutoLamp = false;
 extern bool mqttPri;
 extern bool mqttVoice;
+extern bool enable_fan;
+extern bool enable_curtain;
+extern bool curtain_direction;
 extern lampButtonData mqttSwitchState;
+extern bool enableOpenSound;
+extern bool enableDoorContactTimeout;
+extern int doorOpenTimeoutThreshold;
 
-static void
-mqtt_callback(char *topic, byte *payload, unsigned int length);
+static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
 extern void sendImgPieces(void);
 
@@ -139,6 +144,36 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 Serial.printf("lampButton2json: %d  lampButton2:%d  activeEnableAutoLamp:%d\n", lampButton2json->valueint, mqttSwitchState.lampButton2, activeEnableAutoLamp);
                 //}
             }
+            cJSON *fanjson = cJSON_GetObjectItem(switches, "fan");
+            if (fanjson != NULL) {
+                enable_fan = fanjson->valueint;
+                enable_fan ? fan_on() : fan_off();
+                Serial.printf("fanjson: %d  lampButton1:%d\n", fanjson->valueint, enable_fan);
+            }
+            cJSON *curtainjson = cJSON_GetObjectItem(switches, "curtain");
+            if (curtainjson != NULL) {
+                curtain_direction = curtainjson->valueint;
+                enable_curtain = true;
+                Serial.printf("curtainjson: %d  lampButton1:%d\n", curtainjson->valueint, curtain_direction);
+            }
+            cJSON *doorContactOpenSoundjson = cJSON_GetObjectItem(switches, "doorContactOpenSound");
+            if (doorContactOpenSoundjson != NULL) {
+                enableOpenSound = doorContactOpenSoundjson->valueint;
+                StoreintData("dcos", enableOpenSound);
+                Serial.printf("doorContactOpenSoundjson: %d  enableOpenSound:%d\n", doorContactOpenSoundjson->valueint, enableOpenSound);
+            }
+            cJSON *enableDoorContactTimeoutjson = cJSON_GetObjectItem(switches, "enableDoorContactTimeout");
+            if (enableDoorContactTimeoutjson != NULL) {
+                enableDoorContactTimeout = enableDoorContactTimeoutjson->valueint;
+                StoreintData("dco", enableDoorContactTimeout);
+                Serial.printf("enableDoorContactTimeoutjson: %d  enableDoorContactTimeout:%d\n", enableDoorContactTimeoutjson->valueint, enableDoorContactTimeout);
+            }
+            cJSON *timeoutTimejson = cJSON_GetObjectItem(switches, "timeoutTime");
+            if (timeoutTimejson != NULL) {
+                doorOpenTimeoutThreshold = timeoutTimejson->valueint;
+                StoreintData("dct", doorOpenTimeoutThreshold);
+                Serial.printf("timeoutTimejson: %d  doorOpenTimeoutThreshold:%d\n", timeoutTimejson->valueint, doorOpenTimeoutThreshold);
+            }
         }
         cJSON *getdatas = cJSON_GetObjectItem(root, "getdatas");
         if (getdatas != NULL) {
@@ -223,6 +258,8 @@ void pulishSwitchDatas(const lampButtonData &data)
     cJSON_AddItemToObject(root, "switches", datas);
     cJSON_AddBoolToObject(datas, "lampButton1", data.lampButton1);
     cJSON_AddBoolToObject(datas, "lampButton2", data.lampButton2);
+    cJSON_AddBoolToObject(datas, "doorContactOpenSound", enableOpenSound);
+    cJSON_AddBoolToObject(datas, "enableDoorContactTimeout", enableDoorContactTimeout);
     char *jsonStr = cJSON_PrintUnformatted(root);
 
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);
@@ -241,6 +278,9 @@ void pulishAllSwitchDatas()
     cJSON_AddBoolToObject(switches, "lampButton2", mqttSwitchState.lampButton2);
     cJSON_AddBoolToObject(switches, "pri", enable_pri);
     cJSON_AddBoolToObject(switches, "voiceControl", enable_VoiceControl);
+    cJSON_AddBoolToObject(switches, "doorContactOpenSound", enableOpenSound);
+    cJSON_AddBoolToObject(switches, "enableDoorContactTimeout", enableDoorContactTimeout);
+    cJSON_AddNumberToObject(switches, "timeoutTime", doorOpenTimeoutThreshold);
     char *jsonStr = cJSON_PrintUnformatted(root);
     Serial.println(jsonStr);
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);

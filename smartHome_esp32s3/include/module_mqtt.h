@@ -21,6 +21,12 @@ struct lampButtonData {
     bool lampButton2;
     bool priButton;
     bool voiceButton;
+    bool fan;
+    bool curtain;
+    bool doorcontact;
+    bool openSound;
+    bool timeout;
+    int timeoutTime;
 };
 
 bool initMQTTConfig(void);
@@ -37,6 +43,7 @@ void mqtt_disconnect(void);
 bool getMqttStart();
 void mqtMontage(const String &user);
 bool pulishState(const String &object, const bool &state, const String &item);
+bool pulishState_int(const String &object, const int &num, const String &item);
 void publishVideoAbout(int value);
 bool sendRePW();
 

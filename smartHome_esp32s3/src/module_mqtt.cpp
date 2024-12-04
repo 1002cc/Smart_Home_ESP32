@@ -155,7 +155,7 @@ void mqttLoop(void)
             lv_setMQTTState("未连接");
             Serial.println("MQTT disconnected, reconnecting...");
             mqttconnect();
-            vTaskDelay(1000);
+            vTaskDelay(5000);
         }
         mqttClient.loop();
     }
@@ -204,6 +204,36 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             if (lampButton2_j != NULL) {
                 mqttSwitchState.lampButton2 = lampButton2_j->valueint;
                 lv_setLampButton2(mqttSwitchState.lampButton2);
+            }
+            cJSON *buttonFan_j = cJSON_GetObjectItem(switches, "fan");
+            if (buttonFan_j != NULL) {
+                mqttSwitchState.fan = buttonFan_j->valueint;
+                lv_setButtonFan(mqttSwitchState.fan);
+            }
+            cJSON *buttonCurtain_j = cJSON_GetObjectItem(switches, "curtain");
+            if (buttonCurtain_j != NULL) {
+                mqttSwitchState.curtain = buttonCurtain_j->valueint;
+                lv_setButtonCurtain(mqttSwitchState.curtain);
+            }
+            cJSON *buttonDoorcontact_j = cJSON_GetObjectItem(switches, "doorcontact");
+            if (buttonDoorcontact_j != NULL) {
+                mqttSwitchState.doorcontact = buttonDoorcontact_j->valueint;
+                lv_setButtonDoorContact(mqttSwitchState.doorcontact);
+            }
+            cJSON *doorContactOpenSound_j = cJSON_GetObjectItem(switches, "doorContactOpenSound");
+            if (doorContactOpenSound_j != NULL) {
+                mqttSwitchState.openSound = doorContactOpenSound_j->valueint;
+                lv_setButtonDoorContactOpenSound(mqttSwitchState.openSound);
+            }
+            cJSON *enableDoorContactTimeout_j = cJSON_GetObjectItem(switches, "enableDoorContactTimeout");
+            if (enableDoorContactTimeout_j != NULL) {
+                mqttSwitchState.timeout = enableDoorContactTimeout_j->valueint;
+                cJSON *enableDoorContactTimeoutTime_j = cJSON_GetObjectItem(switches, "timeoutTime");
+                if (enableDoorContactTimeoutTime_j != NULL) {
+                    mqttSwitchState.timeoutTime = enableDoorContactTimeoutTime_j->valueint;
+                    lv_setDropdownDoorContactTimeoutTime(mqttSwitchState.timeoutTime);
+                }
+                lv_setButtonDoorContactTimeout(mqttSwitchState.timeout);
             }
             cJSON *pri_j = cJSON_GetObjectItem(switches, "pri");
             if (pri_j != NULL) {
@@ -295,6 +325,27 @@ bool pulishState(const String &object, const bool &state, const String &item)
         cJSON *datas = cJSON_CreateObject();
         cJSON_AddItemToObject(root, item.c_str(), datas);
         cJSON_AddBoolToObject(datas, object.c_str(), state);
+        char *jsonStr = cJSON_PrintUnformatted(root);
+
+        Serial.println(jsonStr);
+        mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        cJSON_Delete(root);
+        return true;
+    } else {
+        Serial.println("mqtt disconnect");
+        return false;
+    }
+}
+
+bool pulishState_int(const String &object, const int &num, const String &item)
+{
+    if (mqttClient.state() == MQTT_CONNECTED) {
+        cJSON *root = cJSON_CreateObject();
+        cJSON *datas = cJSON_CreateObject();
+        cJSON_AddItemToObject(root, item.c_str(), datas);
+        cJSON_AddNumberToObject(datas, object.c_str(), num);
         char *jsonStr = cJSON_PrintUnformatted(root);
 
         Serial.println(jsonStr);

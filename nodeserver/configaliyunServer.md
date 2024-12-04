@@ -157,6 +157,7 @@ VALUES ('switch','lampButton1','灯1',0,20);
 
 --------------------------------------
 ## 四.配置MQTT服务器
+因为微信小程序的安全性要求，我们需要使用ssl安全证书来配置mqtt服务器，同时需要使用域名来访问服务器，需要购买域名ssl证书，并实名备案，这样我们微信小程序才能访问服务器。
 ### 1.安装eqmx  
 ``` shell
 1.配置 EMQX Apt源
@@ -169,7 +170,10 @@ sudo systemctl start emqx
 emqx start
 ``` 
 ### 2.配置证书
-
+#### 购买ssl证书
+#### 下载pem和key文件
+#### 打开emqx的配置网站，默认账号：admin 密码：public
+#### 打开管理中的监听器配置sll和wss的tls，最后更新就行了，注意服务器的防火墙要开发emqx需要的端口 1883 8883 8083 8084端口，同时要配置emqx的访问控制，添加访问用户
 https://blog.csdn.net/ywt092/article/details/134496250
 
 

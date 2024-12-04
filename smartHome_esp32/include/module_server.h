@@ -15,6 +15,9 @@ enum class AUDIO_NAME {
     WC,        // 欢迎语
     RAIN,      // 雨滴
     LT,        // 长时间停留
+    DC1,       // 门窗已打开
+    DC2,       // 检测到门窗长时间未关闭
+    DC3        // 警报警报，非法闯入
 };
 
 void printLocalTime(void);

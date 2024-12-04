@@ -33,7 +33,7 @@ std::vector<String> foundWifiList;
 
 // web camera
 using namespace websockets;
-String websockets_server_host = "47.120.7.163";
+String websockets_server_host = "47.115.139.166";
 uint16_t websockets_server_port = 3000;
 WebsocketsClient cameraClient;
 uint16_t *image_buffer;
@@ -86,10 +86,32 @@ static lv_obj_t *ipTextarea;
 static lv_obj_t *portTextarea;
 static lv_obj_t *deviceRePwButton;
 static lv_obj_t *deviceRePwLabel;
-
+/// 设备控制界面
+static lv_obj_t *ButtonFan;
+static lv_obj_t *stateLabelFan;
+static lv_obj_t *stateImageFan;
+static lv_obj_t *nameLabelFan;
+static lv_obj_t *ButtonCurtain;
+static lv_obj_t *stateLabelCurtain;
+static lv_obj_t *stateImageCurtain;
+static lv_obj_t *nameLabelCurtain;
+static lv_obj_t *ui_ButtonDoorContact;
+static lv_obj_t *ui_stateLabelDoorContact;
+static lv_obj_t *ui_stateImageDoorContact;
+static lv_obj_t *ui_nameLabelDoorContact;
+static lv_obj_t *ui_doorContactLabeltitle;
+static lv_obj_t *ui_doorContactLabelsound;
+static lv_obj_t *ui_doorContactPanel;
+static lv_obj_t *ui_openSoundSwitch;
+static lv_obj_t *ui_Dropdowntime;
+static lv_obj_t *ui_doorContactLabeltimeout;
+static lv_obj_t *ui_timeoutSwitch;
+static lv_obj_t *ui_doorContactButtonsure;
+static lv_obj_t *ui_doorContactLabelsure;
+static lv_obj_t *ui_doorContactLabelTime;
 static TaskHandle_t cameraTaskHandle = NULL;
 
-lampButtonData mqttSwitchState = {false, false};
+lampButtonData mqttSwitchState = {false, false, false, false, false, false, false};
 detectionDate detectiondatas = {false, false, false};
 extern String username;
 extern String upassword;
@@ -185,19 +207,19 @@ void initLVGLConfig(void)
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
-    lv_font_t *my_font;
-    my_font = lv_font_load("L:/sFont_20.bin")`;
-    if (my_font == NULL) {
-        Serial.println("font load failed");
-    }
-    static lv_style_t font_style;
-    lv_style_init(&font_style);
-    lv_style_set_text_font(&font_style, my_font);
+    // lv_font_t *my_font;
+    // my_font = lv_font_load("L:/sFont_20.bin");
+    // if (my_font == NULL) {
+    //     Serial.println("font load failed");
+    // }
+    // static lv_style_t font_style;
+    // lv_style_init(&font_style);
+    // lv_style_set_text_font(&font_style, my_font);
 
-    lv_obj_t *label_zh = lv_label_create(lv_scr_act());
-    lv_obj_align(label_zh, LV_ALIGN_BOTTOM_MID, 0, 0);
-    lv_obj_add_style(label_zh, &font_style, 0);
-    lv_label_set_text(label_zh, "中国智造");
+    // lv_obj_t *label_zh = lv_label_create(lv_scr_act());
+    // lv_obj_align(label_zh, LV_ALIGN_BOTTOM_MID, 0, 0);
+    // lv_obj_add_style(label_zh, &font_style, 0);
+    // lv_label_set_text(label_zh, "中国智造");
 
     ui_init();
     ui_timer_init();
@@ -242,10 +264,42 @@ void lampButtonCB(lv_event_t *e)
     bool is_on = lv_obj_has_state(btn, LV_STATE_CHECKED);
     if (btn == ui_lampButton3) {
         lv_ai_control("lampButton1", is_on);
-    }
-    if (btn == ui_lampButton2) {
+    } else if (btn == ui_lampButton2) {
         lv_ai_control("lampButton2", is_on);
+    } else if (btn == ButtonFan) {
+        lv_ai_control("fan", is_on);
+    } else if (btn == ButtonCurtain) {
+        lv_ai_control("curtain", is_on);
     }
+}
+
+void doorContactCB(lv_event_t *e)
+{
+    lv_obj_clear_flag(ui_doorContactPanel, LV_OBJ_FLAG_HIDDEN);
+}
+
+void doorContactCB1(lv_event_t *e)
+{
+    lv_obj_add_flag(ui_doorContactPanel, LV_OBJ_FLAG_HIDDEN);
+}
+
+void openSoundSwitchCB(lv_event_t *e)
+{
+    lv_obj_t *btn = lv_event_get_target(e);
+    bool is_on = lv_obj_has_state(btn, LV_STATE_CHECKED);
+    if (btn == ui_openSoundSwitch) {
+        pulishState("doorContactOpenSound", is_on, "switches");
+    } else if (btn == ui_timeoutSwitch) {
+        pulishState("enableDoorContactTimeout", is_on, "switches");
+        pulishState_int("timeoutTime", mqttSwitchState.timeoutTime, "switches");
+    }
+}
+void doorContactDropdownCB(lv_event_t *e)
+{
+    char tmp_buf[32];
+    lv_dropdown_get_selected_str(ui_Dropdowntime, tmp_buf, sizeof(tmp_buf));
+    mqttSwitchState.timeoutTime = atoi(tmp_buf);
+    Serial.printf("timeoutTime:%d\n", mqttSwitchState.timeoutTime);
 }
 
 void detectionCB(lv_event_t *e)
@@ -586,6 +640,71 @@ void lv_setLampButton2(bool state)
         lv_img_set_src(ui_stateImage3, &ui_img_l1_png);
     }
 }
+
+void lv_setButtonFan(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ButtonFan, LV_STATE_CHECKED);
+        lv_label_set_text(stateLabelFan, "ON");
+        lv_img_set_src(stateImageFan, &ui_img_fan_png);
+    } else {
+        lv_obj_clear_state(ButtonFan, LV_STATE_CHECKED);
+        lv_label_set_text(stateLabelFan, "OFF");
+        lv_img_set_src(stateImageFan, &ui_img_fan1_png);
+    }
+}
+void lv_setButtonCurtain(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ButtonCurtain, LV_STATE_CHECKED);
+        lv_label_set_text(stateLabelCurtain, "ON");
+        lv_img_set_src(stateImageCurtain, &ui_img_curtain_png);
+    } else {
+        lv_obj_clear_state(ButtonCurtain, LV_STATE_CHECKED);
+        lv_label_set_text(stateLabelCurtain, "OFF");
+        lv_img_set_src(stateImageCurtain, &ui_img_curtain1_png);
+    }
+}
+
+void lv_setButtonDoorContact(bool state)
+{
+    if (state) {
+        lv_label_set_text(ui_nameLabelDoorContact, "ON");
+    } else {
+        lv_label_set_text(ui_nameLabelDoorContact, "OFF");
+    }
+}
+
+void lv_setButtonDoorContactOpenSound(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_openSoundSwitch, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(ui_openSoundSwitch, LV_STATE_CHECKED);
+    }
+}
+
+void lv_setButtonDoorContactTimeout(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_timeoutSwitch, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(ui_timeoutSwitch, LV_STATE_CHECKED);
+    }
+}
+
+void lv_setDropdownDoorContactTimeoutTime(int time)
+{
+    if (time == 10) {
+        time = 6;
+    } else if (time == 20) {
+        time = 7;
+    } else if (time == 30) {
+        time = 8;
+    }
+    lv_dropdown_set_selected(ui_Dropdowntime, time - 1);
+}
+
 void lv_setPriButtonState(bool state)
 {
     if (state) {
@@ -622,6 +741,20 @@ void lv_ai_control(const String &handl, bool state)
             msgboxTip("请登录账号!!!");
         }
         lv_setLampButton2(mqttSwitchState.lampButton2);
+    } else if (handl == "fan") {
+        if (isSuccess) {
+            mqttSwitchState.fan = state;
+        } else {
+            msgboxTip("请登录账号!!!");
+        }
+        lv_setButtonFan(mqttSwitchState.fan);
+    } else if (handl == "curtain") {
+        if (isSuccess) {
+            mqttSwitchState.curtain = state;
+        } else {
+            msgboxTip("请登录账号!!!");
+        }
+        lv_setButtonCurtain(mqttSwitchState.curtain);
     }
 }
 
@@ -947,134 +1080,6 @@ void lv_deviceRepwCD(lv_event_t *e)
     }
 }
 
-void initSetConfigUI()
-{
-    inputKeyboard = lv_keyboard_create(ui_set1Screen);
-    lv_obj_add_event_cb(inputKeyboard, kbClear_cb, LV_EVENT_CANCEL, NULL);
-    lv_obj_add_event_cb(inputKeyboard, kbHide_cb, LV_EVENT_READY, NULL);
-    lv_obj_add_flag(inputKeyboard, LV_OBJ_FLAG_HIDDEN);
-
-    wfList = lv_list_create(ui_wifilistPanel);
-    lv_obj_set_size(wfList, 200, 210);
-    lv_obj_align(wfList, LV_ALIGN_CENTER, 0, 15);
-
-    subTextarea = lv_textarea_create(ui_w2);
-    lv_obj_set_size(subTextarea, 200, 30);
-    lv_obj_align_to(subTextarea, ui_Label13, LV_ALIGN_LEFT_MID, 80, 0);
-    // lv_textarea_set_placeholder_text(subTextarea, "/smartHome/esp32_sub");
-    lv_obj_set_style_text_color(subTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(subTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_textarea_set_one_line(subTextarea, true);
-
-    pubTextarea = lv_textarea_create(ui_w2);
-    lv_obj_set_size(pubTextarea, 200, 35);
-    lv_obj_align_to(pubTextarea, ui_Label17, LV_ALIGN_LEFT_MID, 80, 0);
-    // lv_textarea_set_placeholder_text(pubTextarea, "/smartHome/esp32_pub");
-    lv_obj_set_style_text_color(pubTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(pubTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_textarea_set_one_line(pubTextarea, true);
-
-    ntpTimeTextarea = lv_textarea_create(ui_w3);
-    lv_obj_set_size(ntpTimeTextarea, 200, 35);
-    lv_obj_align_to(ntpTimeTextarea, ui_Label23, LV_ALIGN_LEFT_MID, 80, 0);
-    lv_textarea_set_placeholder_text(ntpTimeTextarea, "360(s)");
-    lv_obj_set_style_text_color(ntpTimeTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ntpTimeTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_textarea_set_one_line(ntpTimeTextarea, true);
-
-    weatherTextarea = lv_textarea_create(ui_w3);
-    lv_obj_set_size(weatherTextarea, 200, 35);
-    lv_obj_align_to(weatherTextarea, ui_Label10, LV_ALIGN_LEFT_MID, 80, 0);
-    lv_textarea_set_placeholder_text(weatherTextarea, "guangzhou");
-    lv_obj_set_style_text_color(weatherTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(weatherTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_textarea_set_one_line(weatherTextarea, true);
-
-    deviceRePwButton = lv_btn_create(ui_w3);
-    lv_obj_set_width(deviceRePwButton, 46);
-    lv_obj_set_height(deviceRePwButton, 28);
-    lv_obj_align_to(deviceRePwButton, ui_pwLabel, LV_ALIGN_LEFT_MID, 160, 0);
-
-    deviceRePwLabel = lv_label_create(deviceRePwButton);
-    lv_obj_set_width(deviceRePwLabel, LV_SIZE_CONTENT);
-    lv_obj_set_height(deviceRePwLabel, LV_SIZE_CONTENT);
-    lv_obj_set_align(deviceRePwLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(deviceRePwLabel, "重置");
-    lv_obj_set_style_text_color(deviceRePwLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(deviceRePwLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(deviceRePwLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    ipTextarea = lv_textarea_create(ui_W5);
-    lv_obj_set_size(ipTextarea, 200, 35);
-    lv_obj_align_to(ipTextarea, ui_Label66, LV_ALIGN_LEFT_MID, 40, 0);
-    lv_textarea_set_placeholder_text(ipTextarea, websockets_server_host.c_str());
-    lv_obj_set_style_text_color(ipTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ipTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_textarea_set_one_line(ipTextarea, true);
-
-    portTextarea = lv_textarea_create(ui_W5);
-    lv_obj_set_size(portTextarea, 200, 35);
-    lv_obj_align_to(portTextarea, ui_Label67, LV_ALIGN_LEFT_MID, 60, 0);
-    lv_textarea_set_placeholder_text(portTextarea, "3000");
-    lv_obj_set_style_text_color(portTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(portTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
-    lv_textarea_set_one_line(portTextarea, true);
-
-    lv_obj_add_event_cb(subTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
-    lv_obj_add_event_cb(pubTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
-    lv_obj_add_event_cb(weatherTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
-    lv_obj_add_event_cb(ntpTimeTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
-    lv_obj_add_event_cb(ipTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
-    lv_obj_add_event_cb(portTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
-
-    lv_obj_add_event_cb(ui_wifiSwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
-
-    lv_obj_add_event_cb(ui_speechDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
-    lv_obj_add_event_cb(ui_aimodeDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
-
-    lv_obj_add_event_cb(deviceRePwButton, lv_deviceRepwCD, LV_EVENT_CLICKED, NULL);
-
-    lv_style_init(&main_black_style);
-    lv_style_set_border_width(&main_black_style, 0);
-    lv_style_set_radius(&main_black_style, 20);
-    lv_style_set_bg_opa(&main_black_style, 0);
-}
-
-static void buildPWMsgBox()
-{
-    mboxConnect = lv_obj_create(ui_set1Screen);
-    lv_obj_set_size(mboxConnect, 320 * 2 / 3, 240 / 2);
-    lv_obj_center(mboxConnect);
-
-    mboxTitle = lv_label_create(mboxConnect);
-    lv_label_set_text(mboxTitle, "Selected WiFi SSID");
-    lv_obj_align(mboxTitle, LV_ALIGN_TOP_LEFT, 0, 0);
-
-    mboxPassword = lv_textarea_create(mboxConnect);
-    lv_obj_set_size(mboxPassword, 320 / 2, 30);
-    lv_obj_align_to(mboxPassword, mboxTitle, LV_ALIGN_TOP_LEFT, 0, 20);
-    lv_textarea_set_placeholder_text(mboxPassword, "Password");
-    lv_obj_add_event_cb(mboxPassword, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
-
-    mboxConnectBtn = lv_btn_create(mboxConnect);
-    lv_obj_add_event_cb(mboxConnectBtn, chooseBtEventCD, LV_EVENT_ALL, NULL);
-    lv_obj_align(mboxConnectBtn, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    lv_obj_t *btnLabel = lv_label_create(mboxConnectBtn);
-    lv_obj_set_style_text_font(btnLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_label_set_text(btnLabel, "连接");
-    lv_obj_center(btnLabel);
-
-    mboxCloseBtn = lv_btn_create(mboxConnect);
-    lv_obj_add_event_cb(mboxCloseBtn, chooseBtEventCD, LV_EVENT_ALL, NULL);
-    lv_obj_align(mboxCloseBtn, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
-    lv_obj_t *btnLabel2 = lv_label_create(mboxCloseBtn);
-    lv_obj_set_style_text_font(btnLabel2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_label_set_text(btnLabel2, "取消");
-    lv_obj_center(btnLabel2);
-
-    lv_obj_add_flag(mboxConnect, LV_OBJ_FLAG_HIDDEN);
-}
-
 static void popupMsgBox(String title, String msg)
 {
     if (popupBox != NULL) {
@@ -1356,47 +1361,6 @@ void closeCameraServer()
     }
 }
 
-void initCameraUI()
-{
-    videoImage = lv_img_create(ui_monitorScreen);
-    lv_obj_set_pos(videoImage, 0, 0);
-    lv_obj_set_size(videoImage, 320, 240);
-    lv_obj_move_foreground(ui_connectCameraButton);
-    lv_obj_move_foreground(ui_cameraStateLabel);
-
-    videoLeft = lv_btn_create(ui_monitorScreen);
-    lv_obj_set_width(videoLeft, 35);
-    lv_obj_set_height(videoLeft, 35);
-    lv_obj_align(videoLeft, LV_ALIGN_LEFT_MID, 10, 0);
-
-    videoLeftlabel = lv_label_create(videoLeft);
-    lv_obj_set_align(videoLeftlabel, LV_ALIGN_CENTER);
-    lv_label_set_text(videoLeftlabel, LV_SYMBOL_LEFT);
-
-    videoRight = lv_btn_create(ui_monitorScreen);
-    lv_obj_set_width(videoRight, 35);
-    lv_obj_set_height(videoRight, 35);
-    lv_obj_align(videoRight, LV_ALIGN_RIGHT_MID, -10, 0);
-
-    videoRightlabel = lv_label_create(videoRight);
-    lv_obj_set_align(videoRightlabel, LV_ALIGN_CENTER);
-    lv_label_set_text(videoRightlabel, LV_SYMBOL_RIGHT);
-
-    lv_obj_add_event_cb(videoLeft, monitorAboutCD, LV_EVENT_CLICKED, NULL);
-    lv_obj_add_event_cb(videoRight, monitorAboutCD, LV_EVENT_CLICKED, NULL);
-
-    TJpgDec.setJpgScale(1);
-    TJpgDec.setSwapBytes(false);
-    // TJpgDec.setSwapBytes(true);
-    TJpgDec.setCallback(tft_output);
-    image_buffer = (uint16_t *)ps_malloc(320 * 240 * sizeof(uint16_t));
-    img_dsc.header.always_zero = 0;
-    img_dsc.header.w = 320;
-    img_dsc.header.h = 240;
-    img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * sizeof(uint16_t);
-    img_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
-}
-
 void videocameratask(void *pvParameter)
 {
     Serial.println("start camera task");
@@ -1560,14 +1524,470 @@ void perinit()
 /********************************************************************
                          LVGL_MY_UI_INIT
 ********************************************************************/
+
+void initDeviceUI(void)
+{
+    ButtonFan = lv_btn_create(ui_TabPage1);
+    lv_obj_set_width(ButtonFan, 80);
+    lv_obj_set_height(ButtonFan, 80);
+    lv_obj_set_x(ButtonFan, -70);
+    lv_obj_set_y(ButtonFan, 65);
+    lv_obj_set_align(ButtonFan, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ButtonFan, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ButtonFan, LV_OBJ_FLAG_SCROLLABLE);                            /// Flags
+    ui_object_set_themeable_style_property(ButtonFan, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ButtonFan, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_bg_color(ButtonFan, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ButtonFan, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ButtonFan, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ButtonFan, 150, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ButtonFan, 10, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_spread(ButtonFan, 5, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonFan, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ButtonFan, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonFan, lv_color_hex(0xA94949), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ButtonFan, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    stateLabelFan = lv_label_create(ButtonFan);
+    lv_obj_set_width(stateLabelFan, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateLabelFan, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateLabelFan, 17);
+    lv_obj_set_y(stateLabelFan, 21);
+    lv_obj_set_align(stateLabelFan, LV_ALIGN_CENTER);
+    lv_label_set_text(stateLabelFan, "OFF");
+    lv_obj_clear_flag(stateLabelFan, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE); /// Flags
+    ui_object_set_themeable_style_property(stateLabelFan, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(stateLabelFan, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(stateLabelFan, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    stateImageFan = lv_img_create(ButtonFan);
+    lv_img_set_src(stateImageFan, &ui_img_fan1_png);
+    lv_obj_set_width(stateImageFan, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateImageFan, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateImageFan, -11);
+    lv_obj_set_y(stateImageFan, -12);
+    lv_obj_set_align(stateImageFan, LV_ALIGN_CENTER);
+    lv_obj_add_flag(stateImageFan, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(stateImageFan, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_img_set_zoom(stateImageFan, 120);
+
+    nameLabelFan = lv_label_create(ButtonFan);
+    lv_obj_set_width(nameLabelFan, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(nameLabelFan, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(nameLabelFan, -19);
+    lv_obj_set_y(nameLabelFan, 22);
+    lv_obj_set_align(nameLabelFan, LV_ALIGN_CENTER);
+    lv_label_set_text(nameLabelFan, "风扇");
+    ui_object_set_themeable_style_property(nameLabelFan, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(nameLabelFan, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(nameLabelFan, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ButtonCurtain = lv_btn_create(ui_TabPage1);
+    lv_obj_set_width(ButtonCurtain, 80);
+    lv_obj_set_height(ButtonCurtain, 80);
+    lv_obj_set_x(ButtonCurtain, 60);
+    lv_obj_set_y(ButtonCurtain, 65);
+    lv_obj_set_align(ButtonCurtain, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ButtonCurtain, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ButtonCurtain, LV_OBJ_FLAG_SCROLLABLE);                            /// Flags
+    ui_object_set_themeable_style_property(ButtonCurtain, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ButtonCurtain, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_bg_color(ButtonCurtain, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ButtonCurtain, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ButtonCurtain, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ButtonCurtain, 150, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ButtonCurtain, 10, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_spread(ButtonCurtain, 5, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonCurtain, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ButtonCurtain, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonCurtain, lv_color_hex(0xA94949), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ButtonCurtain, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    stateLabelCurtain = lv_label_create(ButtonCurtain);
+    lv_obj_set_width(stateLabelCurtain, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateLabelCurtain, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateLabelCurtain, 17);
+    lv_obj_set_y(stateLabelCurtain, 21);
+    lv_obj_set_align(stateLabelCurtain, LV_ALIGN_CENTER);
+    lv_label_set_text(stateLabelCurtain, "OFF");
+    lv_obj_clear_flag(stateLabelCurtain, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE); /// Flags
+    ui_object_set_themeable_style_property(stateLabelCurtain, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(stateLabelCurtain, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(stateLabelCurtain, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    stateImageCurtain = lv_img_create(ButtonCurtain);
+    lv_img_set_src(stateImageCurtain, &ui_img_curtain1_png);
+    lv_obj_set_width(stateImageCurtain, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateImageCurtain, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateImageCurtain, -11);
+    lv_obj_set_y(stateImageCurtain, -12);
+    lv_obj_set_align(stateImageCurtain, LV_ALIGN_CENTER);
+    lv_obj_add_flag(stateImageCurtain, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(stateImageCurtain, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_img_set_zoom(stateImageCurtain, 80);
+
+    nameLabelCurtain = lv_label_create(ButtonCurtain);
+    lv_obj_set_width(nameLabelCurtain, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(nameLabelCurtain, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(nameLabelCurtain, -19);
+    lv_obj_set_y(nameLabelCurtain, 22);
+    lv_obj_set_align(nameLabelCurtain, LV_ALIGN_CENTER);
+    lv_label_set_text(nameLabelCurtain, "窗帘");
+    ui_object_set_themeable_style_property(nameLabelCurtain, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(nameLabelCurtain, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(nameLabelCurtain, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ButtonDoorContact = lv_btn_create(ui_TabPage2);
+    lv_obj_set_width(ui_ButtonDoorContact, 115);
+    lv_obj_set_height(ui_ButtonDoorContact, 80);
+    lv_obj_set_x(ui_ButtonDoorContact, -76);
+    lv_obj_set_y(ui_ButtonDoorContact, 58);
+    lv_obj_set_align(ui_ButtonDoorContact, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_ButtonDoorContact, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ui_ButtonDoorContact, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
+    ui_object_set_themeable_style_property(ui_ButtonDoorContact, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_ButtonDoorContact, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_bg_color(ui_ButtonDoorContact, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ui_ButtonDoorContact, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ui_ButtonDoorContact, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ui_ButtonDoorContact, 150, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ui_ButtonDoorContact, 10, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_spread(ui_ButtonDoorContact, 5, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui_ButtonDoorContact, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ui_ButtonDoorContact, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ui_ButtonDoorContact, lv_color_hex(0xA94949), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ui_ButtonDoorContact, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    ui_stateLabelDoorContact = lv_label_create(ui_ButtonDoorContact);
+    lv_obj_set_width(ui_stateLabelDoorContact, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_stateLabelDoorContact, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_stateLabelDoorContact, 30);
+    lv_obj_set_y(ui_stateLabelDoorContact, -20);
+    lv_obj_set_align(ui_stateLabelDoorContact, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_stateLabelDoorContact, "OFF");
+    lv_obj_clear_flag(ui_stateLabelDoorContact, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE); /// Flags
+    ui_object_set_themeable_style_property(ui_stateLabelDoorContact, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_stateLabelDoorContact, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_stateLabelDoorContact, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_stateImageDoorContact = lv_img_create(ui_ButtonDoorContact);
+    lv_img_set_src(ui_stateImageDoorContact, &ui_img_doorcontact_png);
+    lv_obj_set_width(ui_stateImageDoorContact, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_stateImageDoorContact, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_stateImageDoorContact, -27);
+    lv_obj_set_y(ui_stateImageDoorContact, -16);
+    lv_obj_set_align(ui_stateImageDoorContact, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_stateImageDoorContact, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(ui_stateImageDoorContact, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_img_set_zoom(ui_stateImageDoorContact, 80);
+
+    ui_nameLabelDoorContact = lv_label_create(ui_ButtonDoorContact);
+    lv_obj_set_width(ui_nameLabelDoorContact, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_nameLabelDoorContact, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_nameLabelDoorContact, 0);
+    lv_obj_set_y(ui_nameLabelDoorContact, 22);
+    lv_obj_set_align(ui_nameLabelDoorContact, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_nameLabelDoorContact, "门磁感应");
+    ui_object_set_themeable_style_property(ui_nameLabelDoorContact, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_nameLabelDoorContact, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_nameLabelDoorContact, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_doorContactPanel = lv_obj_create(ui_TabPage2);
+    lv_obj_set_width(ui_doorContactPanel, 255);
+    lv_obj_set_height(ui_doorContactPanel, 155);
+    lv_obj_set_align(ui_doorContactPanel, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_doorContactPanel, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ui_doorContactPanel, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_obj_set_style_bg_color(ui_doorContactPanel, lv_color_hex(0xD1D5D9), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_doorContactPanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_doorContactPanel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_doorContactLabeltitle = lv_label_create(ui_doorContactPanel);
+    lv_obj_set_width(ui_doorContactLabeltitle, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_doorContactLabeltitle, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_doorContactLabeltitle, 3);
+    lv_obj_set_y(ui_doorContactLabeltitle, -54);
+    lv_obj_set_align(ui_doorContactLabeltitle, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_doorContactLabeltitle, "门磁配置");
+    lv_obj_set_style_text_font(ui_doorContactLabeltitle, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_doorContactLabelsound = lv_label_create(ui_doorContactPanel);
+    lv_obj_set_width(ui_doorContactLabelsound, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_doorContactLabelsound, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_doorContactLabelsound, -67);
+    lv_obj_set_y(ui_doorContactLabelsound, -24);
+    lv_obj_set_align(ui_doorContactLabelsound, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_doorContactLabelsound, "开机语音设置:");
+    lv_obj_set_style_text_font(ui_doorContactLabelsound, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_openSoundSwitch = lv_switch_create(ui_doorContactPanel);
+    lv_obj_set_width(ui_openSoundSwitch, 50);
+    lv_obj_set_height(ui_openSoundSwitch, 25);
+    lv_obj_set_x(ui_openSoundSwitch, 21);
+    lv_obj_set_y(ui_openSoundSwitch, -24);
+    lv_obj_set_align(ui_openSoundSwitch, LV_ALIGN_CENTER);
+
+    ui_Dropdowntime = lv_dropdown_create(ui_doorContactPanel);
+    lv_dropdown_set_options(ui_Dropdowntime, "1\n2\n3\n4\n5\n10\n20\n30");
+    lv_obj_set_width(ui_Dropdowntime, 43);
+    lv_obj_set_height(ui_Dropdowntime, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_Dropdowntime, 74);
+    lv_obj_set_y(ui_Dropdowntime, 8);
+    lv_obj_set_align(ui_Dropdowntime, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Dropdowntime, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+
+    ui_doorContactLabeltimeout = lv_label_create(ui_doorContactPanel);
+    lv_obj_set_width(ui_doorContactLabeltimeout, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_doorContactLabeltimeout, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_doorContactLabeltimeout, -65);
+    lv_obj_set_y(ui_doorContactLabeltimeout, 8);
+    lv_obj_set_align(ui_doorContactLabeltimeout, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_doorContactLabeltimeout, "超时未关设置:");
+    lv_obj_set_style_text_font(ui_doorContactLabeltimeout, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_timeoutSwitch = lv_switch_create(ui_doorContactPanel);
+    lv_obj_set_width(ui_timeoutSwitch, 50);
+    lv_obj_set_height(ui_timeoutSwitch, 25);
+    lv_obj_set_x(ui_timeoutSwitch, 19);
+    lv_obj_set_y(ui_timeoutSwitch, 8);
+    lv_obj_set_align(ui_timeoutSwitch, LV_ALIGN_CENTER);
+
+    ui_doorContactButtonsure = lv_btn_create(ui_doorContactPanel);
+    lv_obj_set_width(ui_doorContactButtonsure, 74);
+    lv_obj_set_height(ui_doorContactButtonsure, 30);
+    lv_obj_set_x(ui_doorContactButtonsure, 0);
+    lv_obj_set_y(ui_doorContactButtonsure, 53);
+    lv_obj_set_align(ui_doorContactButtonsure, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_doorContactButtonsure, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ui_doorContactButtonsure, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
+
+    ui_doorContactLabelsure = lv_label_create(ui_doorContactButtonsure);
+    lv_obj_set_width(ui_doorContactLabelsure, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_doorContactLabelsure, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_align(ui_doorContactLabelsure, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_doorContactLabelsure, "确定");
+    lv_obj_set_style_text_font(ui_doorContactLabelsure, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_doorContactLabelTime = lv_label_create(ui_doorContactPanel);
+    lv_obj_set_width(ui_doorContactLabelTime, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_doorContactLabelTime, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_doorContactLabelTime, 110);
+    lv_obj_set_y(ui_doorContactLabelTime, 8);
+    lv_obj_set_align(ui_doorContactLabelTime, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_doorContactLabelTime, "分");
+    lv_obj_set_style_text_font(ui_doorContactLabelTime, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_add_event_cb(ButtonFan, lampButtonCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ButtonCurtain, lampButtonCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_ButtonDoorContact, doorContactCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_doorContactButtonsure, doorContactCB1, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_openSoundSwitch, openSoundSwitchCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_timeoutSwitch, openSoundSwitchCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_Dropdowntime, doorContactDropdownCB, LV_EVENT_VALUE_CHANGED, NULL);
+}
+
+void initSetConfigUI()
+{
+    inputKeyboard = lv_keyboard_create(ui_set1Screen);
+    lv_obj_add_event_cb(inputKeyboard, kbClear_cb, LV_EVENT_CANCEL, NULL);
+    lv_obj_add_event_cb(inputKeyboard, kbHide_cb, LV_EVENT_READY, NULL);
+    lv_obj_add_flag(inputKeyboard, LV_OBJ_FLAG_HIDDEN);
+
+    wfList = lv_list_create(ui_wifilistPanel);
+    lv_obj_set_size(wfList, 200, 210);
+    lv_obj_align(wfList, LV_ALIGN_CENTER, 0, 15);
+
+    subTextarea = lv_textarea_create(ui_w2);
+    lv_obj_set_size(subTextarea, 200, 30);
+    lv_obj_align_to(subTextarea, ui_Label13, LV_ALIGN_LEFT_MID, 80, 0);
+    // lv_textarea_set_placeholder_text(subTextarea, "/smartHome/esp32_sub");
+    lv_obj_set_style_text_color(subTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(subTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(subTextarea, true);
+
+    pubTextarea = lv_textarea_create(ui_w2);
+    lv_obj_set_size(pubTextarea, 200, 35);
+    lv_obj_align_to(pubTextarea, ui_Label17, LV_ALIGN_LEFT_MID, 80, 0);
+    // lv_textarea_set_placeholder_text(pubTextarea, "/smartHome/esp32_pub");
+    lv_obj_set_style_text_color(pubTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(pubTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(pubTextarea, true);
+
+    ntpTimeTextarea = lv_textarea_create(ui_w3);
+    lv_obj_set_size(ntpTimeTextarea, 200, 35);
+    lv_obj_align_to(ntpTimeTextarea, ui_Label23, LV_ALIGN_LEFT_MID, 80, 0);
+    lv_textarea_set_placeholder_text(ntpTimeTextarea, "360(s)");
+    lv_obj_set_style_text_color(ntpTimeTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ntpTimeTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(ntpTimeTextarea, true);
+
+    weatherTextarea = lv_textarea_create(ui_w3);
+    lv_obj_set_size(weatherTextarea, 200, 35);
+    lv_obj_align_to(weatherTextarea, ui_Label10, LV_ALIGN_LEFT_MID, 80, 0);
+    lv_textarea_set_placeholder_text(weatherTextarea, "guangzhou");
+    lv_obj_set_style_text_color(weatherTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(weatherTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(weatherTextarea, true);
+
+    deviceRePwButton = lv_btn_create(ui_w3);
+    lv_obj_set_width(deviceRePwButton, 46);
+    lv_obj_set_height(deviceRePwButton, 28);
+    lv_obj_align_to(deviceRePwButton, ui_pwLabel, LV_ALIGN_LEFT_MID, 160, 0);
+
+    deviceRePwLabel = lv_label_create(deviceRePwButton);
+    lv_obj_set_width(deviceRePwLabel, LV_SIZE_CONTENT);
+    lv_obj_set_height(deviceRePwLabel, LV_SIZE_CONTENT);
+    lv_obj_set_align(deviceRePwLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(deviceRePwLabel, "重置");
+    lv_obj_set_style_text_color(deviceRePwLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(deviceRePwLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(deviceRePwLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ipTextarea = lv_textarea_create(ui_W5);
+    lv_obj_set_size(ipTextarea, 200, 35);
+    lv_obj_align_to(ipTextarea, ui_Label66, LV_ALIGN_LEFT_MID, 40, 0);
+    lv_textarea_set_placeholder_text(ipTextarea, websockets_server_host.c_str());
+    lv_obj_set_style_text_color(ipTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ipTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(ipTextarea, true);
+
+    portTextarea = lv_textarea_create(ui_W5);
+    lv_obj_set_size(portTextarea, 200, 35);
+    lv_obj_align_to(portTextarea, ui_Label67, LV_ALIGN_LEFT_MID, 60, 0);
+    lv_textarea_set_placeholder_text(portTextarea, "3000");
+    lv_obj_set_style_text_color(portTextarea, lv_color_hex(0x808080), LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(portTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
+    lv_textarea_set_one_line(portTextarea, true);
+
+    lv_obj_add_event_cb(subTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+    lv_obj_add_event_cb(pubTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+    lv_obj_add_event_cb(weatherTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+    lv_obj_add_event_cb(ntpTimeTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+    lv_obj_add_event_cb(ipTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+    lv_obj_add_event_cb(portTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+
+    lv_obj_add_event_cb(ui_wifiSwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
+
+    lv_obj_add_event_cb(ui_speechDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_add_event_cb(ui_aimodeDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
+
+    lv_obj_add_event_cb(deviceRePwButton, lv_deviceRepwCD, LV_EVENT_CLICKED, NULL);
+
+    lv_style_init(&main_black_style);
+    lv_style_set_border_width(&main_black_style, 0);
+    lv_style_set_radius(&main_black_style, 20);
+    lv_style_set_bg_opa(&main_black_style, 0);
+}
+
+static void buildPWMsgBox()
+{
+    mboxConnect = lv_obj_create(ui_set1Screen);
+    lv_obj_set_size(mboxConnect, 320 * 2 / 3, 240 / 2);
+    lv_obj_center(mboxConnect);
+
+    mboxTitle = lv_label_create(mboxConnect);
+    lv_label_set_text(mboxTitle, "Selected WiFi SSID");
+    lv_obj_align(mboxTitle, LV_ALIGN_TOP_LEFT, 0, 0);
+
+    mboxPassword = lv_textarea_create(mboxConnect);
+    lv_obj_set_size(mboxPassword, 320 / 2, 30);
+    lv_obj_align_to(mboxPassword, mboxTitle, LV_ALIGN_TOP_LEFT, 0, 20);
+    lv_textarea_set_placeholder_text(mboxPassword, "Password");
+    lv_obj_add_event_cb(mboxPassword, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
+
+    mboxConnectBtn = lv_btn_create(mboxConnect);
+    lv_obj_add_event_cb(mboxConnectBtn, chooseBtEventCD, LV_EVENT_ALL, NULL);
+    lv_obj_align(mboxConnectBtn, LV_ALIGN_BOTTOM_LEFT, 0, 0);
+    lv_obj_t *btnLabel = lv_label_create(mboxConnectBtn);
+    lv_obj_set_style_text_font(btnLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text(btnLabel, "连接");
+    lv_obj_center(btnLabel);
+
+    mboxCloseBtn = lv_btn_create(mboxConnect);
+    lv_obj_add_event_cb(mboxCloseBtn, chooseBtEventCD, LV_EVENT_ALL, NULL);
+    lv_obj_align(mboxCloseBtn, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    lv_obj_t *btnLabel2 = lv_label_create(mboxCloseBtn);
+    lv_obj_set_style_text_font(btnLabel2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_label_set_text(btnLabel2, "取消");
+    lv_obj_center(btnLabel2);
+
+    lv_obj_add_flag(mboxConnect, LV_OBJ_FLAG_HIDDEN);
+}
+
+void initCameraUI()
+{
+    videoImage = lv_img_create(ui_monitorScreen);
+    lv_obj_set_pos(videoImage, 0, 0);
+    lv_obj_set_size(videoImage, 320, 240);
+    lv_obj_move_foreground(ui_connectCameraButton);
+    lv_obj_move_foreground(ui_cameraStateLabel);
+
+    videoLeft = lv_btn_create(ui_monitorScreen);
+    lv_obj_set_width(videoLeft, 35);
+    lv_obj_set_height(videoLeft, 35);
+    lv_obj_align(videoLeft, LV_ALIGN_LEFT_MID, 10, 0);
+
+    videoLeftlabel = lv_label_create(videoLeft);
+    lv_obj_set_align(videoLeftlabel, LV_ALIGN_CENTER);
+    lv_label_set_text(videoLeftlabel, LV_SYMBOL_LEFT);
+
+    videoRight = lv_btn_create(ui_monitorScreen);
+    lv_obj_set_width(videoRight, 35);
+    lv_obj_set_height(videoRight, 35);
+    lv_obj_align(videoRight, LV_ALIGN_RIGHT_MID, -10, 0);
+
+    videoRightlabel = lv_label_create(videoRight);
+    lv_obj_set_align(videoRightlabel, LV_ALIGN_CENTER);
+    lv_label_set_text(videoRightlabel, LV_SYMBOL_RIGHT);
+
+    lv_obj_add_event_cb(videoLeft, monitorAboutCD, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(videoRight, monitorAboutCD, LV_EVENT_CLICKED, NULL);
+
+    TJpgDec.setJpgScale(1);
+    TJpgDec.setSwapBytes(false);
+    // TJpgDec.setSwapBytes(true);
+    TJpgDec.setCallback(tft_output);
+    image_buffer = (uint16_t *)ps_malloc(320 * 240 * sizeof(uint16_t));
+    img_dsc.header.always_zero = 0;
+    img_dsc.header.w = 320;
+    img_dsc.header.h = 240;
+    img_dsc.data_size = img_dsc.header.w * img_dsc.header.h * sizeof(uint16_t);
+    img_dsc.header.cf = LV_IMG_CF_TRUE_COLOR;
+}
+
 void my_ui_init(void)
 {
+    // 设备控制界面UI
+    initDeviceUI();
+    // 设置界面UI
     initSetConfigUI();
+    // 消息弹出UI
     buildPWMsgBox();
+    // 视频监控界面
     initCameraUI();
+    // 设计界面数据初始化
     initDataUI();
 
 #if USE_AUDIO
+    // 音乐界面UI
     initUIspeech();
 #endif
 }

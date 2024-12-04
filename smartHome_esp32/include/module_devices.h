@@ -34,7 +34,21 @@
 #define RAIN_CHANNL A7
 
 // sg90舵机
-#define SG90_PIN 18
+// #define SG90_PIN 18
+
+// 电机设备
+// 风扇
+#define FAN_PINA 18
+// #define FAN_PINB 17
+
+// 窗帘
+#define CURTAIN_PIN1 25
+#define CURTAIN_PIN2 26
+#define CURTAIN_PIN3 27
+#define CURTAIN_PIN4 17
+
+// 门磁
+#define DOOR_CONTACT_PIN 16
 
 // 按键
 #define BUTTON_PIN1 13
@@ -53,6 +67,11 @@ void led3w_off();
 int led3w_state();
 
 void sg90_setAngle(int angle);
+
+void fan_on();
+void fan_off();
+
+void setStep(int pin1, int pin2, int pin3, int pin4);
 
 void startSensorTask();
 

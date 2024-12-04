@@ -15,7 +15,7 @@ const int g_daylight_offset_sec = 3600;
 const char *g_time_zone = "CST-8"; // TimeZone rule for China Standard Time (UTC+8)
 struct tm g_time;
 
-String websockets_server_host = "47.120.7.163";
+String websockets_server_host = "47.115.139.166";
 const uint16_t websockets_server_port = 3000;
 using namespace websockets;
 WebsocketsClient cameraClient;

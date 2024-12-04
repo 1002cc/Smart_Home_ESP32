@@ -162,6 +162,15 @@ void playAudio(const AUDIO_NAME &index)
     case AUDIO_NAME::LT:
         audio.connecttoFS(LittleFS, "/LT.mp3");
         break;
+    case AUDIO_NAME::DC1:
+        audio.connecttoFS(LittleFS, "/dc1.mp3");
+        break;
+    case AUDIO_NAME::DC2:
+        audio.connecttoFS(LittleFS, "/dc2.mp3");
+        break;
+    case AUDIO_NAME::DC3:
+        audio.connecttoFS(LittleFS, "/dc3.mp3");
+        break;
     default:
         break;
     }
