@@ -1,7 +1,9 @@
 #include "module_wifi.h"
+#include "module_blue.h"
 #include "module_devices.h"
 #include "module_mqtt.h"
 #include "module_server.h"
+
 /**
  * @brief  WiFi配置模块
  * 指示灯:
@@ -25,13 +27,13 @@ String wifi_ssid = "";
 String wifi_pass = "";
 String username = "";
 
+extern ConnectionMode cMode;
+
 DNSServer dnsServer;       // 创建dnsServer实例
 WebServer server(webPort); // 开启web服务, 创建TCP SERVER,参数: 端口号,最大连接数
 
-// 上下两段HTML代码
-
-String ROOT_HTML_1 = "<!DOCTYPE html><html><head>  <meta charset=\"UTF-8\">  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">  <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />  <title>WIFI配置</title>  <style>   #content,.login,.login-card a,.login-card h1,.login-help{text-align:center}body,html{margin:0;padding:0;width:100%;height:100%;display:table}#content{font-family:\'Source Sans Pro\',sans-serif;-webkit-background-size:cover;-moz-background-size:cover;-o-background-size:cover;background-size:cover;display:table-cell;vertical-align:middle}.login-card{padding:40px;width:274px;background-color:#F7F7F7;margin:0 auto 10px;border-radius:20px;box-shadow:8px 8px 15px rgba(0,0,0,.3);overflow:hidden}.login-card h1{font-weight:400;font-size:2.3em;color:#1383c6}.login-card h1 span{color:#f26721}.login-card img{width:70%;height:70%}.login-card input[type=submit]{width:100%;display:block;margin-bottom:10px;position:relative}.login-card input[type=text],input[type=password]{height:44px;font-size:16px;width:100%;margin-bottom:10px;-webkit-appearance:none;background:#fff;border:1px solid #d9d9d9;border-top:1px solid silver;padding:0 8px;box-sizing:border-box;-moz-box-sizing:border-box}.login-card input[type=text]:hover,input[type=password]:hover{border:1px solid #b9b9b9;border-top:1px solid #a0a0a0;-moz-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);-webkit-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}.login{font-size:14px;font-family:Arial,sans-serif;font-weight:700;height:36px;padding:0 8px}.login-submit{-webkit-appearance:none;-moz-appearance:none;appearance:none;border:0;color:#fff;text-shadow:0 1px rgba(0,0,0,.1);background-color:#4d90fe}.login-submit:disabled{opacity:.6}.login-submit:hover{border:0;text-shadow:0 1px rgba(0,0,0,.3);background-color:#357ae8}.login-card a{text-decoration:none;color:#666;font-weight:400;display:inline-block;opacity:.6;transition:opacity ease .5s}.login-card a:hover{opacity:1}.login-help{width:100%;font-size:12px}.list{list-style-type:none;padding:0}.list__item{margin:0 0 .7rem;padding:0}label{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;text-align:left;font-size:14px;}input[type=checkbox]{-webkit-box-flex:0;-webkit-flex:none;-ms-flex:none;flex:none;margin-right:10px;float:left}.error{font-size:14px;font-family:Arial,sans-serif;font-weight:700;height:25px;padding:0 8px;padding-top: 10px; -webkit-appearance:none;-moz-appearance:none;appearance:none;border:0;color:#fff;text-shadow:0 1px rgba(0,0,0,.1);background-color:#ff1215}@media screen and (max-width:450px){.login-card{width:70%!important}.login-card img{width:30%;height:30%}}  </style></head><body style=\"background-color: #e5e9f2\"><div id=\"content\"> <form name=\'input\' action=\'/configwifi\' method=\'POST\'>  <div class=\"login-card\">    <h1>WiFi登录</h1>   <form name=\"login_form\" method=\"post\" action=\"$PORTAL_ACTION$\">   <input type=\"text\" name=\"ssid\" placeholder=\"请输入 WiFi 名称\" id=\"auth_user\" list = \"data-list\"; style=\"border-radius: 10px\">    <datalist id = \"data-list\">";
-String ROOT_HTML_2 = "<input type=\"password\" name=\"password\" placeholder=\"请输入 WiFi 密码\" id=\"auth_pass\"; style=\"border-radius: 10px\"> <input type=\"text\" name=\"username\" placeholder=\"请输入绑定账号名(选填)\"; style=\"border-radius: 10px\">      <div class=\"login-help\">        <ul class=\"list\">          <li class=\"list__item\">          </li>        </ul>      </div>   <input type=\"submit\" class=\"login login-submit\" value=\"连 接\" id=\"login\"; disabled; style=\"border-radius: 15px\"  >    </form> <!-- <form name=\'input\' action=\'/English\' method=\'POST\'>    <input type=\"submit\" class=\"login login-submit\" value=\"English\" id=\"login\"; disabled; style=\"border-radius: 15px\"  >    </form> --></body></html>";
+String ROOT_HTML_1 = "<!DOCTYPE html><html><head>  <meta charset=\"UTF-8\">  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">  <meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\" />  <title>WIFI配置</title>  <style>   #content,.login,.login-card a,.login-card h1,.login-help{text-align:center}body,html{margin:0;padding:0;width:100%;height:100%;display:table}#content{font-family:\'Source Sans Pro\',sans-serif;-webkit-background-size:cover;-moz-background-size:cover;-o-background-size:cover;background-size:cover;display:table-cell;vertical-align:middle}.login-card{padding:40px;width:274px;background-color:#F7F7F7;margin:0 auto 10px;border-radius:20px;box-shadow:8px 8px 15px rgba(0,0,0,.3);overflow:hidden}.login-card h1{font-weight:400;font-size:2.3em;color:#1383c6}.login-card h1 span{color:#f26721}.login-card img{width:70%;height:70%}.login-card input[type=submit]{width:100%;display:block;margin-bottom:10px;position:relative}.login-card input[type=text],input[type=password]{height:44px;font-size:16px;width:100%;margin-bottom:10px;-webkit-appearance:none;background:#fff;border:1px solid #d9d9d9;border-top:1px solid silver;padding:0 8px;box-sizing:border-box;-moz-box-sizing:border-box}.login-card input[type=text]:hover,input[type=password]:hover{border:1px solid #b9b9b9;border-top:1px solid #a0a0a0;-moz-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);-webkit-box-shadow:inset 0 1px 2px rgba(0,0,0,.1);box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}.login{font-size:14px;font-family:Arial,sans-serif;font-weight:700;height:36px;padding:0 8px}.login-submit{-webkit-appearance:none;-moz-appearance:none;appearance:none;border:0;color:#fff;text-shadow:0 1px rgba(0,0,0,.1);background-color:#4d90fe}.login-submit:disabled{opacity:.6}.login-submit:hover{border:0;text-shadow:0 1px rgba(0,0,0,.3);background-color:#357ae8}.login-card a{text-decoration:none;color:#666;font-weight:400;display:inline-block;opacity:.6;transition:opacity ease.5s}.login-card a:hover{opacity:1}.login-help{width:100%;font-size:12px}.list{list-style-type:none;padding:0}.list__item{margin:0 0.7rem;padding:0}label{display:-webkit-box;display:-webkit-flex;display:-ms-flexbox;display:flex;-webkit-box-align:center;-webkit-align-items:center;-ms-flex-align:center;align-items:center;text-align:left;font-size:14px;}input[type=checkbox]{-webkit-box-flex:0;-webkit-flex:none;-ms-flex:none;flex:none;margin-right:10px;float:left}.error{font-size:14px;font-family:Arial,sans-serif;font-weight:700;height:25px;padding:0 8px;padding-top: 10px; -webkit-appearance:none;-moz-appearance:none;appearance:none;border:0;color:#fff;text-shadow:0 1px rgba(0,0,0,.1);background-color:#ff1215}@media screen and (max-width:450px){.login-card{width:70%!important}.login-card img{width:30%;height:30%}}  </style></head><body style=\"background-color: #e5e9f2\"><div id=\"content\"> <form name=\'input\' action=\'/configwifi\' method=\'POST\'>  <div class=\"login-card\">    <h1>WiFi登录</h1>   <form name=\"login_form\" method=\"post\" action=\"$PORTAL_ACTION$\">   <input type=\"text\" name=\"ssid\" placeholder=\"请输入 WiFi 名称\" id=\"auth_user\" list = \"data-list\"; style=\"border-radius: 10px\">    <datalist id = \"data-list\">";
+String ROOT_HTML_2 = "<input type=\"password\" name=\"password\" placeholder=\"请输入 WiFi 密码\" id=\"auth_pass\"; style=\"border-radius: 10px\"> <input type=\"text\" name=\"username\" placeholder=\"请输入绑定账号名(必填)\"; style=\"border-radius: 10px\">      <div class=\"login-help\">        <ul class=\"list\"> <li class=\"list__item\"> </li></ul></div> <input type=\"submit\" class=\"login login-submit\" value=\"连 接\" id=\"login\"> </form></form> <input type=\"button\" class=\"login login-submit\" value=\"离线蓝牙模式\" onclick=\"msg()\"> <script> function msg(){var xhttp = new XMLHttpRequest();xhttp.open('GET', '/button_click', true);xhttp.send();}</script></body> </html> ";
 void handleRoot()
 {
     if (server.hasArg("selectSSID")) {
@@ -46,6 +48,10 @@ void handleConfigWifi()
     if (server.hasArg("ssid")) {
         Serial.print("got ssid:");
         wifi_ssid = server.arg("ssid");
+        if (wifi_ssid.length() <= 1) {
+            server.send(200, "text/html", "<meta charset='UTF-8'>请输入wifi名称,wifi名称不能空");
+            return;
+        }
         Serial.println(wifi_ssid);
     } else {
         Serial.println("error, not found ssid");
@@ -56,6 +62,10 @@ void handleConfigWifi()
     if (server.hasArg("password")) {
         Serial.print("got password:");
         wifi_pass = server.arg("password");
+        if (wifi_pass.length() <= 1) {
+            server.send(200, "text/html", "<meta charset='UTF-8'>请输入wifi密码,wifi密码不能空");
+            return;
+        }
         Serial.println(wifi_pass);
     } else {
         Serial.println("error, not found password");
@@ -66,6 +76,10 @@ void handleConfigWifi()
     if (server.hasArg("username")) {
         Serial.print("got username:");
         username = server.arg("username");
+        if (username.length() <= 1) {
+            server.send(200, "text/html", "<meta charset='UTF-8'>请输入用户名,用户名不能空");
+            return;
+        }
         StoreData("username", username.c_str());
         mqttMontage(username);
         Serial.println(username);
@@ -89,6 +103,15 @@ void handleConfigWifi()
     } else {
         Serial.println("提交的配置信息自动连接成功..");
     }
+}
+
+void handleButtonClick()
+{
+    server.send(200, "text/html", "<meta charset='UTF-8'><br />已选择蓝牙模式，不进行WiFi配置。");
+    Serial.println("按钮被点击了！");
+    playAudio(AUDIO_NAME::BL);
+    cMode = ConnectionMode::BLUE;
+    // startBlue();
 }
 
 void handleNotFound()
@@ -133,7 +156,7 @@ void initWebServer()
     // 必须添加第二个参数HTTP_GET，以下面这种格式去写，否则无法强制门户
     server.on("/", HTTP_GET, handleRoot);                  //  当浏览器请求服务器根目录(网站首页)时调用自定义函数handleRoot处理，设置主页回调函数，必须添加第二个参数HTTP_GET，否则无法强制门户
     server.on("/configwifi", HTTP_POST, handleConfigWifi); //  当浏览器请求服务器/configwifi(表单字段)目录时调用自定义函数handleConfigWifi处理
-
+    server.on("/button_click", HTTP_GET, handleButtonClick);
     server.onNotFound(handleNotFound); // 当浏览器请求的网络资源无法在服务器找到时调用自定义函数handleNotFound处理
 
     server.begin(); // 启动TCP SERVER
@@ -223,31 +246,29 @@ void connectToWiFi(int timeOut_s)
         if (Connect_time > 2 * timeOut_s) // 长时间连接不上，重新进入配网页面
         {
             led_off();
-            Serial.println(""); // 主要目的是为了换行符
-            Serial.println("WIFI autoconnect fail, start AP for webconfig now...");
+            Serial.println("\nWIFI autoconnect fail, start AP for webconfig now...");
             wifiConfig();
             blinkLED(5, 500);
             return;
         }
     }
 
-    if (WiFi.status() == WL_CONNECTED) // 如果连接成功
-    {
+    if (WiFi.status() == WL_CONNECTED) {
         Serial.println("WIFI connect Success");
         Serial.printf("SSID:%s", WiFi.SSID().c_str());
         Serial.printf(", PSW:%s\r\n", WiFi.psk().c_str());
         Serial.print("LocalIP:");
         Serial.print(WiFi.localIP());
-        Serial.print(" ,GateIP:");
-        Serial.println(WiFi.gatewayIP());
-        Serial.print("WIFI status is:");
-        Serial.print(WiFi.status());
         led_on();
         server.stop();
         initNtpTime();
         playAudio(AUDIO_NAME::CONNECT_Y);
+        cMode = ConnectionMode::WIFI;
     } else {
         playAudio(AUDIO_NAME::CONNECT_N);
+        // startBlue();
+        cMode = ConnectionMode::BLUE;
+        return;
     }
 }
 
@@ -277,11 +298,10 @@ void checkConnect(bool reConnect)
         led_off();
         if (reConnect == true && WiFi.getMode() != WIFI_AP && WiFi.getMode() != WIFI_AP_STA) {
             Serial.println("WIFI未连接.");
-            Serial.println("WiFi Mode:");
-            Serial.println(WiFi.getMode());
             Serial.println("正在连接WiFi...");
-            connectToWiFi(CONNECTTIMEOUT); // 连接wifi函数
+            connectToWiFi(CONNECTTIMEOUT);
         }
+        vTaskDelay(1000);
     }
 }
 

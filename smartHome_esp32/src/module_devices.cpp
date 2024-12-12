@@ -18,7 +18,7 @@ int isDoorContact = HIGH;
 // 记录门的当前状态，0表示关闭，1表示打开
 int doorContactState = 0;
 // 是否开启门磁超时未关闭
-bool enableDoorContactTimeout = false;
+bool enableDoorContactTimeout = true;
 // 记录上一次门的状态，用于对比判断状态是否改变
 int lastDoorContactState = 0;
 // 用于防抖处理，记录连续读取到相同状态的次数
@@ -42,6 +42,8 @@ bool enable_fan = false;
 bool enable_curtain = false;
 // 控制窗帘的方向
 bool curtain_direction = 1;
+// 电机运行时长
+int motorRunTime = 10;
 // 电机参数
 int stepSequence[8][4] = {
     {1, 0, 0, 0},
@@ -58,6 +60,8 @@ int currentStep = 0;
 const int stepDelay = 1;
 // 定义电机转动的总步数
 const int totalSteps = 200;
+unsigned long startTime = 0;
+TaskHandle_t curtainForwardReverseTaskHandle;
 
 /********************************************************************
                          LED
@@ -142,7 +146,7 @@ void sensorTask(void *pt)
     unsigned long lastPrintTime = 0;
     unsigned long autoLampTime = 0, rainTime = 0, priLongTime = 0, priTime = 0, voiceTime = 0;
     bool rainFlag = 0, isRain = 0;
-    unsigned long startTime = 0;
+
     while (1) {
 
         // 雨滴检测
@@ -284,7 +288,7 @@ void sensorTask(void *pt)
 
         // 开关1
         if (digitalRead(BUTTON_PIN1)) {
-            delay(20);
+            delay(30);
             if (digitalRead(BUTTON_PIN1)) {
                 Serial.println("BUTTON_PIN1");
                 mqttSwitchState.lampButton1 = !led3w_state();
@@ -295,7 +299,7 @@ void sensorTask(void *pt)
 
         // 开关2
         if (digitalRead(BUTTON_PIN2)) {
-            delay(20);
+            delay(30);
             if (digitalRead(BUTTON_PIN2)) {
                 Serial.println("BUTTON_PIN2");
                 mqttSwitchState.lampButton2 = !autoled_state();
@@ -303,9 +307,24 @@ void sensorTask(void *pt)
                 pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
             }
         }
+        if (enable_curtain) {
+            if (curtainForwardReverseTaskHandle == NULL) {
+                xTaskCreate(curtainForwardReverseTasks, "curtainForwardTask", 4096, NULL, 5, &curtainForwardReverseTaskHandle);
+            }
+        }
 
-        // 打开窗帘正转
-        if (enable_curtain && curtain_direction == 1) {
+        vTaskDelay(100);
+    }
+    vTaskDelete(NULL);
+}
+
+// 窗帘正转任务函数
+void curtainForwardReverseTasks(void *pvParameters)
+{
+    unsigned long currentRunTime = 0, elapsedTime = 0, newCurrentRunTime = 0;
+    bool currentState = curtain_direction, hasInterrupt = false;
+    while (1) {
+        if (currentState) {
             currentStep++;
             if (currentStep >= totalSteps) {
                 currentStep = 0;
@@ -314,17 +333,7 @@ void sensorTask(void *pt)
                     stepSequence[currentStep % 8][1],
                     stepSequence[currentStep % 8][2],
                     stepSequence[currentStep % 8][3]);
-            if (startTime == 0) {
-                startTime = millis();
-            }
-            if (millis() - startTime >= 5000) {
-                enable_curtain = 0;
-                startTime = 0;
-            }
-        }
-
-        // 打开窗帘反转
-        if (enable_curtain && curtain_direction == 0) {
+        } else {
             currentStep--;
             if (currentStep < 0) {
                 currentStep = totalSteps - 1;
@@ -333,17 +342,35 @@ void sensorTask(void *pt)
                     stepSequence[currentStep % 8][1],
                     stepSequence[currentStep % 8][2],
                     stepSequence[currentStep % 8][3]);
-            if (startTime == 0) {
-                startTime = millis();
-            }
-            if (millis() - startTime >= 5000) {
-                enable_curtain = 0;
-                startTime = 0;
-            }
         }
 
-        vTaskDelay(100);
+        if (currentRunTime == 0) {
+            currentRunTime = millis();
+        }
+        if (millis() - currentRunTime >= motorRunTime * 1000) {
+            enable_curtain = 0;
+            // vTaskDelete(curtainForwardReverseTaskHandle);
+            break;
+        }
+
+        // 处理方向的变化
+        if (curtain_direction != currentState) {
+            currentState = curtain_direction;
+            elapsedTime = millis() - currentRunTime;
+            newCurrentRunTime = millis();
+            hasInterrupt = true;
+        }
+
+        if (hasInterrupt) {
+            if (millis() - newCurrentRunTime >= elapsedTime) {
+                enable_curtain = 0;
+                // vTaskDelete(curtainForwardReverseTaskHandle);
+                break;
+            }
+        }
+        vTaskDelay(3);
     }
+    curtainForwardReverseTaskHandle = NULL;
     vTaskDelete(NULL);
 }
 

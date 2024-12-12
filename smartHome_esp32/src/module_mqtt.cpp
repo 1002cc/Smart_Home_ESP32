@@ -21,6 +21,8 @@ const int mqtt_keepalive = 60;
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
+extern String username;
+
 bool enable_mqtt = true;
 bool enable_pri = true;
 bool enable_VoiceControl = true;
@@ -29,6 +31,7 @@ extern bool mqttPri;
 extern bool mqttVoice;
 extern bool enable_fan;
 extern bool enable_curtain;
+extern int motorRunTime;
 extern bool curtain_direction;
 extern lampButtonData mqttSwitchState;
 extern bool enableOpenSound;
@@ -50,6 +53,7 @@ bool initMQTTConfig(void)
     if (userlogin != "null") {
         Serial.printf("userlogin : %s\n", userlogin);
         mqttMontage(userlogin);
+        username = userlogin;
     } else {
         Serial.println("no username, start wifi config");
         wifiConfig();
@@ -155,6 +159,11 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 curtain_direction = curtainjson->valueint;
                 enable_curtain = true;
                 Serial.printf("curtainjson: %d  lampButton1:%d\n", curtainjson->valueint, curtain_direction);
+            }
+            cJSON *motorRunTimejson = cJSON_GetObjectItem(switches, "motorRunTime");
+            if (motorRunTimejson != NULL) {
+                motorRunTime = motorRunTimejson->valueint;
+                Serial.printf("motorRunTimejson: %d  motorRunTime:%d\n", motorRunTimejson->valueint, motorRunTime);
             }
             cJSON *doorContactOpenSoundjson = cJSON_GetObjectItem(switches, "doorContactOpenSound");
             if (doorContactOpenSoundjson != NULL) {

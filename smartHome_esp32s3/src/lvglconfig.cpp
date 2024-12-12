@@ -57,7 +57,6 @@ extern int useAIMode;
 
 extern int updatetimentp;
 
-extern TaskHandle_t speakTaskHandle;
 /********************************************************************
                          BUILD UI
 ********************************************************************/
@@ -110,6 +109,15 @@ static lv_obj_t *ui_doorContactButtonsure;
 static lv_obj_t *ui_doorContactLabelsure;
 static lv_obj_t *ui_doorContactLabelTime;
 static TaskHandle_t cameraTaskHandle = NULL;
+static lv_obj_t *ui_curtainPanel;
+static lv_obj_t *ui_curtainLabeltitle;
+static lv_obj_t *ui_curtainLabelsound;
+static lv_obj_t *ui_curtainButtonsure;
+static lv_obj_t *ui_curtainLabelsure;
+static lv_obj_t *ui_curtainLabelTime;
+static lv_obj_t *ui_curtainButtonq;
+static lv_obj_t *ui_curtainLabelsure2;
+static lv_obj_t *ui_curtainDropdown;
 
 lampButtonData mqttSwitchState = {false, false, false, false, false, false, false};
 detectionDate detectiondatas = {false, false, false};
@@ -281,6 +289,21 @@ void doorContactCB(lv_event_t *e)
 void doorContactCB1(lv_event_t *e)
 {
     lv_obj_add_flag(ui_doorContactPanel, LV_OBJ_FLAG_HIDDEN);
+}
+
+void curtainCB(lv_event_t *e)
+{
+    lv_obj_clear_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);
+}
+
+void curtainCB1(lv_event_t *e)
+{
+    lv_obj_add_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);
+}
+
+void curtainCB2(lv_event_t *e)
+{
+    // lv_obj_add_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);
 }
 
 void openSoundSwitchCB(lv_event_t *e)
@@ -548,7 +571,7 @@ void lv_speakState(const SpeakState_t &state)
         lv_obj_clear_state(ui_speakButton, LV_STATE_DISABLED);
         lv_label_set_text(ui_speakLabel, "录音");
         lv_setSpeechinfo("");
-        Serial.println("录音");
+        Serial.println("等待");
         break;
     case SpeakState_t::RECORDING:
         lv_label_set_text(ui_speakLabel, "录制中");
@@ -1199,7 +1222,6 @@ static void timerForNetwork(lv_timer_t *timer1)
 /********************************************************************
                          AUDIO_UI
 ********************************************************************/
-#if USE_AUDIO
 void musicbtnCD(lv_event_t *e)
 {
     lv_obj_t *btn = lv_event_get_target(e);
@@ -1248,8 +1270,6 @@ void initUIspeech()
 
     lv_obj_add_event_cb(ui_musicDropdown, dropdown_event_cd, LV_EVENT_VALUE_CHANGED, NULL);
 }
-
-#endif
 
 /********************************************************************
                          CAMMER_UI
@@ -1389,7 +1409,6 @@ void startCameraTask()
             isStartCamera = false;
             return;
         }
-        // publishStartVideo(true);
         xTaskCreatePinnedToCore(&videocameratask, "videocamera_task", 5 * 1024, NULL, 3, &cameraTaskHandle, 1);
     } else {
         Serial.println("cameraTaskHandle is not NULL");
@@ -1410,7 +1429,6 @@ void speakScreenCD(lv_event_t *e)
     lv_obj_t *btn = lv_event_get_target(e);
     if (code == LV_EVENT_CLICKED) {
         if (btn == ui_Button4) {
-            startSpeakTask();
             lv_tabview_set_act(ui_TabView4, 0, LV_ANIM_OFF);
             lv_scr_load_anim(ui_speechScreen, LV_SCR_LOAD_ANIM_MOVE_LEFT, 500, 0, false);
         } else if (btn == ui_Button7) {
@@ -1421,7 +1439,6 @@ void speakScreenCD(lv_event_t *e)
                 lv_speakState(SpeakState_t::RECORDING);
             } else {
                 lv_speakState(SpeakState_t::RECORDED);
-                xTaskNotify(speakTaskHandle, 1, eSetBits);
             }
             Serial.println("speakState = " + String(speakState));
         }
@@ -1430,7 +1447,6 @@ void speakScreenCD(lv_event_t *e)
 
 void speakScreenFCD(lv_event_t *e)
 {
-    stopSpeakTask();
     lv_speakState(SpeakState_t::NO_DIALOGUE);
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
 }
@@ -1632,8 +1648,8 @@ void initDeviceUI(void)
     lv_obj_set_x(stateImageCurtain, -11);
     lv_obj_set_y(stateImageCurtain, -12);
     lv_obj_set_align(stateImageCurtain, LV_ALIGN_CENTER);
-    lv_obj_add_flag(stateImageCurtain, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
-    lv_obj_clear_flag(stateImageCurtain, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_obj_add_flag(stateImageCurtain, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_ADV_HITTEST); /// Flags
+    lv_obj_clear_flag(stateImageCurtain, LV_OBJ_FLAG_SCROLLABLE);                        /// Flags
     lv_img_set_zoom(stateImageCurtain, 80);
 
     nameLabelCurtain = lv_label_create(ButtonCurtain);
@@ -1795,8 +1811,91 @@ void initDeviceUI(void)
     lv_label_set_text(ui_doorContactLabelTime, "分");
     lv_obj_set_style_text_font(ui_doorContactLabelTime, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    ui_curtainPanel = lv_obj_create(ui_TabPage1);
+    lv_obj_set_width(ui_curtainPanel, 238);
+    lv_obj_set_height(ui_curtainPanel, 139);
+    lv_obj_set_x(ui_curtainPanel, 6);
+    lv_obj_set_y(ui_curtainPanel, -2);
+    lv_obj_set_align(ui_curtainPanel, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);       /// Flags
+    lv_obj_clear_flag(ui_curtainPanel, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_obj_set_style_bg_color(ui_curtainPanel, lv_color_hex(0xD1D5D9), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(ui_curtainPanel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(ui_curtainPanel, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_curtainLabeltitle = lv_label_create(ui_curtainPanel);
+    lv_obj_set_width(ui_curtainLabeltitle, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_curtainLabeltitle, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_curtainLabeltitle, 3);
+    lv_obj_set_y(ui_curtainLabeltitle, -54);
+    lv_obj_set_align(ui_curtainLabeltitle, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_curtainLabeltitle, "窗帘开关配置");
+    lv_obj_set_style_text_font(ui_curtainLabeltitle, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_curtainLabelsound = lv_label_create(ui_curtainPanel);
+    lv_obj_set_width(ui_curtainLabelsound, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_curtainLabelsound, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_curtainLabelsound, -58);
+    lv_obj_set_y(ui_curtainLabelsound, -17);
+    lv_obj_set_align(ui_curtainLabelsound, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_curtainLabelsound, "窗帘开关时长:");
+    lv_obj_set_style_text_font(ui_curtainLabelsound, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_curtainButtonsure = lv_btn_create(ui_curtainPanel);
+    lv_obj_set_width(ui_curtainButtonsure, 74);
+    lv_obj_set_height(ui_curtainButtonsure, 30);
+    lv_obj_set_x(ui_curtainButtonsure, -46);
+    lv_obj_set_y(ui_curtainButtonsure, 30);
+    lv_obj_set_align(ui_curtainButtonsure, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_curtainButtonsure, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ui_curtainButtonsure, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
+
+    ui_curtainLabelsure = lv_label_create(ui_curtainButtonsure);
+    lv_obj_set_width(ui_curtainLabelsure, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_curtainLabelsure, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_align(ui_curtainLabelsure, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_curtainLabelsure, "确定");
+    lv_obj_set_style_text_font(ui_curtainLabelsure, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_curtainLabelTime = lv_label_create(ui_curtainPanel);
+    lv_obj_set_width(ui_curtainLabelTime, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_curtainLabelTime, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_curtainLabelTime, 78);
+    lv_obj_set_y(ui_curtainLabelTime, -18);
+    lv_obj_set_align(ui_curtainLabelTime, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_curtainLabelTime, "秒");
+    lv_obj_set_style_text_font(ui_curtainLabelTime, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_curtainButtonq = lv_btn_create(ui_curtainPanel);
+    lv_obj_set_width(ui_curtainButtonq, 74);
+    lv_obj_set_height(ui_curtainButtonq, 30);
+    lv_obj_set_x(ui_curtainButtonq, 68);
+    lv_obj_set_y(ui_curtainButtonq, 32);
+    lv_obj_set_align(ui_curtainButtonq, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_curtainButtonq, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ui_curtainButtonq, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
+
+    ui_curtainLabelsure2 = lv_label_create(ui_curtainButtonq);
+    lv_obj_set_width(ui_curtainLabelsure2, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_curtainLabelsure2, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_align(ui_curtainLabelsure2, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_curtainLabelsure2, "取消");
+    lv_obj_set_style_text_font(ui_curtainLabelsure2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_curtainDropdown = lv_dropdown_create(ui_curtainPanel);
+    lv_dropdown_set_options(ui_curtainDropdown, "5\n10\n20\n30\n40\n50");
+    lv_obj_set_width(ui_curtainDropdown, 53);
+    lv_obj_set_height(ui_curtainDropdown, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_curtainDropdown, 36);
+    lv_obj_set_y(ui_curtainDropdown, -17);
+    lv_obj_set_align(ui_curtainDropdown, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_curtainDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+
     lv_obj_add_event_cb(ButtonFan, lampButtonCB, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ButtonCurtain, lampButtonCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(stateImageCurtain, curtainCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_curtainButtonsure, curtainCB2, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_curtainButtonq, curtainCB1, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ui_ButtonDoorContact, doorContactCB, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ui_doorContactButtonsure, doorContactCB1, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ui_openSoundSwitch, openSoundSwitchCB, LV_EVENT_CLICKED, NULL);
@@ -1985,9 +2084,6 @@ void my_ui_init(void)
     initCameraUI();
     // 设计界面数据初始化
     initDataUI();
-
-#if USE_AUDIO
     // 音乐界面UI
     initUIspeech();
-#endif
 }

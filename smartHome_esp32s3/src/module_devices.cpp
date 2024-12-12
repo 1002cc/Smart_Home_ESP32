@@ -201,10 +201,10 @@ void sensor_task(void *pvParameter)
                 MQSure++;
                 if (MQSure >= 2) {
                     MQSure = 0;
-                    // if (millis() - lastMQTime > 6000) {
-                    //     lastMQTime = millis();
-                    // playMQAlarm();
-                    //}
+                    if (millis() - lastMQTime > 6000) {
+                        lastMQTime = millis();
+                        playMQAlarm();
+                    }
                 }
             } else {
                 MQSure = 0;
@@ -214,11 +214,10 @@ void sensor_task(void *pvParameter)
             lv_label_set_text(ui_MQLabel, temp_char);
         }
 
-        if (millis() - lastPrintTime > 10000) {
-            Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
-            lastPrintTime = millis();
-        }
-        // if (millis() - lastPrintTime > 2000) {
+        // if (millis() - lastPrintTime > 10000) {
+        //     Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
+        //     lastPrintTime = millis();
+        // }
         if (getMqttStart()) {
             SensorData sensorData = {
                 .temp = temperature,
@@ -226,9 +225,7 @@ void sensor_task(void *pvParameter)
                 .mq = mq2sensorValue,
             };
             publishSensorData(sensorData);
-            // lastPrintTime = millis();
         }
-        //}
         vTaskDelay(4000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
@@ -242,13 +239,9 @@ void initDevices()
 {
     Serial.println("Init Devices ...");
     initWSrgbled();
-    Serial.println("Init Devices Done");
-}
-
-void startSensorTask(void)
-{
     Serial.println("Starting sensor task");
     initDHT();
     initmq2();
     xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, NULL, 0);
+    Serial.println("Init Devices Done");
 }

@@ -987,14 +987,14 @@ bool AudioHelpr::connecttospeech(const char *speech, const char *lang)
 
     char perid_str[2];
     sprintf(perid_str, "%d", m_perid);
-    char tok_str[100];
-    sprintf(tok_str, "&tok=%s&", token);
+    // char tok_str[100];
+    // sprintf(tok_str, "&tok=%s&", token);
 
     char resp[strlen(speechBuff) + 200] = "";
     strcat(resp, "tex=");
     strcat(resp, speechBuff);
-    strcat(resp, tok_str);
-    strcat(resp, "cuid=aAzA4gBN5mmIViCqofGDaMUseHsVs4AS&");
+    strcat(resp, "&tok=25.e2641c7a9b1c6b680875c5348040a198.315360000.2049285185.282335-109052759");
+    strcat(resp, "&cuid=aAzA4gBN5mmIViCqofGDaMUseHsVs4AS&");
     strcat(resp, "ctp=1&");
     strcat(resp, "lan=zh&");
     strcat(resp, "spd=8&");
@@ -1028,7 +1028,7 @@ bool AudioHelpr::connecttospeech(const char *speech, const char *lang)
     // 发送请求的实体内容（payload）
     _client->print(resp);
     // _client->print(resp);
-    // Serial.println(resp);
+    Serial.println(resp);
     m_streamType = ST_WEBFILE;
     isplaying = 1;
     m_f_running = true;

@@ -6,8 +6,9 @@ SECRET_KEY = "rKFhtw5D3H3pRUPY44jrvsb46Qr3prSr"
 
 def main():
     url = "https://tsn.baidu.com/text2audio"
-    print(get_access_token())
-    payload = 'tex=你好&tok=' + get_access_token() + '&cuid=aAzA4gBN5mmIViCqofGDaMUseHsVs4AS&ctp=1&lan=zh&spd=5&pit=5&vol=5&per=1&aue=3'
+    token = get_access_token()
+    print(token)
+    payload = 'tex=你好&tok=' + token + '&cuid=aAzA4gBN5mmIViCqofGDaMUseHsVs4AS&ctp=1&lan=zh&spd=5&pit=5&vol=5&per=1&aue=3'
     headers = {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept': '*/*'

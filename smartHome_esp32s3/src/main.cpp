@@ -10,22 +10,28 @@
 
 void setup()
 {
+    // 初始化串口
     Serial.begin(115200);
     Serial.println("smarthome start-up");
+    // 打印PSRAM信息
     printPSRAM();
+    // 初始化文件系统
     LittleFS_init();
+    // 初始化LVGL
     initLVGLConfig();
-    initDevices();
-#if USE_AUDIO
-    startAudioTack();
-#endif
-    initWIFIConfig();
-    initMQTTConfig();
-    delay(100);
-    lv_gohome();
-    startNTPTask();
+    // 初始化语音和音频
     initSpeakConfig();
-    startSensorTask();
+    // 初始化设备
+    initDevices();
+    // 初始化WIFI
+    initWIFIConfig();
+    // 初始化MQTT
+    initMQTTConfig();
+    delay(500);
+    // 加载主页
+    lv_gohome();
+    // 初始化NTP
+    startNTPTask();
     printPSRAM();
 }
 

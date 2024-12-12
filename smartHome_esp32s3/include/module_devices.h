@@ -10,15 +10,11 @@
 #define DHTPIN 7
 #define DHTTYPE DHT11
 
-// #define PIN_R 2
-// #define PIN_G 1
-// #define PIN_B 38
+#define RX_PIN 19
+#define TX_PIN 20
 
 // MAX98357
 #define I2S_MAX_PORT I2S_NUM_0
-// #define PIN_I2S_MAX98357_LRC 9
-// #define PIN_I2S_MAX98357_BCLK 10
-// #define PIN_I2S_MAX98357_DOUT 11
 #define PIN_I2S_MAX98357_LRC 11
 #define PIN_I2S_MAX98357_BCLK 10
 #define PIN_I2S_MAX98357_DOUT 9
@@ -28,9 +24,9 @@
 
 // INMP411
 #define I2S_NMP411_PORT I2S_NUM_1
-#define PIN_I2S_INMP411_WS 47
+#define PIN_I2S_INMP411_WS 21
 #define PIN_I2S_INMP411_SD 45
-#define PIN_I2S_INMP411_SCK 21
+#define PIN_I2S_INMP411_SCK 47
 
 // #define BUTTON_PIN 13
 // #define BUTTON_PIN1 14
@@ -52,6 +48,5 @@ float dhtReadTemperature();
 float dhtReadHumidity();
 
 void initDevices();
-void startSensorTask(void);
 
 #endif

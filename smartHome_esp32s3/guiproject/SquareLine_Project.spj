@@ -26070,7 +26070,8 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "TABPAGE"
+                "saved_objtypeKey": "TABPAGE",
+                "tree_closed": true
               },
               {
                 "guid": "GUID4381560-805434S195903159",
@@ -29045,7 +29046,7 @@
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 2877,
+    "backup_cnt": 2878,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

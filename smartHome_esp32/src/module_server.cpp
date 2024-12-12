@@ -171,6 +171,9 @@ void playAudio(const AUDIO_NAME &index)
     case AUDIO_NAME::DC3:
         audio.connecttoFS(LittleFS, "/dc3.mp3");
         break;
+    case AUDIO_NAME::BL:
+        audio.connecttoFS(LittleFS, "/BL.mp3");
+        break;
     default:
         break;
     }

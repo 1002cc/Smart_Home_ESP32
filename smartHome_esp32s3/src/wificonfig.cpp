@@ -18,6 +18,8 @@ extern SemaphoreHandle_t xnetworkStatusSemaphore;
 
 extern std::vector<String> foundWifiList;
 
+extern bool isOnlineMode;
+
 static void scanWIFITask(void *pvParameters);
 void beginWIFITask(void *pvParameters);
 bool initWIFIConfig(void)
@@ -43,12 +45,14 @@ void WiFiEvent(WiFiEvent_t event)
         if (lv_getMQTTSwitchState()) {
             enable_mqtt = true;
         }
+        isOnlineMode = true;
         Serial.println("已连接到接入点");
         lv_setstatusbarLabel(1);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         lv_setWIFIState("未连接");
         enable_mqtt = false;
+        isOnlineMode = false;
         Serial.println("与WiFi接入点断开连接");
         lv_setstatusbarLabel(0);
         break;

@@ -75,6 +75,7 @@ void setStep(int pin1, int pin2, int pin3, int pin4);
 
 void startSensorTask();
 
+void curtainForwardReverseTasks(void *pvParameters);
 void initDevices();
 void initDevicesDatas();
 

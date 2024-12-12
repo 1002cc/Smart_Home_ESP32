@@ -27,10 +27,6 @@ const char *SECRET_KEY = "rKFhtw5D3H3pRUPY44jrvsb46Qr3prSr";
 
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
-    // if (ntpxHandle != NULL) {
-    //     vTaskDelete(ntpxHandle);
-    //     ntpxHandle = NULL;
-    // }
     Serial.println("Re-syncing time with NTP server");
     xTaskCreatePinnedToCore(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle, 0);
     Serial.println("Update weather information");
@@ -40,7 +36,6 @@ void ntpTimerCallback(TimerHandle_t xTimer)
 void ntpTask(void *param)
 {
     int timenumber = 3;
-
     while (true) {
         if (!getwifistate()) {
             break;
@@ -195,7 +190,7 @@ String unixTimeToGMTString(time_t unixTime)
 
 String getDateTime_one()
 {
-    time_t timer; // time_t就是long int 类型
+    time_t timer;
     struct tm *tblock;
     timer = time(NULL);
     tblock = localtime(&timer);
@@ -240,35 +235,6 @@ bool postlogin(String username, String password)
     }
     http.end();
     return isLogin;
-}
-void LoginRRequestTask(void *pvParameters)
-{
-    while (1) {
-        if ((getwifistate())) {
-            HTTPClient http;
-            http.begin(loginurl);
-            http.addHeader("Content-Type", "application/json;charset=UTF8");
-
-            String data = "{\"username\":\"" + String(username) + "\",\"password\":\"" + String(upassword) + "\"}";
-
-            int httpCode = http.POST(data);
-            if (httpCode > 0) {
-                String payload = http.getString();
-                Serial.println(httpCode);
-                Serial.println(payload);
-            } else {
-                Serial.println("Error on HTTP request");
-            }
-            http.end();
-        }
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-    }
-}
-
-void startLoginReequestTask(void)
-{
-    Serial.println("Starting Login Request task");
-    xTaskCreatePinnedToCore(LoginRRequestTask, "httpRequestTask", 4096, NULL, 1, NULL, 0);
 }
 
 String getAccessToken()

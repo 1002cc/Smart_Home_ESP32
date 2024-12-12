@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 16 px
  * Bpp: 1
- * Opts: --bpp 1 --size 16 --font E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets/SourceHanSansCN-Normal-2.otf -o E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets\ui_font_weatherfont.c --format lvgl -r 0x20-0x7f --symbols 多云晴小大雨雪阴风已未室外温度天气°C城市订阅主题发布应用中阵雷 --no-compress --no-prefilter
+ * Opts: --bpp 1 --size 16 --font E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets/SourceHanSansCN-Normal-2.otf -o E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets\ui_font_weatherfont.c --format lvgl -r 0x20-0x7f --symbols 多云晴小大雨雾雪阴风已未室外温度天气°C城市订阅主题发布应用中阵雷 --no-compress --no-prefilter
  ******************************************************************************/
 
 #include "../ui.h"
@@ -531,6 +531,12 @@ static LV_ATTRIBUTE_LARGE_CONST const uint8_t glyph_bitmap[] = {
     0xc1, 0x4, 0xeb, 0xc0, 0x0, 0x7f, 0xf2, 0x10,
     0x9f, 0xfc, 0x84, 0x24, 0x21, 0x3f, 0xf8,
 
+    /* U+96FE "雾" */
+    0x3f, 0xfc, 0x1, 0x0, 0x7f, 0xfe, 0x5d, 0x7a,
+    0x1d, 0x78, 0x1, 0x0, 0xf, 0xfc, 0x38, 0x10,
+    0x7, 0xe0, 0xfe, 0x7e, 0x3, 0x0, 0x3f, 0xf8,
+    0x6, 0x8, 0x78, 0x78,
+
     /* U+9898 "题" */
     0x7d, 0xfe, 0x88, 0x41, 0xf1, 0x82, 0x27, 0xe4,
     0x48, 0x47, 0x14, 0xbf, 0xa9, 0x8, 0x52, 0x50,
@@ -675,8 +681,9 @@ static const lv_font_fmt_txt_glyph_dsc_t glyph_dsc[] = {
     {.bitmap_index = 1538, .adv_w = 256, .box_w = 14, .box_h = 14, .ofs_x = 1, .ofs_y = -1},
     {.bitmap_index = 1563, .adv_w = 256, .box_w = 14, .box_h = 14, .ofs_x = 1, .ofs_y = -1},
     {.bitmap_index = 1588, .adv_w = 256, .box_w = 13, .box_h = 14, .ofs_x = 1, .ofs_y = -1},
-    {.bitmap_index = 1611, .adv_w = 256, .box_w = 15, .box_h = 14, .ofs_x = 1, .ofs_y = -1},
-    {.bitmap_index = 1638, .adv_w = 256, .box_w = 15, .box_h = 14, .ofs_x = 1, .ofs_y = -1}
+    {.bitmap_index = 1611, .adv_w = 256, .box_w = 16, .box_h = 14, .ofs_x = 0, .ofs_y = -1},
+    {.bitmap_index = 1639, .adv_w = 256, .box_w = 15, .box_h = 14, .ofs_x = 1, .ofs_y = -1},
+    {.bitmap_index = 1666, .adv_w = 256, .box_w = 15, .box_h = 14, .ofs_x = 1, .ofs_y = -1}
 };
 
 /*---------------------
@@ -687,7 +694,7 @@ static const uint16_t unicode_list_1[] = {
     0x0, 0x4d7d, 0x4d8b, 0x4de1, 0x5321, 0x571e, 0x5866, 0x586a,
     0x5877, 0x5879, 0x5af4, 0x5b5f, 0x5d42, 0x5d52, 0x5d53, 0x5de4,
     0x5df6, 0x65c4, 0x667a, 0x6b64, 0x6d79, 0x7478, 0x8af2, 0x9555,
-    0x9584, 0x9585, 0x9638, 0x963a, 0x9647, 0x97e8, 0x981e
+    0x9584, 0x9585, 0x9638, 0x963a, 0x9647, 0x964e, 0x97e8, 0x981e
 };
 
 /*Collect the unicode lists and glyph_id offsets*/
@@ -699,7 +706,7 @@ static const lv_font_fmt_txt_cmap_t cmaps[] =
     },
     {
         .range_start = 176, .range_length = 38943, .glyph_id_start = 96,
-        .unicode_list = unicode_list_1, .glyph_id_ofs_list = NULL, .list_length = 31, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
+        .unicode_list = unicode_list_1, .glyph_id_ofs_list = NULL, .list_length = 32, .type = LV_FONT_FMT_TXT_CMAP_SPARSE_TINY
     }
 };
 
@@ -726,7 +733,7 @@ static const uint8_t kern_left_class_mapping[] =
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /*Map glyph_ids to kern right classes*/
@@ -747,7 +754,7 @@ static const uint8_t kern_right_class_mapping[] =
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0
 };
 
 /*Kern values between classes*/
@@ -984,9 +991,12 @@ static const lv_font_fmt_txt_kern_classes_t kern_classes =
  *  ALL CUSTOM DATA
  *--------------------*/
 
-#if LV_VERSION_CHECK(8, 0, 0)
+#if LVGL_VERSION_MAJOR == 8
 /*Store all the custom data of the font*/
 static  lv_font_fmt_txt_glyph_cache_t cache;
+#endif
+
+#if LVGL_VERSION_MAJOR >= 8
 static const lv_font_fmt_txt_dsc_t font_dsc = {
 #else
 static lv_font_fmt_txt_dsc_t font_dsc = {
@@ -1000,10 +1010,11 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
     .bpp = 1,
     .kern_classes = 1,
     .bitmap_format = 0,
-#if LV_VERSION_CHECK(8, 0, 0)
+#if LVGL_VERSION_MAJOR == 8
     .cache = &cache
 #endif
 };
+
 
 
 /*-----------------
@@ -1011,7 +1022,7 @@ static lv_font_fmt_txt_dsc_t font_dsc = {
  *----------------*/
 
 /*Initialize a public general font descriptor*/
-#if LV_VERSION_CHECK(8, 0, 0)
+#if LVGL_VERSION_MAJOR >= 8
 const lv_font_t ui_font_weatherfont = {
 #else
 lv_font_t ui_font_weatherfont = {
@@ -1027,7 +1038,11 @@ lv_font_t ui_font_weatherfont = {
     .underline_position = -2,
     .underline_thickness = 1,
 #endif
-    .dsc = &font_dsc           /*The custom font data. Will be accessed by `get_glyph_bitmap/dsc` */
+    .dsc = &font_dsc,          /*The custom font data. Will be accessed by `get_glyph_bitmap/dsc` */
+#if LV_VERSION_CHECK(8, 2, 0) || LVGL_VERSION_MAJOR >= 9
+    .fallback = NULL,
+#endif
+    .user_data = NULL,
 };
 
 

@@ -3,9 +3,6 @@
 #include <Arduino.h>
 #include <vector>
 
-#define USE_AUDIO 1
-#define USE_MAX98357 1
-#define USE_INMP411 1
 #define MAX_MUSIC_NUM 15
 #define NETWORK_TIMEOUT (5 * 1000)
 
