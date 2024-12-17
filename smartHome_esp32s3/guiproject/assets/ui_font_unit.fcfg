@@ -10,7 +10,7 @@
   "ranges": [
     "0x20-0x7f"
   ],
-  "symbols": "温度湿度浓度传感器数据气体浓度灯配置设置网络时间监控音乐语系统应声控风扇窗帘门磁感应",
+  "symbols": "温度湿度浓度传感器数据气体浓度灯配置设置网络时间监控音乐语系统应声控风扇窗帘门磁感应通信蓝牙模式",
   "customparams": "--no-compress --no-prefilter",
   "uploaded": false
 }

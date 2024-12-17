@@ -13,12 +13,13 @@ typedef enum {
 
 void initLVGLConfig(void);
 void startLVGLTask(void);
-
+void lv_closeWifi();
 void lv_setMQTTState(const char *text);
 void lv_setMQTTSwitchState(bool state);
 bool lv_getMQTTSwitchState();
 void lv_setWIFIState(const char *text);
 void lv_setWIFISwitchState(bool state);
+void lv_setBLESwitchState(bool state);
 void lv_setWeatherinfo(const char *text);
 void lv_setCityinfo(const char *text);
 void lv_setWeatherImage(int number);
@@ -51,6 +52,7 @@ void lv_setPriButtonState(bool state);
 void lv_setVoiceButtonState(bool state);
 void lv_speakState(const SpeakState_t &state);
 void lv_ai_control(const String &handl, bool state);
+void lv_ai_control_offline(const String &handl, int state);
 
 void ui_calender_update(void);
 void startCameraTask();

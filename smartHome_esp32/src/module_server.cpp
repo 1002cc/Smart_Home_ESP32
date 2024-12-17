@@ -30,7 +30,6 @@ void printLocalTime(void)
         Serial.println("No time available (yet)");
         return;
     }
-    // Serial.println(&g_time, "%Y-%m-%d %H:%M:%S");
 }
 
 /*
@@ -46,6 +45,17 @@ void initNtpTime()
 {
     sntp_set_time_sync_notification_cb(timeAvailable); // 配置时间获取回调
     configTzTime(g_time_zone, g_ntp_server1, g_ntp_server2);
+}
+
+/********************************************************************
+                         flash存储本地数据
+*********************************************************************/
+void littlefs_init()
+{
+    if (!LittleFS.begin()) {
+        Serial.println("An Error has occurred while mounting LittleFS");
+    }
+    Serial.println("LittleFS init succesful");
 }
 
 String ReadData(const char *val)
@@ -92,14 +102,6 @@ void printPSRAM(void)
     Serial.println("-----------------------------printPSRAM-----------------------------");
 }
 
-void littlefs_init()
-{
-    if (!LittleFS.begin()) {
-        Serial.println("An Error has occurred while mounting LittleFS");
-    }
-    Serial.println("LittleFS init succesful");
-}
-
 /********************************************************************
                          audio
 ********************************************************************/
@@ -135,6 +137,9 @@ void audioSpeak(const String &text)
 
 void startAudioTack()
 {
+    // 初始化音频模块
+    audio_init();
+    // 创建音频任务
     xTaskCreatePinnedToCore(audioTask, "audio_task", 1024 * 3, NULL, 2, NULL, 1);
 }
 

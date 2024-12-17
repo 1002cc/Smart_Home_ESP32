@@ -17,15 +17,18 @@ int16_t *audioData;
 int16_t *pcm_data; // 录音缓存区
 uint recordingSize = 0;
 
-String answer_list[10];
-uint8_t answer_list_num = 0;
-bool answer_ste = 0;
 String stttext = "";
+String answerllm = "";
+
+String TTS_APPID = "6501ee63";
+String TTS_APIKEY = "02e3f5858bb8af38e05a157c1fcfb9a7";
+String TTS_SECRETKEY = "M2VmZmRmZjA0ZTFlMTQ2NDBkYmI1ZmE1";
+#define XFDOMAIN "generalv3"
 
 // 火山引擎(豆包)
 const char *apiKey = "b50ace91-bf6d-4628-9096-14a4d2a21b80";
 const char *endpointId = "hich_doubao";
-const String doubao_system = "你是一个智能家居助手小欧，回答问题比较简洁。"; // 定义豆包的人设
+const String doubao_system = "你是一个智能家居助手小欧，回答问题比较简洁不超过55个汉字,"; // 定义豆包的人设
 String duobaoUrl = "https://ark.cn-beijing.volces.com/api/v3/chat/completions";
 
 // MINIMAX模型
@@ -35,6 +38,11 @@ String minimaxUrl = "https://api.minimax.chat/v1/text/chatcompletion_v2";
 using namespace websockets;
 WebsocketsClient webSocketClient_stt;
 
+#define USE_WED 1
+#if USE_WED
+WebsocketsClient webSocketClient_llm;
+#endif
+
 extern AudioHelpr audio;
 
 SpeakState_t speakState = NO_DIALOGUE;
@@ -43,14 +51,10 @@ int useAIMode = 0;
 SoftwareSerial voiceModuleSerial(RX_PIN, TX_PIN);
 
 // 语音识别时间
-static int recognitionTime = 5 * 1000;
-String receivedString = "";
+static int recognitionTime = 3 * 1000;
 
-// 语音对话模式
-// 0: 离线模式 1: 在线模式
-// 离线模式: 蓝牙通信 + 串口通信 不能AI对话
-// 在线模式: WIFI和MQTT通信
-bool isOnlineMode = false;
+DynamicJsonDocument gen_params(const char *appid, const char *domain, const char *role_set);
+void CleanInformation();
 /********************************************************************
                          max98357
 ********************************************************************/
@@ -123,6 +127,132 @@ bool initinmp441()
     Serial.println("INMP411 init successfully");
     return true;
 }
+/********************************************************************
+                        sst 回调
+********************************************************************/
+void onMessageCallbackSST(WebsocketsMessage message)
+{
+    Serial.print("Got Message: ");
+    Serial.println(message.data());
+    JsonDocument doc;
+    DeserializationError error = deserializeJson(doc, message.data());
+    if (error) {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        return;
+    }
+    JsonArray ws = doc["data"]["result"]["ws"];
+    for (JsonObject word : ws) {
+        int bg = word["bg"];
+        const char *w = word["cw"][0]["w"];
+        stttext += w;
+    }
+    if (doc["data"]["status"] == 2) {
+        webSocketClient_stt.close();
+        if (stttext.isEmpty() || stttext == "") {
+            lv_speakState(SpeakState_t::NO_DIALOGUE);
+            audio.connecttoFS(LittleFS, "/nosound.mp3");
+        } else {
+            lv_speakState(SpeakState_t::ANSWERING);
+            stttext.replace("\n", "");
+            String commandAnswer = "";
+            commandAnswer = instructionRecognition(stttext);
+            if (commandAnswer != "") {
+                audio.connecttospeech(commandAnswer.c_str(), "zh");
+                lv_speakState(SpeakState_t::SPEAKING);
+                return;
+            }
+#if USE_WED
+            llmRequest();
+#else
+            if (useAIMode) {
+                Serial.println("doubao answer");
+                commandAnswer = getDoubaoAnswer(stttext);
+            } else {
+                Serial.println("xunfei answer");
+                commandAnswer = getXunfeiAnswer(stttext);
+            }
+            Serial.printf("stttext: %s  anwer : %s mdoe: %d\n", stttext.c_str(), commandAnswer.c_str(), useAIMode);
+            lv_speakState(SpeakState_t::SPEAKING);
+            if (!commandAnswer.isEmpty() && commandAnswer != "error") {
+                commandAnswer = truncateStringIfTooLong(commandAnswer);
+                audio.connecttospeech(commandAnswer.c_str(), "zh");
+            } else {
+                audio.connecttoFS(LittleFS, "/noResponse.mp3");
+                Serial.println("回答内容为空,取消TTS发送");
+            }
+#endif
+            commandAnswer = "";
+        }
+        Serial.printf("stttext: %s\n", stttext.c_str());
+    }
+}
+#if USE_WED
+
+String truncateStringIfTooLong(String input)
+{
+    int byteLength = 0;
+    for (int i = 0; i < input.length(); i++) {
+        byteLength += sizeof(input.charAt(i)); // 计算每个字符的字节数并累加
+        if (byteLength > 180) {
+            return input.substring(0, i); // 超过180字节，截取前面部分
+        }
+    }
+    return input;
+}
+
+void onMessageCallbackLLM(WebsocketsMessage message)
+{
+    StaticJsonDocument<1024> jsonDocument;
+    DeserializationError error = deserializeJson(jsonDocument, message.data());
+    if (!error) {
+        int code = jsonDocument["header"]["code"];
+        if (code != 0) {
+            Serial.print("sth is wrong: ");
+            Serial.println(code);
+            Serial.println(message.data());
+            webSocketClient_llm.close();
+        } else {
+            JsonObject choices = jsonDocument["payload"]["choices"];
+            int status = choices["status"];
+            const char *contentAnswer = "";
+            contentAnswer = choices["text"][0]["content"];
+            answerllm += String(contentAnswer);
+            if (status == 2) {
+                Serial.println(answerllm);
+                if (answerllm != "" && answerllm != "error") {
+                    lv_speakState(SpeakState_t::SPEAKING);
+                    answerllm = truncateStringIfTooLong(answerllm);
+                    audio.connecttospeech(answerllm.c_str(), "zh");
+                } else {
+                    audio.connecttoFS(LittleFS, "/noResponse.mp3");
+                    Serial.println("回答内容为空,取消TTS发送");
+                    lv_speakState(SpeakState_t::NO_DIALOGUE);
+                }
+            }
+        }
+    }
+}
+
+void onEventsCa1llbackLLM(WebsocketsEvent event, String data)
+{
+    if (event == WebsocketsEvent::ConnectionOpened) {
+        Serial.println("Send message to serverllm!");
+        DynamicJsonDocument jsonData = gen_params(TTS_APPID.c_str(), XFDOMAIN, XFROLE);
+        String jsonString;
+        serializeJson(jsonData, jsonString);
+        Serial.println(jsonString);
+        webSocketClient_llm.send(jsonString);
+    } else if (event == WebsocketsEvent::ConnectionClosed) {
+        Serial.println("Connnection Closed");
+    } else if (event == WebsocketsEvent::GotPing) {
+        Serial.println("Got a Ping!");
+    } else if (event == WebsocketsEvent::GotPong) {
+        Serial.println("Got a Pong!");
+    }
+}
+
+#endif
 
 /********************************************************************
                         init SpeakConfig
@@ -144,52 +274,12 @@ void initSpeakConfig()
         Serial.printf("I2S start failed (I2S_NMP411_PORT): %d\n", err);
         return;
     }
-
+#if USE_WED
+    webSocketClient_llm.onMessage(onMessageCallbackLLM);
+    webSocketClient_llm.onEvent(onEventsCa1llbackLLM);
+#endif
     // 初始化讯飞语音转文字websocket连接
-    webSocketClient_stt.onMessage([&](WebsocketsMessage message) { // STT ws连接的回调函数
-        Serial.print("Got Message: ");
-        Serial.println(message.data());
-        JsonDocument doc;
-        DeserializationError error = deserializeJson(doc, message.data());
-        if (error) {
-            Serial.print(F("deserializeJson() failed: "));
-            Serial.println(error.f_str());
-            return;
-        }
-        JsonArray ws = doc["data"]["result"]["ws"];
-        for (JsonObject word : ws) {
-            int bg = word["bg"];
-            const char *w = word["cw"][0]["w"];
-            stttext += w;
-        }
-        if (doc["data"]["status"] == 2) {
-            if (stttext.isEmpty() || stttext == "") {
-                lv_speakState(SpeakState_t::NO_DIALOGUE);
-                audio.connecttoFS(LittleFS, "/nosound.mp3");
-            } else {
-                lv_speakState(SpeakState_t::ANSWERING);
-            }
-            Serial.printf("stttext: %s\n", stttext.c_str());
-        }
-    });
-
     audio.setTok("25.3d59d26887081131ac1a52225baf130f.315360000.2049277194.282335-109052759");
-    // 更新百度合成taken
-    // String tok = getAccessToken();
-    // Serial.printf("token:%s\n", tok.c_str());
-    // if (tok.isEmpty()) {
-    //     tok = "";
-    //     tok = ReadData("tok");
-    //     if (tok != "null") {
-    //         audio.setTok(tok.c_str());
-    //     } else {
-    //         audio.setTok("24.fe14f4355b5db90310d8c6fd20394caf.2592000.1736132606.282335-109052759");
-    //     }
-    // } else {
-    //     StoreData("tok", tok.c_str());
-    //     audio.setTok(tok.c_str());
-    // }
-    // 创建语音任务
     xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 12, NULL, 0);
     Serial.println("initSpeakConfig done");
 }
@@ -205,10 +295,10 @@ void sendSTTData()
     if (lan_end > 0) {
         lan++;
     }
-
     Serial.printf("byteDatasize: %d , lan: %d , lan_end: %d \n", audioDataSize, lan, lan_end);
-    String host_url = XF_wsUrl(TTS_SECRETKEY, TTS_APIKEY, "/v2/iat", "iat-api.xfyun.cn");
+    String host_url = wedUrlXF(TTS_SECRETKEY.c_str(), TTS_APIKEY.c_str(), "/v2/iat", "iat-api.xfyun.cn");
     Serial.println("Connecting to server.");
+    webSocketClient_stt.onMessage(onMessageCallbackSST);
     bool connected = webSocketClient_stt.connect(host_url);
     if (connected) {
         Serial.println("Connected!");
@@ -256,9 +346,7 @@ void sendSTTData()
             if (lan_end > 0) {
                 String input = "{";
                 input += "\"data\":{\"status\": 2, \"format\": \"audio/L16;rate=16000\",\"encoding\": \"raw\",\"audio\":\"";
-
                 String base64audioString = base64::encode((uint8_t *)pcm_data + (i * dataSize), lan_end);
-
                 input += base64audioString;
                 input += "\"}}";
                 // Serial.printf("input: %d , status: %d \n", i, status);
@@ -278,7 +366,7 @@ String formatDateForURL(String dateString)
 }
 
 // 构造讯飞ws连接url
-String XF_wsUrl(const char *Secret, const char *Key, String request, String host)
+String wedUrlXF(const char *Secret, const char *Key, String request, String host)
 {
     String timeString = getDateTime_one();
     String signature_origin = "host: " + host;
@@ -312,11 +400,86 @@ String XF_wsUrl(const char *Secret, const char *Key, String request, String host
     url += "&date=";
     url += formatDateForURL(timeString);
     url += "&host=" + host;
-    Serial.println("\nurl encoded result:");
-    Serial.println(url);
+    // Serial.println("\nurl encoded result:");
+    // Serial.println(url);
+    return url;
+}
+#if USE_WED
+String wedUrlXFLLM(String Spark_url, String host, String path)
+{
+    String timeString = getDateTime_one();
+    String signature_origin = "host: " + host + "\n";
+    signature_origin += "date: " + timeString + "\n";
+    signature_origin += "GET " + path + " HTTP/1.1";
+    // Serial.println(signature_origin);
+    // signature_origin="host: spark-api.xf-yun.com\ndate: Mon, 04 Mar 2024 19:23:20 GMT\nGET /v3.5/chat HTTP/1.1";
+
+    // hmac-sha256 加密
+    unsigned char hmacResult[32];
+    mbedtls_md_context_t ctx;
+    mbedtls_md_type_t md_type = MBEDTLS_MD_SHA256;
+    mbedtls_md_init(&ctx);
+    mbedtls_md_setup(&ctx, mbedtls_md_info_from_type(md_type), 1); // 1 表示 HMAC
+    mbedtls_md_hmac_starts(&ctx, (const unsigned char *)TTS_SECRETKEY.c_str(), TTS_SECRETKEY.length());
+    mbedtls_md_hmac_update(&ctx, (const unsigned char *)signature_origin.c_str(), signature_origin.length());
+    mbedtls_md_hmac_finish(&ctx, hmacResult);
+    mbedtls_md_free(&ctx);
+    String base64Result = base64::encode(hmacResult, sizeof(hmacResult) / sizeof(hmacResult[0]));
+
+    // 构建Authorization原始字符串
+    String authorization_origin = "api_key=\"" + TTS_APIKEY + "\", algorithm=\"hmac-sha256\", headers=\"host date request-line\", signature=\"" + base64Result + "\"";
+    // 将Authorization原始字符串进行Base64编码
+    String authorization = base64::encode(authorization_origin);
+    // 构建最终的URL
+    String url = Spark_url + '?' + "authorization=" + authorization + "&date=" + formatDateForURL(timeString) + "&host=" + host;
+    // 向串口输出生成的URL
+    // Serial.println(url);
+    // 返回生成的URL
     return url;
 }
 
+DynamicJsonDocument gen_params(const char *appid, const char *domain, const char *role_set)
+{
+    DynamicJsonDocument data(1500);
+    JsonObject header = data.createNestedObject("header");
+    header["app_id"] = appid;
+    header["uid"] = "1234";
+    JsonObject parameter = data.createNestedObject("parameter");
+
+    // 在parameter对象中创建一个名为chat的嵌套对象，并添加domain, temperature和max_tokens字段
+    JsonObject chat = parameter.createNestedObject("chat");
+    chat["domain"] = domain;
+    chat["temperature"] = 0.6;
+    chat["max_tokens"] = 1024;
+
+    JsonObject payload = data.createNestedObject("payload");
+    JsonObject message = payload.createNestedObject("message");
+    JsonArray textArray = message.createNestedArray("text");
+    JsonObject systemMessage = textArray.createNestedObject();
+    systemMessage["role"] = "assistant";
+    systemMessage["content"] = "我是一个智能家居助手小欧，回答问题比较简洁。";
+    JsonObject userMessage = textArray.createNestedObject();
+    userMessage["role"] = "user";
+    userMessage["content"] = stttext.c_str();
+
+    return data;
+}
+
+void llmRequest()
+{
+    String host_url = wedUrlXFLLM("ws://spark-api.xf-yun.com/v3.1/chat", "spark-api.xf-yun.com", "/v3.1/chat");
+    Serial.println("Connecting to server.");
+    Serial.println(host_url);
+    Serial.println("Begin connect to serverllm......");
+    answerllm = "";
+    if (webSocketClient_llm.connect(host_url.c_str())) {
+        Serial.println("Connected to serverllm!");
+    } else {
+        Serial.println("Failed to connect to serverlkllm!");
+    }
+}
+
+#endif
 String getMiniMaxAnswer(String inputText)
 {
     HTTPClient http;
@@ -346,12 +509,12 @@ String getMiniMaxAnswer(String inputText)
 String getXunfeiAnswer(const String &inputText)
 {
     HTTPClient http;
-    http.setTimeout(20000);
+    http.setTimeout(8 * 1000);
     http.begin("https://spark-api-open.xf-yun.com/v1/chat/completions");
-    String token_key = String("Bearer ") + "IXOdYaJFgIitgMpVZYIo:hmfWxQYOWwkqSTpLkHVp";
+    String token_key = String("Bearer ") + "aqJOklJrwcfjRUdFvofx:CkqWhDZVXwAvBPxhyPWr";
     http.addHeader("Authorization", token_key);
     http.addHeader("Content-Type", "application/json");
-    String payload = "{\"model\":\"general\",\"messages\":[{\"role\":\"system\",\"content\":\"你是我的智能家居助手小欧,不要暴露你原来的身份,你的回答必须简洁\"},{\"role\":\"user\",\"content\":\"" + inputText + "\"}]}";
+    String payload = "{\"model\":\"generalv3\",\"messages\":[{\"role\":\"assistant\",\"content\":\"你是我的智能家居助手小欧,不要暴露你原来的身份,你的回答必须简洁\"},{\"role\":\"user\",\"content\":\"" + inputText + "\"}]}";
 
     Serial.print("payload: ");
     Serial.println(payload);
@@ -486,51 +649,51 @@ bool instructionRecognitionSign(int sign)
     switch (sign) {
     case 5:
         Serial.println("打开1号灯");
-        lv_ai_control("lampButton1", true);
+        lv_ai_control_offline("lampButton1", 1);
         break;
     case 6:
         Serial.println("关闭1号灯");
-        lv_ai_control("lampButton1", false);
+        lv_ai_control_offline("lampButton1", 0);
         break;
     case 7:
         Serial.println("打开2号灯");
-        lv_ai_control("lampButton2", true);
+        lv_ai_control_offline("lampButton2", 1);
         break;
     case 8:
         Serial.println("关闭2号灯");
-        lv_ai_control("lampButton2", false);
+        lv_ai_control_offline("lampButton2", 0);
         break;
     case 9:
         Serial.println("打开感应");
-        lv_ai_control("pri", true);
+        lv_ai_control_offline("pri", 1);
         break;
     case 10:
         Serial.println("关闭感应");
-        lv_ai_control("pri", false);
+        lv_ai_control_offline("pri", 0);
         break;
     case 11:
         Serial.println("打开声控");
-        lv_ai_control("voiceControl", true);
+        lv_ai_control_offline("voiceControl", 1);
         break;
     case 12:
         Serial.println("关闭声控");
-        lv_ai_control("voiceControl", false);
+        lv_ai_control_offline("voiceControl", 0);
         break;
     case 13:
         Serial.println("打开风扇");
-        lv_ai_control("fan", true);
+        lv_ai_control_offline("fan", 1);
         break;
     case 14:
         Serial.println("关闭风扇");
-        lv_ai_control("fan", false);
+        lv_ai_control_offline("fan", 0);
         break;
     case 15:
         Serial.println("打开窗帘");
-        lv_ai_control("curtain", true);
+        lv_ai_control_offline("curtain", 1);
         break;
     case 16:
         Serial.println("关闭窗帘");
-        lv_ai_control("curtain", false);
+        lv_ai_control_offline("curtain", 0);
         break;
     default:
         isSuccess = false;
@@ -538,11 +701,6 @@ bool instructionRecognitionSign(int sign)
         break;
     }
     return isSuccess;
-}
-
-void voiceModuleSerialWrite(String data)
-{
-    voiceModuleSerial.write(data.c_str());
 }
 
 void speakTask(void *pvParameter)
@@ -554,84 +712,48 @@ void speakTask(void *pvParameter)
             String receivedData = voiceModuleSerial.readStringUntil('\n');
             receivedData.trim();
             convertedInt = receivedData.toInt();
-            audio.stopSong();
+            Serial.printf("receivedData: %d\n", convertedInt);
             if (convertedInt == 1) {
+                // 打断回复
+                audio.stopSong();
+                webSocketClient_stt.close();
                 speakState = WAKEUP;
             }
-            // 离线语音控制
-            if (!isOnlineMode && convertedInt != 1) {
-                if (instructionRecognitionSign(convertedInt)) {
-                    Serial.printf("send command to voice module: %d\n", convertedInt);
-                    voiceModuleSerial.print(convertedInt);
-                }
-            }
         }
-
+        webSocketClient_stt.poll();
+#if USE_WED
+        webSocketClient_llm.poll();
+#endif
         // 在线语音对话
-        if (isOnlineMode) {
-            if ((speakState == RECORDING || speakState == WAKEUP)) {
-                stttext = "";
-                Serial.println("Recording...");
-                size_t bytes_read = 0;
-                recordingSize = 0;
-                pcm_data = reinterpret_cast<int16_t *>(ps_malloc(BUFFER_SIZE * 2));
-                if (!pcm_data) {
-                    Serial.println("Failed to allocate memory for pcm_data");
-                }
-
-                int min = millis();
-                while ((speakState != RECORDED)) {
-                    esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
-                    memcpy(pcm_data + recordingSize, audioData, bytes_read);
-                    recordingSize += bytes_read / 2;
-                    if (!(millis() - min < recognitionTime)) {
-                        lv_speakState(SpeakState_t::RECORDED);
-                    }
-                }
-
-                Serial.printf("Recorded done. recordingSize: %d\n", recordingSize);
-                sendSTTData();
-                free(pcm_data);
+        if ((speakState == RECORDING || speakState == WAKEUP)) {
+            stttext = "";
+            Serial.println("Recording...");
+            size_t bytes_read = 0;
+            recordingSize = 0;
+            pcm_data = reinterpret_cast<int16_t *>(ps_malloc(BUFFER_SIZE * 2));
+            if (!pcm_data) {
+                Serial.println("Failed to allocate memory for pcm_data");
             }
 
-            if (webSocketClient_stt.available()) {
-                webSocketClient_stt.poll();
+            int min = millis();
+            while ((speakState != RECORDED)) {
+                esp_err_t result = i2s_read(I2S_NMP411_PORT, audioData, sizeof(audioData), &bytes_read, portMAX_DELAY);
+                memcpy(pcm_data + recordingSize, audioData, bytes_read);
+                recordingSize += bytes_read / 2;
+                if (!(millis() - min < recognitionTime)) {
+                    lv_speakState(SpeakState_t::RECORDED);
+                }
             }
 
-            if (speakState == ANSWERING) {
-                Serial.println(stttext);
-                stttext.replace("\n", "");
-
-                String answer = "";
-
-                if (isOnlineMode) {
-                    answer = instructionRecognition(stttext);
-                    if (answer != "") {
-                        audio.connecttospeech(answer.c_str(), "zh");
-                        lv_speakState(SpeakState_t::NO_DIALOGUE);
-                        continue;
-                    }
-                    answer = "";
-                }
-
-                if (useAIMode) {
-                    Serial.println("doubao answer");
-                    answer = getDoubaoAnswer(stttext);
-                } else {
-                    Serial.println("xunfei answer");
-                    answer = getXunfeiAnswer(stttext);
-                }
-                Serial.printf("stttext: %s  anwer : %s mdoe: %d\n", stttext.c_str(), answer.c_str(), useAIMode);
-                lv_speakState(SpeakState_t::SPEAKING);
-                if (!answer.isEmpty() && answer != "error") {
-                    audio.connecttospeech(answer.c_str(), "zh");
-                } else {
-                    audio.connecttoFS(LittleFS, "/noResponse.mp3");
-                    Serial.println("回答内容为空,取消TTS发送");
-                }
-                lv_speakState(SpeakState_t::NO_DIALOGUE);
-            }
+            Serial.printf("Recorded done. recordingSize: %d\n", recordingSize);
+            sendSTTData();
+            free(pcm_data);
         }
+
+        if (!audio.isplaying && speakState == SpeakState_t::SPEAKING) {
+            lv_speakState(SpeakState_t::NO_DIALOGUE);
+        }
+
         vTaskDelay(50);
     }
     vTaskDelete(NULL);

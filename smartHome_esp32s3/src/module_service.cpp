@@ -18,9 +18,8 @@ TaskHandle_t ntpxHandle = NULL;
 TimerHandle_t ntpTimer;
 
 const char *loginurl = "http://hichchen.top:3002/userlogin";
-String username;
 String upassword;
-bool loginState = false;
+bool loginState = true;
 
 const char *API_KEY = "P9SYyz2QOA4lsXjFLv8DRv8p";
 const char *SECRET_KEY = "rKFhtw5D3H3pRUPY44jrvsb46Qr3prSr";
@@ -28,7 +27,7 @@ const char *SECRET_KEY = "rKFhtw5D3H3pRUPY44jrvsb46Qr3prSr";
 void ntpTimerCallback(TimerHandle_t xTimer)
 {
     Serial.println("Re-syncing time with NTP server");
-    xTaskCreatePinnedToCore(ntpTask, "NTP Task", 5 * 1024, NULL, 2, &ntpxHandle, 0);
+    xTaskCreatePinnedToCore(ntpTask, "NTP Task", 3 * 1024, NULL, 2, &ntpxHandle, 0);
     Serial.println("Update weather information");
     weatherQuery();
 }
@@ -193,7 +192,8 @@ String getDateTime_one()
     time_t timer;
     struct tm *tblock;
     timer = time(NULL);
-    tblock = localtime(&timer);
+    // tblock = localtime(&timer);
+    tblock = gmtime(&timer);
     char buffer[80];
     strftime(buffer, sizeof(buffer), "%a, %d %b %Y %H:%M:%S GMT", tblock);
     Serial.println(buffer);

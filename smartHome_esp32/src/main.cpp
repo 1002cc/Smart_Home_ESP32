@@ -1,11 +1,7 @@
-#include "module_blue.h"
 #include "module_devices.h"
 #include "module_mqtt.h"
 #include "module_server.h"
 #include "module_wifi.h"
-
-// 通信模式
-ConnectionMode cMode = MODE;
 
 void setup()
 {
@@ -23,12 +19,6 @@ void setup()
     // 初始化传感器设备
     initDevices();
 
-    // 加载设备数据
-    initDevicesDatas();
-
-    // 开始传感器任务
-    startSensorTask();
-
     // 配置wifi
     connectToWiFi(CONNECTTIMEOUT);
 
@@ -44,15 +34,10 @@ void setup()
 
 void loop()
 {
-    if (cMode == ConnectionMode::WIFI || ConnectionMode::WB) {
-        mqttLoop();
-        if (!wifitate()) {
-            checkDNS_HTTP();
-        }
-        checkConnect(true);
-    } else if (cMode == ConnectionMode::BLUE) {
-        // blueLoop();
+    mqttLoop();
+    if (!wifitate()) {
+        checkDNS_HTTP();
     }
-
+    checkConnect(true);
     vTaskDelay(500);
 }

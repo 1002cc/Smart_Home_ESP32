@@ -4,6 +4,7 @@
 #include "confighelpr.h"
 #include <Arduino.h>
 
+void audio_init();
 void startAudioTack();
 void audioVolume(int volume);
 void audioStation(int station);

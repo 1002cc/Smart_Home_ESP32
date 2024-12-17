@@ -1,5 +1,4 @@
 #include "confighelpr.h"
-
 #include <LittleFS.h>
 #include <Preferences.h>
 
@@ -150,14 +149,9 @@ String optionsGet(std::vector<String> musiclist)
 void printPSRAM(void)
 {
     Serial.println("-----------------------------printPSRAM-----------------------------");
-    Serial.printf("Total heap: %d\n", ESP.getHeapSize());
-    Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
-    Serial.printf("Deafult free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_DEFAULT));
-    Serial.printf("PSRAM free size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-    Serial.printf("Flash size: %d bytes\n", ESP.getFlashChipSize());
-    Serial.printf("Free_heap_size = %d\n", esp_get_free_heap_size());
-    Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
-    Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
-    Serial.printf("sp_get_free_internal_heap_size = %ld\n", esp_get_free_internal_heap_size());
+    Serial.printf("Flash大小: %d bytes\n", ESP.getFlashChipSize());
+    Serial.printf("PSRAM大小: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    Serial.printf("可用堆的大小: %d\n", esp_get_free_heap_size());
+    Serial.printf("可用内部堆的大小: %ld\n", esp_get_free_internal_heap_size());
     Serial.println("-----------------------------printPSRAM-----------------------------");
 }

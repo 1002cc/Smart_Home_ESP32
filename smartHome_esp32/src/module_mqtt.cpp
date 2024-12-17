@@ -8,8 +8,6 @@
 
 const char *mqtt_url = "47.115.139.166";
 String mqtt_wroom_sub = "";
-String mqtt_app_pub = "";
-String mqtt_qt_pub = "";
 String mqtt_pub = "";
 const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 1024;
@@ -28,8 +26,8 @@ bool enable_pri = true;
 bool enable_VoiceControl = true;
 bool activeEnableAutoLamp = false;
 extern bool mqttPri;
-extern bool mqttVoice;
 extern bool enable_fan;
+extern bool enable_fanf;
 extern bool enable_curtain;
 extern int motorRunTime;
 extern bool curtain_direction;
@@ -37,8 +35,10 @@ extern lampButtonData mqttSwitchState;
 extern bool enableOpenSound;
 extern bool enableDoorContactTimeout;
 extern int doorOpenTimeoutThreshold;
+// extern ConnectionMode cMode;
 
-static void mqtt_callback(char *topic, byte *payload, unsigned int length);
+static void
+mqtt_callback(char *topic, byte *payload, unsigned int length);
 
 extern void sendImgPieces(void);
 
@@ -63,15 +63,11 @@ bool initMQTTConfig(void)
 
 void mqttMontage(const String &user)
 {
-    mqtt_wroom_sub = "/smartHome/" + user + "/esp32_wroom_pub";
-    mqtt_app_pub = "/smartHome/" + user + "/esp32_app_pub";
-    mqtt_qt_pub = "/smartHome/" + user + "/esp32_qt_pub";
-    mqtt_pub = "/smartHome/" + user + "/esp32_sub";
+    mqtt_wroom_sub = "/smartHome/" + user + "/#";
+    mqtt_pub = "/smartHome/" + user + "/esp32_wroom_pub";
 
     Serial.printf("mqtt_sub:%s\n", mqtt_wroom_sub.c_str());
     Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
-    Serial.printf("mqtt_app_pub:%s\n", mqtt_app_pub.c_str());
-    Serial.printf("mqtt_qt_pub:%s\n", mqtt_qt_pub.c_str());
 
     if (mqttClient.connected()) {
         mqttClient.subscribe(mqtt_wroom_sub.c_str());
@@ -115,6 +111,10 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         Serial.print((char)payload[i]);
     }
 
+    if (topic == mqtt_pub.c_str()) {
+        return;
+    }
+
     String payloadString(payload, length);
 
     cJSON *root = cJSON_Parse(payloadString.c_str());
@@ -143,16 +143,20 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             }
             cJSON *lampButton2json = cJSON_GetObjectItem(switches, "lampButton2");
             if (lampButton2json != NULL) {
-                // if (!mqttPri || !mqttVoice) {
                 activeEnableAutoLamp = lampButton2json->valueint;
                 Serial.printf("lampButton2json: %d  lampButton2:%d  activeEnableAutoLamp:%d\n", lampButton2json->valueint, mqttSwitchState.lampButton2, activeEnableAutoLamp);
-                //}
             }
             cJSON *fanjson = cJSON_GetObjectItem(switches, "fan");
             if (fanjson != NULL) {
                 enable_fan = fanjson->valueint;
                 enable_fan ? fan_on() : fan_off();
                 Serial.printf("fanjson: %d  lampButton1:%d\n", fanjson->valueint, enable_fan);
+            }
+            cJSON *fanfjson = cJSON_GetObjectItem(switches, "fanf");
+            if (fanfjson != NULL) {
+                enable_fanf = fanfjson->valueint;
+                enable_fanf ? fanf_on() : fanf_off();
+                Serial.printf("fanfjson: %d  lampButton1:%d\n", fanfjson->valueint, enable_fanf);
             }
             cJSON *curtainjson = cJSON_GetObjectItem(switches, "curtain");
             if (curtainjson != NULL) {
@@ -252,8 +256,6 @@ void pulishState(const String &object, const bool &state, const String &item)
         char *jsonStr = cJSON_PrintUnformatted(root);
         Serial.println(jsonStr);
         mqttClient.publish(mqtt_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
         cJSON_Delete(root);
     } else {
         Serial.println("mqtt disconnect");
@@ -272,9 +274,6 @@ void pulishSwitchDatas(const lampButtonData &data)
     char *jsonStr = cJSON_PrintUnformatted(root);
 
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);
-    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
-    mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
-
     cJSON_Delete(root);
 }
 void pulishAllSwitchDatas()
@@ -293,7 +292,5 @@ void pulishAllSwitchDatas()
     char *jsonStr = cJSON_PrintUnformatted(root);
     Serial.println(jsonStr);
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);
-    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
-    mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }

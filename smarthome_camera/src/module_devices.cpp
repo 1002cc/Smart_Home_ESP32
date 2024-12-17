@@ -30,7 +30,6 @@ void blinkLED(int n, int t)
 
 void initServo()
 {
-
     ESP32PWM::allocateTimer(0);
     ESP32PWM::allocateTimer(1);
     ESP32PWM::allocateTimer(2);

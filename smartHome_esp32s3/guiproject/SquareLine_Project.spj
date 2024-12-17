@@ -16128,7 +16128,7 @@
                       {
                         "nid": 1611845005,
                         "strtype": "LABEL/Text",
-                        "strval": "WIFI设置",
+                        "strval": "通信设置",
                         "InheritedType": 10
                       },
                       {
@@ -16598,8 +16598,7 @@
                     "InheritedType": 4
                   }
                 ],
-                "saved_objtypeKey": "BUTTON",
-                "tree_closed": true
+                "saved_objtypeKey": "BUTTON"
               },
               {
                 "guid": "GUID77133816-784492S264163183",
@@ -17904,7 +17903,7 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -109,
+                          -108,
                           -62
                         ],
                         "InheritedType": 7
@@ -17973,7 +17972,8 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "SWITCH"
+                    "saved_objtypeKey": "SWITCH",
+                    "tree_closed": true
                   },
                   {
                     "guid": "GUID59408619-729124S225813156",
@@ -29046,7 +29046,7 @@
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 2878,
+    "backup_cnt": 2880,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

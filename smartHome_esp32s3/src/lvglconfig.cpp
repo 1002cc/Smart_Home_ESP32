@@ -14,15 +14,12 @@
 #include <lvgl.h>
 #include <vector>
 
-#include "lv_fs_if.h"
-
 static const uint16_t screenWidth = 320;
 static const uint16_t screenHeight = 240;
 static lv_disp_draw_buf_t draw_buf;
 TFT_eSPI tft = TFT_eSPI(screenWidth, screenHeight);
 
 static int foundNetworks = 0;
-SemaphoreHandle_t lvglSemaphore = NULL;
 SemaphoreHandle_t xnetworkStatusSemaphore = NULL;
 
 // wifi
@@ -118,13 +115,15 @@ static lv_obj_t *ui_curtainLabelTime;
 static lv_obj_t *ui_curtainButtonq;
 static lv_obj_t *ui_curtainLabelsure2;
 static lv_obj_t *ui_curtainDropdown;
+static lv_obj_t *ui_LabelBLE;
+static lv_obj_t *ui_BLESwitch;
 
 lampButtonData mqttSwitchState = {false, false, false, false, false, false, false};
 detectionDate detectiondatas = {false, false, false};
 extern String username;
 extern String upassword;
 extern bool loginState;
-
+extern bool enableBLE;
 int enble_startAudio = 1;
 
 void ui_timer_init(void);
@@ -178,23 +177,21 @@ void initLVGLConfig(void)
 {
     lv_init();
 
-    // lv_fs_if_init();
-    // lv_png_init();
-
     tft.begin();
     // 屏幕旋转方向和触摸点校正
     tft.setRotation(1);
     // tft.setRotation(3);
+    // uint16_t calData[5] = {490, 3259, 422, 3210, 1};
     tft.setTextColor(0xFFFF, 0x0000);
     tft.setSwapBytes(true);
     uint16_t calData[5] = {436, 3332, 277, 3365, 7};
-    // uint16_t calData[5] = {490, 3259, 422, 3210, 1};
     tft.setTouch(calData);
 
+    // 初始化屏幕背光
     pinMode(TFT_BL, OUTPUT);
 
-    lv_color_t *draw_buf1 = (lv_color_t *)ps_malloc(screenWidth * screenHeight * 2);
-    lv_color_t *draw_buf2 = (lv_color_t *)ps_malloc(screenWidth * screenHeight * 2);
+    lv_color_t *draw_buf1 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM);
+    lv_color_t *draw_buf2 = (lv_color_t *)heap_caps_malloc(screenWidth * screenHeight * 2, MALLOC_CAP_SPIRAM);
 
     lv_disp_draw_buf_init(&draw_buf, draw_buf1, draw_buf2, screenWidth * screenHeight);
 
@@ -215,20 +212,6 @@ void initLVGLConfig(void)
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
-    // lv_font_t *my_font;
-    // my_font = lv_font_load("L:/sFont_20.bin");
-    // if (my_font == NULL) {
-    //     Serial.println("font load failed");
-    // }
-    // static lv_style_t font_style;
-    // lv_style_init(&font_style);
-    // lv_style_set_text_font(&font_style, my_font);
-
-    // lv_obj_t *label_zh = lv_label_create(lv_scr_act());
-    // lv_obj_align(label_zh, LV_ALIGN_BOTTOM_MID, 0, 0);
-    // lv_obj_add_style(label_zh, &font_style, 0);
-    // lv_label_set_text(label_zh, "中国智造");
-
     ui_init();
     ui_timer_init();
     my_ui_init();
@@ -236,7 +219,6 @@ void initLVGLConfig(void)
     lv_obj_clear_flag(lv_tabview_get_content(ui_TabView4), LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_clear_flag(lv_tabview_get_content(ui_chooseTabView), LV_OBJ_FLAG_SCROLLABLE);
 
-    lvglSemaphore = xSemaphoreCreateMutex();
     xnetworkStatusSemaphore = xSemaphoreCreateMutex();
 
     startLVGLTask();
@@ -245,14 +227,9 @@ void initLVGLConfig(void)
 
 void lvgl_task(void *pvParameter)
 {
-    // TickType_t xLastWakeTime;
-    // const TickType_t xPeriod = pdMS_TO_TICKS(5);
-    // xLastWakeTime = xTaskGetTickCount();
+    Serial.println("lvgl task start");
     while (1) {
-        // vTaskDelayUntil(&xLastWakeTime, xPeriod);
-        //  xSemaphoreTake(lvglSemaphore, portMAX_DELAY);
         lv_timer_handler();
-        // xSemaphoreGive(lvglSemaphore);
         vTaskDelay(5);
     }
     vTaskDelete(NULL);
@@ -352,25 +329,6 @@ void detectionCB(lv_event_t *e)
     }
 }
 
-void updateSwitchState(lampButtonData uSwitchState)
-{
-    // if (uSwitchState.lampButton1) {
-    //     lv_obj_add_state(ui_lampButton1, LV_EVENT_CLICKED);
-    //     redled_on();
-    // } else {
-    //     lv_obj_clear_flag(ui_lampButton1, LV_EVENT_CLICKED);
-    //     redled_off();
-    // }
-
-    // if (uSwitchState.lampButton2) {
-    //     lv_obj_add_state(ui_lampButton2, LV_EVENT_CLICKED);
-    //     greenled_on();
-    // } else {
-    //     lv_obj_clear_flag(ui_lampButton2, LV_EVENT_CLICKED);
-    //     greenled_off();
-    // }
-}
-
 /********************************************************************
                          LVGL_TIME UPDATE
 ********************************************************************/
@@ -432,12 +390,22 @@ void lv_setWIFIState(const char *text)
 {
     lv_label_set_text(ui_wifiStateLabel, text);
 }
+
 void lv_setWIFISwitchState(bool state)
 {
     if (state) {
         lv_obj_add_state(ui_wifiSwitch, LV_STATE_CHECKED);
     } else {
-        lv_obj_add_state(ui_wifiSwitch, LV_STATE_DEFAULT);
+        lv_obj_clear_state(ui_wifiSwitch, LV_STATE_CHECKED);
+    }
+}
+
+void lv_setBLESwitchState(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_BLESwitch, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(ui_BLESwitch, LV_STATE_CHECKED);
     }
 }
 
@@ -778,9 +746,62 @@ void lv_ai_control(const String &handl, bool state)
             msgboxTip("请登录账号!!!");
         }
         lv_setButtonCurtain(mqttSwitchState.curtain);
+    } else if (handl == "pri") {
+        if (isSuccess) {
+            mqttSwitchState.priButton = state;
+        } else {
+            msgboxTip("请登录账号!!!");
+        }
+        lv_setPriButtonState(mqttSwitchState.priButton);
+    } else if (handl == "voiceControl") {
+        if (isSuccess) {
+            mqttSwitchState.voiceButton = state;
+        } else {
+            msgboxTip("请登录账号!!!");
+        }
+        lv_setVoiceButtonState(mqttSwitchState.voiceButton);
     }
 }
 
+void lv_ai_control_offline(const String &handl, int state)
+{
+    Serial.printf("handl:%s  state:%d\n", handl.c_str(), state);
+    if (handl == "lampButton1") {
+        mqttSwitchState.lampButton1 = state;
+        lv_setLampButton1(mqttSwitchState.lampButton1);
+        // state ? sendIntDataBLE(5) : sendIntDataBLE(6);
+    } else if (handl == "lampButton2") {
+        mqttSwitchState.lampButton2 = state;
+        lv_setLampButton2(mqttSwitchState.lampButton2);
+        // state ? sendIntDataBLE(7) : sendIntDataBLE(8);
+    } else if (handl == "fan") {
+        mqttSwitchState.fan = state;
+        lv_setButtonFan(mqttSwitchState.fan);
+        // state ? sendIntDataBLE(13) : sendIntDataBLE(14);
+    } else if (handl == "curtain") {
+        mqttSwitchState.curtain = state;
+        lv_setButtonCurtain(mqttSwitchState.curtain);
+        // state ? sendIntDataBLE(15) : sendIntDataBLE(16);
+    } else if (handl == "pri") {
+        mqttSwitchState.priButton = state;
+        lv_setPriButtonState(mqttSwitchState.priButton);
+        // state ? sendIntDataBLE(9) : sendIntDataBLE(10);
+    } else if (handl == "voiceControl") {
+        mqttSwitchState.voiceButton = state;
+        lv_setVoiceButtonState(mqttSwitchState.voiceButton);
+        // state ? sendIntDataBLE(11) : sendIntDataBLE(12);
+    } else if (handl == "doorContactOpenSound") {
+        // sendStrDataBLEStr("doorContactOpenSound:" + state);
+    } else if (handl == "enableDoorContactTimeout") {
+        // sendStrDataBLEStr("enableDoorContactTimeout:" + state);
+    } else if (handl == "timeoutTime") {
+        // sendStrDataBLEStr("timeoutTime:" + state);
+    } else if (handl == "motorRunTime") {
+        // sendStrDataBLEStr("motorRunTime:" + state);
+    } else if (handl == "message") {
+        // sendStrDataBLEStr("message:" + state);
+    }
+}
 /********************************************************************
                          LVGL_SET_UI
 ********************************************************************/
@@ -855,6 +876,36 @@ void setChooseScreenCD(lv_event_t *e)
         lv_tabview_set_act(ui_chooseTabView, 3, LV_ANIM_OFF);
     } else if (setbt == ui_monitorSetButton) {
         lv_tabview_set_act(ui_chooseTabView, 4, LV_ANIM_OFF);
+    }
+}
+
+void lv_closeWifi()
+{
+    lv_setWIFISwitchState(false);
+    // 清除wifi列表
+    lv_list_add_text(wfList, "");
+    lv_obj_clean(wfList);
+    // 停止扫描wifi任务
+    if (ntScanTaskHandler != NULL) {
+        xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
+        networkStatus = NONE;
+        xSemaphoreGive(xnetworkStatusSemaphore);
+        vTaskDelete(ntScanTaskHandler);
+        ntScanTaskHandler = NULL;
+    }
+    // 停止连接wifi任务
+    if (ntConnectTaskHandler != NULL) {
+        vTaskDelete(ntConnectTaskHandler);
+    }
+    // 停止wifi列表定时器
+    if (wifiListtimer != NULL) {
+        lv_timer_del(wifiListtimer);
+        wifiListtimer = NULL;
+    }
+    // 关闭WiFi
+    if (getwifistate()) {
+        wifiDisconnect();
+        lv_label_set_text(ui_wifiStateLabel, "未连接");
     }
 }
 
@@ -1000,39 +1051,29 @@ void chooseBtEventCD(lv_event_t *e)
                     }
                 }
             } else {
-                lv_list_add_text(wfList, "");
-                lv_obj_clean(wfList);
-
-                if (ntScanTaskHandler != NULL) {
-                    xSemaphoreTake(xnetworkStatusSemaphore, portMAX_DELAY);
-                    networkStatus = NONE;
-                    xSemaphoreGive(xnetworkStatusSemaphore);
-                    vTaskDelete(ntScanTaskHandler);
-                    ntScanTaskHandler = NULL;
-                }
-
-                if (ntConnectTaskHandler != NULL) {
-                    vTaskDelete(ntConnectTaskHandler);
-                }
-
-                if (wifiListtimer != NULL) {
-                    lv_timer_del(wifiListtimer);
-                    wifiListtimer = NULL;
-                }
-
-                if (getwifistate()) {
-                    wifiDisconnect();
-                    lv_label_set_text(ui_wifiStateLabel, "未连接");
-                }
+                lv_closeWifi();
             }
         }
+        // else if (btn == ui_BLESwitch) {
+        //     if (lv_obj_has_state(btn, LV_STATE_CHECKED)) {
+        //         Serial1.println("enable ble");
+        //         lv_closeWifi();
+        //         enableBLE = true;
+        //         lv_setBLESwitchState(true);
+        //         startBLE();
+        //     } else {
+        //         enableBLE = false;
+        //         stopBLE();
+        //         lv_setBLESwitchState(false);
+        //     }
+        // }
     }
 }
 
 void chooseScreenFCD(lv_event_t *e)
 {
     lv_list_add_text(wfList, "");
-
+    lv_obj_clean(wfList);
     if (ntScanTaskHandler != NULL) {
         vTaskDelete(ntScanTaskHandler);
         ntScanTaskHandler = NULL;
@@ -1154,7 +1195,6 @@ static void showingFoundWiFiList()
                 lv_obj_set_style_bg_color(wifibtnc, lv_color_hex(0x2095f6), LV_PART_MAIN);
             }
         }
-
         delay(1);
         num++;
         if (num >= 15) {
@@ -1370,7 +1410,6 @@ void closeCameraServer()
     lv_label_set_text(ui_cameraStateLabel, "未连接");
 
     if (isStartCamera) {
-        // publishStartVideo(false);
         isStartCamera = false;
     }
 
@@ -1447,7 +1486,7 @@ void speakScreenCD(lv_event_t *e)
 
 void speakScreenFCD(lv_event_t *e)
 {
-    lv_speakState(SpeakState_t::NO_DIALOGUE);
+    // lv_speakState(SpeakState_t::NO_DIALOGUE);
     lv_scr_load_anim(ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, false);
 }
 
@@ -1890,6 +1929,32 @@ void initDeviceUI(void)
     lv_obj_set_y(ui_curtainDropdown, -17);
     lv_obj_set_align(ui_curtainDropdown, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_curtainDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+
+#if USE_BLE
+    ui_LabelBLE = lv_label_create(ui_w1);
+    lv_obj_set_width(ui_LabelBLE, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_LabelBLE, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_LabelBLE, -108);
+    lv_obj_set_y(ui_LabelBLE, -19);
+    lv_obj_set_align(ui_LabelBLE, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_LabelBLE, "蓝牙模式");
+    ui_object_set_themeable_style_property(ui_LabelBLE, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_LabelBLE, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_LabelBLE, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_BLESwitch = lv_switch_create(ui_w1);
+    lv_obj_set_width(ui_BLESwitch, 73);
+    lv_obj_set_height(ui_BLESwitch, 33);
+    lv_obj_set_x(ui_BLESwitch, -108);
+    lv_obj_set_y(ui_BLESwitch, 18);
+    lv_obj_set_align(ui_BLESwitch, LV_ALIGN_CENTER);
+    lv_obj_add_state(ui_BLESwitch, LV_STATE_DEFAULT); /// States
+
+    lv_obj_add_event_cb(ui_BLESwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
+
+#endif
 
     lv_obj_add_event_cb(ButtonFan, lampButtonCB, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ButtonCurtain, lampButtonCB, LV_EVENT_CLICKED, NULL);

@@ -8,65 +8,32 @@
 #include <TJpg_Decoder.h>
 #include <WiFiClientSecure.h>
 
-// const char *mqtt_url = "o083a17e.ala.cn-hangzhou.emqxsl.cn";
 const char *mqtt_url = "47.115.139.166";
 String mqtt_sub = "";
 String mqtt_pub = "";
-String mqtt_app_pub = "";
-String mqtt_qt_pub = "";
 String mqtt_cam_pub = "";
-String mqtt_wroom_pub = "";
-// const uint16_t mqtt_broker_port = 8883;
 const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "esp32";
 const char *mqtt_password = "1002";
 String mqtt_client_id = "esp32_s3_";
 const int mqtt_keepalive = 60;
-// const char *ca_cert = R"EOF(
-// -----BEGIN CERTIFICATE-----
-// MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh
-// MQswCQYDVQQGEwJVUzEVMBMGA1UEChMMRGlnaUNlcnQgSW5jMRkwFwYDVQQLExB3
-// d3cuZGlnaWNlcnQuY29tMSAwHgYDVQQDExdEaWdpQ2VydCBHbG9iYWwgUm9vdCBD
-// QTAeFw0wNjExMTAwMDAwMDBaFw0zMTExMTAwMDAwMDBaMGExCzAJBgNVBAYTAlVT
-// MRUwEwYDVQQKEwxEaWdpQ2VydCBJbmMxGTAXBgNVBAsTEHd3dy5kaWdpY2VydC5j
-// b20xIDAeBgNVBAMTF0RpZ2lDZXJ0IEdsb2JhbCBSb290IENBMIIBIjANBgkqhkiG
-// 9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4jvhEXLeqKTTo1eqUKKPC3eQyaKl7hLOllsB
-// CSDMAZOnTjC3U/dDxGkAV53ijSLdhwZAAIEJzs4bg7/fzTtxRuLWZscFs3YnFo97
-// nh6Vfe63SKMI2tavegw5BmV/Sl0fvBf4q77uKNd0f3p4mVmFaG5cIzJLv07A6Fpt
-// 43C/dxC//AH2hdmoRBBYMql1GNXRor5H4idq9Joz+EkIYIvUX7Q6hL+hqkpMfT7P
-// T19sdl6gSzeRntwi5m3OFBqOasv+zbMUZBfHWymeMr/y7vrTC0LUq7dBMtoM1O/4
-// gdW7jVg/tRvoSSiicNoxBN33shbyTApOB6jtSj1etX+jkMOvJwIDAQABo2MwYTAO
-// BgNVHQ8BAf8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAdBgNVHQ4EFgQUA95QNVbR
-// TLtm8KPiGxvDl7I90VUwHwYDVR0jBBgwFoAUA95QNVbRTLtm8KPiGxvDl7I90VUw
-// DQYJKoZIhvcNAQEFBQADggEBAMucN6pIExIK+t1EnE9SsPTfrgT1eXkIoyQY/Esr
-// hMAtudXH/vTBH1jLuG2cenTnmCmrEbXjcKChzUyImZOMkXDiqw8cvpOp/2PV5Adg
-// 06O/nVsJ8dWO41P0jmP6P6fbtGbfYmbW0W5BjfIttep3Sp+dWOIrWcBAI+0tKIJF
-// PnlUkiaY4IBIqDfv8NZ5YBberOgOzW6sRBc4L0na4UU+Krk2U886UAb3LujEV0ls
-// YSEY1QSteDwsOoBrp+uvFRTp2InBuThs4pFsiv9kuXclVzDAGySj4dzp30d8tbQk
-// CAUw7C29C79Fv1C5qfPrmAESrciIxpg0X40KPMbp1ZWVbd4=
-// -----END CERTIFICATE-----
-// )EOF";
-
-// WiFiClientSecure net;
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
 
 extern lampButtonData mqttSwitchState;
 extern detectionDate detectiondatas;
 
-bool enable_mqtt;
+bool enable_mqtt = true;
 extern bool loginState;
+String username = "hich";
 
-static void
-mqtt_callback(char *topic, byte *payload, unsigned int length);
+static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 bool firstConnectMQTT(void);
 
 bool initMQTTConfig(void)
 {
     Serial.println("Init MQTT Config");
-    // net.setCACert(ca_cert);
-    // mqttClient.setClient(net);
     mqttClient.setServer(mqtt_url, mqtt_broker_port);
     mqttClient.setBufferSize(mqtt_client_buff_size);
     mqttClient.setCallback(mqtt_callback);
@@ -86,7 +53,6 @@ bool initMQTTConfig(void)
     }
     Serial.printf("loginState is false \n");
     loginState = false;
-    enable_mqtt = false;
     return false;
 }
 
@@ -119,7 +85,7 @@ bool firstConnectMQTT(void)
         lv_setMQTTState("未连接");
         enable_mqtt = false;
     }
-    vTaskDelay(500);
+    vTaskDelay(1000);
     return enable_mqtt;
 }
 
@@ -148,6 +114,12 @@ bool mqttconnect(void)
     }
 }
 
+void stopMQTT()
+{
+    enable_mqtt = false;
+    mqttClient.disconnect();
+}
+
 void mqttLoop(void)
 {
     if (enable_mqtt && loginState) {
@@ -163,12 +135,15 @@ void mqttLoop(void)
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
+    if (topic == mqtt_pub.c_str()) {
+        return;
+    }
     Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
     Serial.print("Message:");
     for (int i = 0; i < length; i++) {
         Serial.print((char)payload[i]);
     }
-    Serial.println("");
+
     String payloadString(payload, length);
 
     cJSON *root = cJSON_Parse(payloadString.c_str());
@@ -254,6 +229,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 playMusicUrl(musicUrl);
             }
         }
+        cJSON_Delete(root);
     }
     Serial.println("\n----------------END----------------");
 }
@@ -261,7 +237,6 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 void publishSensorData(const SensorData &data)
 {
     cJSON *root = cJSON_CreateObject();
-
     cJSON *datas = cJSON_CreateObject();
     char tempCharArray[32], humidityCharArray[32], mq2CharArray[32];
     snprintf(tempCharArray, sizeof(tempCharArray), "%.0f", data.temp);
@@ -271,11 +246,8 @@ void publishSensorData(const SensorData &data)
     cJSON_AddStringToObject(datas, "temp", tempCharArray);
     cJSON_AddStringToObject(datas, "humidity", humidityCharArray);
     cJSON_AddStringToObject(datas, "mq", mq2CharArray);
-
     char *jsonStr = cJSON_PrintUnformatted(root);
-
-    mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
-    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 
@@ -306,9 +278,7 @@ bool pulishSwitchDatas(const lampButtonData &data)
 
         char *jsonStr = cJSON_PrintUnformatted(root);
         Serial.println(jsonStr);
-        mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_pub.c_str(), jsonStr);
         cJSON_Delete(root);
         return true;
     } else {
@@ -328,9 +298,7 @@ bool pulishState(const String &object, const bool &state, const String &item)
         char *jsonStr = cJSON_PrintUnformatted(root);
 
         Serial.println(jsonStr);
-        mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_pub.c_str(), jsonStr);
         cJSON_Delete(root);
         return true;
     } else {
@@ -347,11 +315,8 @@ bool pulishState_int(const String &object, const int &num, const String &item)
         cJSON_AddItemToObject(root, item.c_str(), datas);
         cJSON_AddNumberToObject(datas, object.c_str(), num);
         char *jsonStr = cJSON_PrintUnformatted(root);
-
         Serial.println(jsonStr);
-        mqttClient.publish(mqtt_app_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
-        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_pub.c_str(), jsonStr);
         cJSON_Delete(root);
         return true;
     } else {
@@ -368,28 +333,13 @@ bool sendRePW()
         char *jsonStr = cJSON_PrintUnformatted(root);
 
         Serial.println(jsonStr);
-        mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
+        mqttClient.publish(mqtt_pub.c_str(), jsonStr);
         cJSON_Delete(root);
         return true;
     } else {
         Serial.println("mqtt disconnect");
         return false;
     }
-}
-
-void publishGetImage()
-{
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "code", "200");
-
-    cJSON *dates = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "datas", dates);
-    cJSON_AddStringToObject(dates, "getImage", "true");
-    char *jsonStr = cJSON_PrintUnformatted(root);
-
-    // publishMQTT(jsonStr);
-    mqttClient.publish(mqtt_cam_pub.c_str(), jsonStr);
-    cJSON_Delete(root);
 }
 
 void publishGetDatas()
@@ -399,21 +349,7 @@ void publishGetDatas()
 
     char *jsonStr = cJSON_PrintUnformatted(root);
 
-    mqttClient.publish(mqtt_wroom_pub.c_str(), jsonStr);
-    cJSON_Delete(root);
-}
-
-void publishStartVideo(bool isStartVideo)
-{
-    cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "code", "200");
-
-    cJSON *dates = cJSON_CreateObject();
-    cJSON_AddItemToObject(root, "datas", dates);
-    cJSON_AddBoolToObject(dates, "startVideo", isStartVideo);
-    char *jsonStr = cJSON_PrintUnformatted(root);
-    Serial.println(jsonStr);
-    mqttClient.publish(mqtt_cam_pub.c_str(), jsonStr);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 
@@ -452,16 +388,11 @@ bool getMqttStart()
 
 void mqtMontage(const String &user)
 {
-    mqtt_sub = "/smartHome/" + user + "/esp32_sub";
-    mqtt_pub = "/smartHome/" + user + "/esp32_pub";
-    mqtt_app_pub = "/smartHome/" + user + "/esp32_app_pub";
-    mqtt_qt_pub = "/smartHome/" + user + "/esp32_qt_pub";
+    username = user;
+    mqtt_sub = "/smartHome/" + user + "/#";
+    mqtt_pub = "/smartHome/" + user + "/esp32s3";
     mqtt_cam_pub = "/smartHome/" + user + "/esp32_cam_pub";
-    mqtt_wroom_pub = "/smartHome/" + user + "/esp32_wroom_pub";
     Serial.printf("mqtt_sub:%s\n", mqtt_sub.c_str());
     Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
-    Serial.printf("mqtt_app_pub:%s\n", mqtt_app_pub.c_str());
-    Serial.printf("mqtt_qt_pub:%s\n", mqtt_qt_pub.c_str());
     Serial.printf("mqtt_cam_pub:%s\n", mqtt_cam_pub.c_str());
-    Serial.printf("mqtt_wroom_pub:%s\n", mqtt_wroom_pub.c_str());
 }

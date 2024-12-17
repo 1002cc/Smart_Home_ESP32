@@ -1,4 +1,6 @@
 #include "module_blue.h"
+#if USE_BLE
+#include "module_server.h"
 #include <Arduino.h>
 #include <BLEAdvertisedDevice.h>
 #include <BLEDevice.h>
@@ -12,21 +14,19 @@
 static BLEAddress *pServerAddress;
 extern String username;
 static String bleServerName;
-
 static boolean doConnect = false;
 static boolean connected = false;
-
 static BLERemoteCharacteristic *pRemoteCharacteristic_RX;
 static BLERemoteCharacteristic *pRemoteCharacteristic_TX;
-
 const uint8_t notification[] = {0x1, 0x0};
-
+BLEClient *pClient;
 BLEScan *pBLEScan;
+// extern ConnectionMode cMode;
 
 static void notifyRXCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, uint8_t *pData, size_t length, bool isNotify)
 {
     Serial.print("Notify callback for characteristic ");
-    Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
+    // Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
     Serial.print(" of data length ");
     Serial.println(length);
     Serial.print("data: ");
@@ -36,12 +36,12 @@ static void notifyRXCallback(BLERemoteCharacteristic *pBLERemoteCharacteristic, 
 
 class BLEClientCallback : public BLEClientCallbacks
 {
-    void onConnect(BLEClient *pclient)
+    void onConnect(BLEClient *pclient1)
     {
         Serial.println("Connected to server");
     }
 
-    void onDisconnect(BLEClient *pclient)
+    void onDisconnect(BLEClient *pclient1)
     {
         Serial.println("Disconnected from server");
         connected = false;
@@ -53,7 +53,7 @@ bool connectToServer(BLEAddress pAddress)
 {
     Serial.print("Forming a connection to ");
     // 创建蓝牙客户端
-    BLEClient *pClient = BLEDevice::createClient();
+    pClient = BLEDevice::createClient();
     pClient->setClientCallbacks(new BLEClientCallback());
 
     pClient->connect(pAddress);
@@ -97,7 +97,7 @@ class bleAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
     void onResult(BLEAdvertisedDevice advertisedDevice)
     {
-        if (advertisedDevice.getName() == bleServerName) {                  // Check if the name of the advertiser matches
+        if (advertisedDevice.getName() == bleServerName.c_str()) {          // Check if the name of the advertiser matches
             advertisedDevice.getScan()->stop();                             // Scan can be stopped, we found what we are looking for
             pServerAddress = new BLEAddress(advertisedDevice.getAddress()); // Address of advertiser is the one we need
             doConnect = true;                                               // Set indicator, stating that we are ready to connect
@@ -113,6 +113,7 @@ void initBLE()
 
 void startBLE()
 {
+    initBLE();
     bleServerName = "smartHome_esp32_" + username;
     pBLEScan = BLEDevice::getScan();
     pBLEScan->setAdvertisedDeviceCallbacks(new bleAdvertisedDeviceCallbacks());
@@ -123,6 +124,7 @@ void startBLE()
 void stopBLE()
 {
     pBLEScan->stop();
+    pClient->disconnect();
 }
 
 void BLELoop()
@@ -142,3 +144,4 @@ void BLELoop()
         // pRemoteCharacteristic_TX->writeValue(message.c_str(), message.length());
     }
 }
+#endif

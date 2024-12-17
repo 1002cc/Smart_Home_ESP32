@@ -199,8 +199,12 @@ void sensor_task(void *pvParameter)
         } else {
             if (mq2sensorValue >= 30) {
                 MQSure++;
-                if (MQSure >= 2) {
+                if (MQSure >= 3) {
                     MQSure = 0;
+                    if (MQSure > 300) {
+                        initmq2();
+                        MQSure = 0;
+                    }
                     if (millis() - lastMQTime > 6000) {
                         lastMQTime = millis();
                         playMQAlarm();
@@ -218,6 +222,7 @@ void sensor_task(void *pvParameter)
         //     Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
         //     lastPrintTime = millis();
         // }
+
         if (getMqttStart()) {
             SensorData sensorData = {
                 .temp = temperature,
@@ -239,7 +244,6 @@ void initDevices()
 {
     Serial.println("Init Devices ...");
     initWSrgbled();
-    Serial.println("Starting sensor task");
     initDHT();
     initmq2();
     xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, NULL, 0);

@@ -165,7 +165,7 @@ void ui_setchooseScreen_screen_init(void)
     lv_obj_set_x(ui_Label12, 0);
     lv_obj_set_y(ui_Label12, 67);
     lv_obj_set_align(ui_Label12, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label12, "WIFI设置");
+    lv_label_set_text(ui_Label12, "通信设置");
     ui_object_set_themeable_style_property(ui_Label12, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
                                            _ui_theme_color_font);
     ui_object_set_themeable_style_property(ui_Label12, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,

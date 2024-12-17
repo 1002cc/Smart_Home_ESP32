@@ -12,14 +12,13 @@ void setup()
     // 初始化led
     initLED();
 
-    // 初始化servo
+    // 初始化舵机
     initServo();
 
     // 初始化摄像头
     initCamera();
 
     // 配置wifi
-    Serial.println("Connecting to WiFi");
     connectToWiFi(CONNECTTIMEOUT);
 
     // 初始化mqtt

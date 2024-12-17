@@ -168,6 +168,7 @@ void playMQAlarm()
 
 void audioTask(void *pt)
 {
+    Serial.println("start audio Task");
     while (1) {
         audio.loop();
         vTaskDelay(3);

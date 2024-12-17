@@ -225,8 +225,7 @@ void connectToWiFi(int timeOut_s)
         if (Connect_time > 2 * timeOut_s) // 长时间连接不上，重新进入配网页面
         {
             led_off();
-            Serial.println(""); // 主要目的是为了换行符
-            Serial.println("WIFI autoconnect fail, start AP for webconfig now...");
+            Serial.println("\nWIFI autoconnect fail, start AP for webconfig now...");
             wifiConfig();
             blinkLED(5, 500);
             return;
@@ -246,6 +245,7 @@ void connectToWiFi(int timeOut_s)
         Serial.print(WiFi.status());
         led_on();
         server.stop();
+        // ntp校时
         initNtpTime();
     }
 }

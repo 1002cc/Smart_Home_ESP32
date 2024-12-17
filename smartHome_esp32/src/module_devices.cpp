@@ -3,13 +3,13 @@
 #include "module_server.h"
 #include "module_wifi.h"
 
-lampButtonData mqttSwitchState = {false, false};
-
 extern bool enable_pri;
 extern bool enable_VoiceControl;
 extern bool activeEnableAutoLamp;
-
 int rainState = 0, soundState = 1, pirState = 0;
+
+// 触摸按钮
+lampButtonData mqttSwitchState = {false, false};
 
 // 门磁开启语音
 bool enableOpenSound = false;
@@ -37,6 +37,7 @@ bool mqttPri = false;
 
 // 风扇开关
 bool enable_fan = false;
+bool enable_fanf = false;
 
 // 窗帘开关
 bool enable_curtain = false;
@@ -66,7 +67,6 @@ TaskHandle_t curtainForwardReverseTaskHandle;
 /********************************************************************
                          LED
 ********************************************************************/
-
 void rgbled_init()
 {
     pinMode(AUTOLED_PIN, OUTPUT);
@@ -123,32 +123,15 @@ int led3w_state()
 }
 
 /********************************************************************
-                         sg90
+                         传感器任务
 ********************************************************************/
-
-// void sg90_init()
-// {
-//     pinMode(SG90_PIN, OUTPUT);
-//     ledcSetup(1, 50, 8);
-//     ledcAttachPin(SG90_PIN, 1);
-// }
-// void sg90_setAngle(int angle)
-// {
-//     ledcWrite(1, angle);
-// }
-
-/********************************************************************
-                         RAIN
-********************************************************************/
-
 void sensorTask(void *pt)
 {
     unsigned long lastPrintTime = 0;
     unsigned long autoLampTime = 0, rainTime = 0, priLongTime = 0, priTime = 0, voiceTime = 0;
     bool rainFlag = 0, isRain = 0;
-
+    Serial.println("sensorTask start");
     while (1) {
-
         // 雨滴检测
         rainState = map(analogRead(RAIN_CHANNL), 0, 4095, 235, 0);
         if (rainState > 0) {
@@ -194,7 +177,6 @@ void sensorTask(void *pt)
                 }
                 priLongTime = millis();
             }
-
         } else {
             if (mqttPri) {
                 mqttPri = false;
@@ -286,6 +268,13 @@ void sensorTask(void *pt)
             lastDoorContactState = isDoorContact;
         }
 
+        // 窗帘控制
+        if (enable_curtain) {
+            if (curtainForwardReverseTaskHandle == NULL) {
+                xTaskCreate(curtainForwardReverseTasks, "curtainForwardTask", 4096, NULL, 5, &curtainForwardReverseTaskHandle);
+            }
+        }
+
         // 开关1
         if (digitalRead(BUTTON_PIN1)) {
             delay(30);
@@ -307,12 +296,6 @@ void sensorTask(void *pt)
                 pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
             }
         }
-        if (enable_curtain) {
-            if (curtainForwardReverseTaskHandle == NULL) {
-                xTaskCreate(curtainForwardReverseTasks, "curtainForwardTask", 4096, NULL, 5, &curtainForwardReverseTaskHandle);
-            }
-        }
-
         vTaskDelay(100);
     }
     vTaskDelete(NULL);
@@ -348,8 +331,7 @@ void curtainForwardReverseTasks(void *pvParameters)
             currentRunTime = millis();
         }
         if (millis() - currentRunTime >= motorRunTime * 1000) {
-            enable_curtain = 0;
-            // vTaskDelete(curtainForwardReverseTaskHandle);
+            enable_curtain = false;
             break;
         }
 
@@ -363,8 +345,7 @@ void curtainForwardReverseTasks(void *pvParameters)
 
         if (hasInterrupt) {
             if (millis() - newCurrentRunTime >= elapsedTime) {
-                enable_curtain = 0;
-                // vTaskDelete(curtainForwardReverseTaskHandle);
+                enable_curtain = false;
                 break;
             }
         }
@@ -377,7 +358,6 @@ void curtainForwardReverseTasks(void *pvParameters)
 void sensor_init()
 {
     pinMode(SOUND_PIN, INPUT);
-
     pinMode(BUTTON_PIN1, INPUT);
     pinMode(BUTTON_PIN2, INPUT);
 }
@@ -396,6 +376,8 @@ void electrical_machinery_init()
     // 风扇
     pinMode(FAN_PINA, OUTPUT);
     fan_off();
+    pinMode(FAN_PINB, OUTPUT);
+    fanf_off();
     // 门磁
     pinMode(DOOR_CONTACT_PIN, INPUT_PULLUP);
     // 窗帘电机
@@ -407,11 +389,24 @@ void electrical_machinery_init()
 
 void fan_on()
 {
+    if (enable_fanf) {
+        fanf_off();
+    }
     digitalWrite(FAN_PINA, HIGH);
 }
 void fan_off()
 {
     digitalWrite(FAN_PINA, LOW);
+}
+
+void fanf_on()
+{
+    fan_off();
+    digitalWrite(FAN_PINB, HIGH);
+}
+void fanf_off()
+{
+    digitalWrite(FAN_PINB, LOW);
 }
 
 void setStep(int pin1, int pin2, int pin3, int pin4)
@@ -427,10 +422,16 @@ void setStep(int pin1, int pin2, int pin3, int pin4)
 ********************************************************************/
 void initDevices()
 {
+    // 初始化LED灯
     rgbled_init();
+    // 初始检测化传感器
     sensor_init();
-    audio_init();
+    // 初始化电机
     electrical_machinery_init();
+    // 加载设备数据
+    initDevicesDatas();
+    // 开始传感器任务
+    startSensorTask();
 }
 
 void initDevicesDatas()

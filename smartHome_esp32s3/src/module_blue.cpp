@@ -1,9 +1,14 @@
 #include "module_blue.h"
+#if USE_BLE
+
+#include "confighelpr.h"
 #include <Arduino.h>
 #include <BLE2902.h>
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
+#include <lvglconfig.h>
+#include <map>
 
 // BLE服务器端
 
@@ -52,17 +57,42 @@ class BLERXCallbacks : public BLECharacteristicCallbacks
             }
             Serial.println();
             Serial.println("*********");
-            if (resStr == "getid") {
-                pTxCharacteristic->setValue("nihao");
-                pTxCharacteristic->notify();
-            } else if (resStr == "light1on") {
-                Serial.println("light1on");
-            } else if (resStr == "light1off") {
-                Serial.println("light1off");
-            } else if (resStr == "light2on") {
-                Serial.println("light2on");
-            } else if (resStr == "light2off") {
-                Serial.println("light2off");
+
+            // 解析命令
+            std::map<String, String> configMap;
+            //
+            int index = resStr.indexOf(',');
+            if (index != -1) {
+                String substring = resStr.substring(0, index);
+                String substring2 = resStr.substring(index + 1);
+
+                int index1 = substring.indexOf(':');
+                if (index1 != -1) {
+                    String key = substring.substring(0, index1);
+                    String value = substring.substring(index1 + 1);
+                    configMap[key] = value;
+                }
+
+                int index2 = substring2.indexOf(':');
+                if (index2 != -1) {
+                    String key = substring2.substring(0, index2);
+                    String value = substring2.substring(index2 + 1);
+                    configMap[key] = value;
+                }
+            } else {
+                int index1 = resStr.indexOf(':');
+                if (index1 != -1) {
+                    String key = resStr.substring(0, index1);
+                    String value = resStr.substring(index1 + 1);
+                    configMap[key] = value;
+                }
+            }
+            for (const auto &element : configMap) {
+                Serial.print("key: ");
+                Serial.print(element.first.c_str());
+                Serial.print(", value: ");
+                Serial.println(element.second.c_str());
+                lv_ai_control_offline(element.first, element.second.toInt());
             }
             resStr = "";
         }
@@ -71,17 +101,17 @@ class BLERXCallbacks : public BLECharacteristicCallbacks
 
 void initBLE()
 {
+    Serial.println("initBLE");
     // 初始化蓝牙设备，设置蓝牙名称
     bleServerName = "smartHome_esp32_" + username;
-    BLEDevice::init(bleServerName);
+    Serial.println(bleServerName);
+    BLEDevice::init(bleServerName.c_str());
     // 创建蓝牙服务器
     pServer = BLEDevice::createServer();
     // 设置服务器回调函数
     pServer->setCallbacks(new MyServerCallbacks());
-
     // 创建服务
     pService = pServer->createService(SERVICE_UUID);
-
     // 创建特征RX和TX
     pTxCharacteristic = pService->createCharacteristic(
         CHARACTERISTIC_UUID_TX,
@@ -96,6 +126,8 @@ void initBLE()
 
 void startBLE()
 {
+    Serial.println("startBLE");
+    initBLE();
     // 开启服务
     pService->start();
     // 开启服务器广播
@@ -105,6 +137,7 @@ void startBLE()
 
 void stopBLE()
 {
+    Serial.println("stopBLE");
     pService->stop();
     pServer->getAdvertising()->stop();
 }
@@ -112,9 +145,8 @@ void stopBLE()
 void BLELoop()
 {
     if (enableBLE) {
-        // if (deviceConnected) {
-
-        // }
+        if (deviceConnected) {
+        }
         if (!deviceConnected && oldDeviceConnected) {
             delay(500);
             pServer->startAdvertising();
@@ -128,3 +160,16 @@ void BLELoop()
         }
     }
 }
+
+void sendIntDataBLE(int num)
+{
+    pTxCharacteristic->setValue(num);
+    pTxCharacteristic->notify();
+}
+
+void sendStrDataBLEStr(const String &str)
+{
+    pTxCharacteristic->setValue(str.c_str());
+    pTxCharacteristic->notify();
+}
+#endif

@@ -18,8 +18,6 @@ extern SemaphoreHandle_t xnetworkStatusSemaphore;
 
 extern std::vector<String> foundWifiList;
 
-extern bool isOnlineMode;
-
 static void scanWIFITask(void *pvParameters);
 void beginWIFITask(void *pvParameters);
 bool initWIFIConfig(void)
@@ -45,14 +43,12 @@ void WiFiEvent(WiFiEvent_t event)
         if (lv_getMQTTSwitchState()) {
             enable_mqtt = true;
         }
-        isOnlineMode = true;
         Serial.println("已连接到接入点");
         lv_setstatusbarLabel(1);
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         lv_setWIFIState("未连接");
         enable_mqtt = false;
-        isOnlineMode = false;
         Serial.println("与WiFi接入点断开连接");
         lv_setstatusbarLabel(0);
         break;
@@ -131,7 +127,6 @@ bool wifiConnect()
         lv_setWIFIState("未连接");
         lv_setTipinfo("连接wifi失败,当前为离线模式,请在配置中连接wifi");
     }
-    vTaskDelay(1000);
     Serial.println("Connection to WiFi failed");
     WSLED_OFF();
     return false;
@@ -150,6 +145,7 @@ String getwifissid()
 void wifiDisconnect(void)
 {
     WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
 }
 
 /********************************************************************
@@ -204,12 +200,15 @@ void beginWIFITask(void *pvParameters)
 
     WSLED_OFF();
     Serial.println("delete wifiConnecttask");
+    ntConnectTaskHandler = NULL;
     vTaskDelete(NULL);
 }
 
 void networkScanner()
 {
-    xTaskCreatePinnedToCore(scanWIFITask, "ScanWIFITask", 4096, NULL, 10, &ntScanTaskHandler, 0);
+    if (ntScanTaskHandler == NULL) {
+        xTaskCreatePinnedToCore(scanWIFITask, "ScanWIFITask", 4096, NULL, 10, &ntScanTaskHandler, 0);
+    }
 }
 
 static void scanWIFITask(void *pvParameters)

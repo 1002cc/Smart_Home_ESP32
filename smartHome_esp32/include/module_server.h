@@ -24,7 +24,7 @@ enum class AUDIO_NAME {
 enum ConnectionMode {
     MODE,
     WIFI,
-    BLUE,
+    BLE,
     WB
 };
 
