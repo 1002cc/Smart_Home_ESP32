@@ -7,7 +7,7 @@ int servoPos = 0;
 void initLED()
 {
     pinMode(LED_RED_NUM, OUTPUT);
-    digitalWrite(LED_RED_NUM, LOW);
+    led_off();
 }
 
 void led_off()
@@ -34,8 +34,9 @@ void initServo()
     ESP32PWM::allocateTimer(1);
     ESP32PWM::allocateTimer(2);
     ESP32PWM::allocateTimer(3);
-    myservo.setPeriodHertz(50); // standard 50 hz servo
+    myservo.setPeriodHertz(50);
     myservo.attach(SERVO_NUM, 1000, 2000);
+    // 读取历史位置,,并恢复
     int value = ReadintData("pos");
     if (value != 1000) {
         servoPos = value;

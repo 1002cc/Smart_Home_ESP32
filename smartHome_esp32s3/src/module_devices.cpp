@@ -21,6 +21,8 @@ DHT dht(DHTPIN, DHTTYPE);
 
 CRGB leds[1];
 
+TaskHandle_t devicesTaskHandle = NULL;
+
 /********************************************************************
                          WS2812BRGBLED
 ********************************************************************/
@@ -246,6 +248,6 @@ void initDevices()
     initWSrgbled();
     initDHT();
     initmq2();
-    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, NULL, 0);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, &devicesTaskHandle, 0);
     Serial.println("Init Devices Done");
 }

@@ -53,6 +53,8 @@ extern SpeakState_t speakState;
 extern int useAIMode;
 
 extern int updatetimentp;
+extern String FirmwareVersion;
+extern String newFirmwareVersion;
 
 /********************************************************************
                          BUILD UI
@@ -82,6 +84,9 @@ static lv_obj_t *ipTextarea;
 static lv_obj_t *portTextarea;
 static lv_obj_t *deviceRePwButton;
 static lv_obj_t *deviceRePwLabel;
+static lv_obj_t *otaLabel;
+static lv_obj_t *otaButton;
+static lv_obj_t *otabuttonLabel;
 /// 设备控制界面
 static lv_obj_t *ButtonFan;
 static lv_obj_t *stateLabelFan;
@@ -117,6 +122,10 @@ static lv_obj_t *ui_curtainLabelsure2;
 static lv_obj_t *ui_curtainDropdown;
 static lv_obj_t *ui_LabelBLE;
 static lv_obj_t *ui_BLESwitch;
+static lv_obj_t *ui_Panel4;
+static lv_obj_t *ui_otaBar;
+static lv_obj_t *ui_otaNumLabel;
+static lv_obj_t *ui_otaLabel;
 
 lampButtonData mqttSwitchState = {false, false, false, false, false, false, false};
 detectionDate detectiondatas = {false, false, false};
@@ -139,7 +148,9 @@ bool startCameraServer();
 void closeCameraServer();
 static void drawing_screen(void);
 static void lv_deviceRepwCD(lv_event_t *e);
+static void lv_deviceOTA(lv_event_t *e);
 void monitorAboutCD(lv_event_t *e);
+void msgboxBarTip();
 /********************************************************************
                          TFT INIT
 ********************************************************************/
@@ -527,6 +538,75 @@ void msgboxTip(const char *text)
     lv_obj_t *mbox2 = lv_msgbox_create(lv_scr_act(), "Tip", text, btn_str, false);
     lv_obj_set_style_text_font(mbox2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_add_event_cb(mbox2, mboxevent_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    lv_obj_align(mbox2, LV_ALIGN_CENTER, 0, 0);
+}
+
+static void mboxevent_cb1(lv_event_t *e)
+{
+    lv_obj_t *obj = lv_event_get_current_target(e);
+    int btn_index = lv_msgbox_get_active_btn(obj);
+    lv_msgbox_close(obj);
+    if (btn_index == 0) {
+        msgboxBarTip();
+        startOTATask();
+    }
+}
+
+void lv_updataOATbar(int value)
+{
+    lv_bar_set_value(ui_otaBar, value, LV_ANIM_OFF);
+    String text;
+    if (value >= 100) {
+        text = "OTA升级完成,重启中...";
+    } else {
+        text = String(value) + "%";
+    }
+    lv_label_set_text(ui_otaNumLabel, text.c_str());
+}
+
+void msgboxBarTip()
+{
+    ui_Panel4 = lv_obj_create(ui_w3);
+    lv_obj_set_width(ui_Panel4, 219);
+    lv_obj_set_height(ui_Panel4, 70);
+    lv_obj_set_x(ui_Panel4, 0);
+    lv_obj_set_y(ui_Panel4, 0);
+    lv_obj_set_align(ui_Panel4, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel4, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+
+    ui_otaBar = lv_bar_create(ui_Panel4);
+    lv_obj_set_width(ui_otaBar, 150);
+    lv_obj_set_height(ui_otaBar, 16);
+    lv_obj_set_x(ui_otaBar, -21);
+    lv_obj_set_y(ui_otaBar, -11);
+    lv_obj_set_align(ui_otaBar, LV_ALIGN_CENTER);
+
+    ui_otaNumLabel = lv_label_create(ui_Panel4);
+    lv_obj_set_width(ui_otaNumLabel, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_otaNumLabel, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_otaNumLabel, 81);
+    lv_obj_set_y(ui_otaNumLabel, -11);
+    lv_obj_set_align(ui_otaNumLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_otaNumLabel, "0%");
+    lv_obj_set_style_text_font(ui_otaNumLabel, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_otaLabel = lv_label_create(ui_Panel4);
+    lv_obj_set_width(ui_otaLabel, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_otaLabel, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_otaLabel, 8);
+    lv_obj_set_y(ui_otaLabel, 14);
+    lv_obj_set_align(ui_otaLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_otaLabel, "正在升级中...");
+    lv_obj_set_style_text_font(ui_otaLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+}
+
+void msgboxTip1(const char *text)
+{
+    static const char *btn_str[] = {"确定", "取消", ""};
+    lv_obj_t *mbox2 = lv_msgbox_create(lv_scr_act(), "Tip", text, btn_str, false);
+    lv_obj_set_style_text_font(mbox2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_width(mbox2, 200);
+    lv_obj_add_event_cb(mbox2, mboxevent_cb1, LV_EVENT_VALUE_CHANGED, NULL);
     lv_obj_align(mbox2, LV_ALIGN_CENTER, 0, 0);
 }
 
@@ -1144,6 +1224,21 @@ void lv_deviceRepwCD(lv_event_t *e)
     }
 }
 
+void lv_deviceOTA(lv_event_t *e)
+{
+    Serial.println("lv_deviceOTA");
+    if (getwifistate()) {
+        if (getOTAVersion()) {
+            String verstr = "新版本:V" + newFirmwareVersion + ",是否升级";
+            msgboxTip1(verstr.c_str());
+        } else {
+            msgboxTip("当前是最新版本");
+        }
+    } else {
+        msgboxTip("请连接WIFI");
+    }
+}
+
 static void popupMsgBox(String title, String msg)
 {
     if (popupBox != NULL) {
@@ -1510,6 +1605,13 @@ void initDataUI()
     if (updatetime != "null") {
         lv_textarea_set_placeholder_text(ntpTimeTextarea, updatetime.c_str());
         updatetimentp = updatetime.toInt();
+    }
+
+    String Version = ReadData("Version");
+    if (Version != "null") {
+        FirmwareVersion = Version;
+        Version = "当前版本:V" + FirmwareVersion;
+        lv_label_set_text(otaLabel, Version.c_str());
     }
 
     int speech_ai_mode = ReadintData("speech_ai_mode");
@@ -2025,6 +2127,33 @@ void initSetConfigUI()
     lv_obj_set_style_text_opa(deviceRePwLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(deviceRePwLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    otaLabel = lv_label_create(ui_w3);
+    lv_obj_set_width(otaLabel, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(otaLabel, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(otaLabel, -96);
+    lv_obj_set_y(otaLabel, 98);
+    lv_obj_set_align(otaLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(otaLabel, "当前版本: V1.0");
+    ui_object_set_themeable_style_property(otaLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(otaLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(otaLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    otaButton = lv_btn_create(ui_w3);
+    lv_obj_set_width(otaButton, 46);
+    lv_obj_set_height(otaButton, 28);
+    lv_obj_align_to(otaButton, otaLabel, LV_ALIGN_LEFT_MID, 160, 0);
+
+    otabuttonLabel = lv_label_create(otaButton);
+    lv_obj_set_width(otabuttonLabel, LV_SIZE_CONTENT);
+    lv_obj_set_height(otabuttonLabel, LV_SIZE_CONTENT);
+    lv_obj_set_align(otabuttonLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(otabuttonLabel, "检查");
+    lv_obj_set_style_text_color(otabuttonLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(otabuttonLabel, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(otabuttonLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
     ipTextarea = lv_textarea_create(ui_W5);
     lv_obj_set_size(ipTextarea, 200, 35);
     lv_obj_align_to(ipTextarea, ui_Label66, LV_ALIGN_LEFT_MID, 40, 0);
@@ -2054,6 +2183,7 @@ void initSetConfigUI()
     lv_obj_add_event_cb(ui_aimodeDropdown, SpeechSetDCD, LV_EVENT_VALUE_CHANGED, NULL);
 
     lv_obj_add_event_cb(deviceRePwButton, lv_deviceRepwCD, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(otaButton, lv_deviceOTA, LV_EVENT_CLICKED, NULL);
 
     lv_style_init(&main_black_style);
     lv_style_set_border_width(&main_black_style, 0);

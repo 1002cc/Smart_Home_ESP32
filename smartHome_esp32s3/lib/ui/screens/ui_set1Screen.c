@@ -43,7 +43,7 @@ void ui_set1Screen_screen_init(void)
     ui_wifiSwitch = lv_switch_create(ui_w1);
     lv_obj_set_width(ui_wifiSwitch, 73);
     lv_obj_set_height(ui_wifiSwitch, 33);
-    lv_obj_set_x(ui_wifiSwitch, -109);
+    lv_obj_set_x(ui_wifiSwitch, -108);
     lv_obj_set_y(ui_wifiSwitch, -62);
     lv_obj_set_align(ui_wifiSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_wifiSwitch, LV_STATE_CHECKED);       /// States
@@ -195,7 +195,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label22, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label22, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label22, -120);
-    lv_obj_set_y(ui_Label22, -70);
+    lv_obj_set_y(ui_Label22, -67);
     lv_obj_set_align(ui_Label22, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label22, "开机语音");
     ui_object_set_themeable_style_property(ui_Label22, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -231,10 +231,10 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_style_text_font(ui_Label10, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_timeuseButton = lv_btn_create(ui_w3);
-    lv_obj_set_width(ui_timeuseButton, 46);
+    lv_obj_set_width(ui_timeuseButton, 49);
     lv_obj_set_height(ui_timeuseButton, 28);
-    lv_obj_set_x(ui_timeuseButton, 116);
-    lv_obj_set_y(ui_timeuseButton, -93);
+    lv_obj_set_x(ui_timeuseButton, 128);
+    lv_obj_set_y(ui_timeuseButton, -97);
     lv_obj_set_align(ui_timeuseButton, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_timeuseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_timeuseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -251,8 +251,8 @@ void ui_set1Screen_screen_init(void)
     ui_Label31 = lv_label_create(ui_w3);
     lv_obj_set_width(ui_Label31, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label31, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label31, -120);
-    lv_obj_set_y(ui_Label31, 34);
+    lv_obj_set_x(ui_Label31, 28);
+    lv_obj_set_y(ui_Label31, -67);
     lv_obj_set_align(ui_Label31, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label31, "深色主题");
     ui_object_set_themeable_style_property(ui_Label31, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -264,8 +264,8 @@ void ui_set1Screen_screen_init(void)
     ui_themeSwitch = lv_switch_create(ui_w3);
     lv_obj_set_width(ui_themeSwitch, 50);
     lv_obj_set_height(ui_themeSwitch, 25);
-    lv_obj_set_x(ui_themeSwitch, -44);
-    lv_obj_set_y(ui_themeSwitch, 34);
+    lv_obj_set_x(ui_themeSwitch, 94);
+    lv_obj_set_y(ui_themeSwitch, -67);
     lv_obj_set_align(ui_themeSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_themeSwitch, LV_STATE_CHECKED);       /// States
 
@@ -273,8 +273,8 @@ void ui_set1Screen_screen_init(void)
     ui_Label36 = lv_label_create(ui_w3);
     lv_obj_set_width(ui_Label36, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label36, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label36, -120);
-    lv_obj_set_y(ui_Label36, 68);
+    lv_obj_set_x(ui_Label36, -119);
+    lv_obj_set_y(ui_Label36, 31);
     lv_obj_set_align(ui_Label36, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label36, "屏幕亮度");
     ui_object_set_themeable_style_property(ui_Label36, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -289,16 +289,16 @@ void ui_set1Screen_screen_init(void)
     if(lv_slider_get_mode(ui_Slider1) == LV_SLIDER_MODE_RANGE) lv_slider_set_left_value(ui_Slider1, 0, LV_ANIM_OFF);
     lv_obj_set_width(ui_Slider1, 170);
     lv_obj_set_height(ui_Slider1, 10);
-    lv_obj_set_x(ui_Slider1, 22);
-    lv_obj_set_y(ui_Slider1, 68);
+    lv_obj_set_x(ui_Slider1, 21);
+    lv_obj_set_y(ui_Slider1, 33);
     lv_obj_set_align(ui_Slider1, LV_ALIGN_CENTER);
 
 
     ui_startAudioSwitch = lv_switch_create(ui_w3);
     lv_obj_set_width(ui_startAudioSwitch, 50);
     lv_obj_set_height(ui_startAudioSwitch, 25);
-    lv_obj_set_x(ui_startAudioSwitch, -45);
-    lv_obj_set_y(ui_startAudioSwitch, -69);
+    lv_obj_set_x(ui_startAudioSwitch, -47);
+    lv_obj_set_y(ui_startAudioSwitch, -67);
     lv_obj_set_align(ui_startAudioSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_startAudioSwitch, LV_STATE_CHECKED);       /// States
 
@@ -306,8 +306,8 @@ void ui_set1Screen_screen_init(void)
     ui_pwLabel = lv_label_create(ui_w3);
     lv_obj_set_width(ui_pwLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_pwLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_pwLabel, -83);
-    lv_obj_set_y(ui_pwLabel, 100);
+    lv_obj_set_x(ui_pwLabel, -81);
+    lv_obj_set_y(ui_pwLabel, 65);
     lv_obj_set_align(ui_pwLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_pwLabel, "检测设备重新配网");
     ui_object_set_themeable_style_property(ui_pwLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,

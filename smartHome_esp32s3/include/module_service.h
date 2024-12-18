@@ -20,4 +20,7 @@ String getDateTime_one();
 bool postlogin(String username, String password);
 
 String getAccessToken();
+bool getOTAVersion();
+void startOTA();
+void startOTATask();
 #endif

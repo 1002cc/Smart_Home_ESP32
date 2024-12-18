@@ -11383,8 +11383,7 @@
                         "InheritedType": 4
                       }
                     ],
-                    "saved_objtypeKey": "BUTTON",
-                    "tree_closed": true
+                    "saved_objtypeKey": "BUTTON"
                   }
                 ],
                 "dont_export": false,
@@ -14824,8 +14823,7 @@
                     "InheritedType": 4
                   }
                 ],
-                "saved_objtypeKey": "BUTTON",
-                "tree_closed": true
+                "saved_objtypeKey": "BUTTON"
               },
               {
                 "guid": "GUID20508579-767765S4593154",
@@ -20339,7 +20337,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           -120,
-                          -70
+                          -67
                         ],
                         "InheritedType": 7
                       },
@@ -20971,8 +20969,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          116,
-                          -93
+                          128,
+                          -97
                         ],
                         "InheritedType": 7
                       },
@@ -20981,7 +20979,7 @@
                         "flags": 17,
                         "strtype": "OBJECT/Size",
                         "intarray": [
-                          46,
+                          49,
                           28
                         ],
                         "InheritedType": 7
@@ -21150,8 +21148,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -120,
-                          34
+                          28,
+                          -67
                         ],
                         "InheritedType": 7
                       },
@@ -21308,8 +21306,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -44,
-                          34
+                          94,
+                          -67
                         ],
                         "InheritedType": 7
                       },
@@ -21485,8 +21483,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -120,
-                          68
+                          -119,
+                          31
                         ],
                         "InheritedType": 7
                       },
@@ -21601,7 +21599,8 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "LABEL"
+                    "saved_objtypeKey": "LABEL",
+                    "tree_closed": true
                   },
                   {
                     "guid": "GUID32581743-438123S8993238",
@@ -21643,8 +21642,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          22,
-                          68
+                          21,
+                          33
                         ],
                         "InheritedType": 7
                       },
@@ -21844,8 +21843,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -45,
-                          -69
+                          -47,
+                          -67
                         ],
                         "InheritedType": 7
                       },
@@ -22020,8 +22019,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -83,
-                          100
+                          -81,
+                          65
                         ],
                         "InheritedType": 7
                       },
@@ -24598,8 +24597,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "TABPAGE",
-                "tree_closed": true
+                "saved_objtypeKey": "TABPAGE"
               }
             ],
             "dont_export": false,
@@ -29046,7 +29044,7 @@
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 2880,
+    "backup_cnt": 2890,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

@@ -40,7 +40,6 @@ void setup()
 
     // 加载主页
     lv_gohome();
-
     printPSRAM();
     Serial.println("smarthome setup done");
 }

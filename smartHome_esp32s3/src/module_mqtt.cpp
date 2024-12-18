@@ -135,7 +135,7 @@ void mqttLoop(void)
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
-    if (topic == mqtt_pub.c_str()) {
+    if (strcmp(topic, mqtt_pub.c_str()) == 0) {
         return;
     }
     Serial.printf("Message arrived in topic %s, length %d\n", topic, length);

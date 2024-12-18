@@ -29,8 +29,6 @@ extern int servoPos;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
-extern void sendImgPieces(void);
-
 bool initMQTTConfig(void)
 {
     mqttClient.setServer(mqtt_url, mqtt_broker_port);

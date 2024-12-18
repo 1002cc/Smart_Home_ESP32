@@ -37,7 +37,7 @@ String minimaxUrl = "https://api.minimax.chat/v1/text/chatcompletion_v2";
 
 using namespace websockets;
 WebsocketsClient webSocketClient_stt;
-
+TaskHandle_t speakTaskHandle = NULL;
 #define USE_WED 1
 #if USE_WED
 WebsocketsClient webSocketClient_llm;
@@ -280,7 +280,7 @@ void initSpeakConfig()
 #endif
     // 初始化讯飞语音转文字websocket连接
     audio.setTok("25.3d59d26887081131ac1a52225baf130f.315360000.2049277194.282335-109052759");
-    xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 12, NULL, 0);
+    xTaskCreatePinnedToCore(&speakTask, "speak_task", 10 * 1024, NULL, 12, &speakTaskHandle, 0);
     Serial.println("initSpeakConfig done");
 }
 
