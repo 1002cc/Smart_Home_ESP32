@@ -27,8 +27,10 @@ extern detectionDate detectiondatas;
 bool enable_mqtt = true;
 extern bool loginState;
 String username = "hich";
+extern String FirmwareVersion;
 
-static void mqtt_callback(char *topic, byte *payload, unsigned int length);
+static void
+mqtt_callback(char *topic, byte *payload, unsigned int length);
 bool firstConnectMQTT(void);
 
 bool initMQTTConfig(void)
@@ -229,6 +231,24 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 playMusicUrl(musicUrl);
             }
         }
+        cJSON *heartbeat_j = cJSON_GetObjectItem(root, "heartbeat");
+        if (heartbeat_j != NULL) {
+            publishDeviceState();
+        }
+        cJSON *version_j = cJSON_GetObjectItem(root, "getVersion");
+        if (version_j != NULL) {
+            publishDeviceVersion();
+        }
+        cJSON *update_j = cJSON_GetObjectItem(root, "update");
+        if (update_j != NULL) {
+            String updateID = update_j->valuestring;
+            if (updateID == "esp32s3") {
+                if (getOTAVersion()) {
+                    msgboxBarTip();
+                    startOTATask();
+                }
+            }
+        }
         cJSON_Delete(root);
     }
     Serial.println("\n----------------END----------------");
@@ -346,9 +366,25 @@ void publishGetDatas()
 {
     cJSON *root = cJSON_CreateObject();
     cJSON_AddBoolToObject(root, "getdatas", true);
-
     char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
 
+void publishDeviceState()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "devices", "esp32s3");
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishDeviceVersion()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "version", FirmwareVersion.c_str());
+    char *jsonStr = cJSON_PrintUnformatted(root);
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }

@@ -27,6 +27,8 @@ bool subscribeMQTT(const char topic[]);
 void mqtt_disconnect(void);
 bool getMqttStart();
 void mqttMontage(const String &user);
+void publishDeviceState();
+void publishDeviceVersion();
 
 void pulishState(const String &object, const bool &state, const String &item = "datas");
 void pulishSwitchDatas(const lampButtonData &data);

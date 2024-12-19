@@ -566,7 +566,7 @@ void lv_updataOATbar(int value)
 
 void msgboxBarTip()
 {
-    ui_Panel4 = lv_obj_create(ui_w3);
+    ui_Panel4 = lv_obj_create(lv_scr_act());
     lv_obj_set_width(ui_Panel4, 219);
     lv_obj_set_height(ui_Panel4, 70);
     lv_obj_set_x(ui_Panel4, 0);

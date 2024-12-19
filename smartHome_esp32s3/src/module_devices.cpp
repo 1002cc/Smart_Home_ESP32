@@ -10,7 +10,7 @@
 #define Board ("ESP-32-S3")
 #define Pin MQ2PIN
 #define Type ("MQ-2")
-#define Voltage_Resolution (3.3)
+#define Voltage_Resolution (4.3)
 #define ADC_Bit_Resolution (12)
 #define RatioMQ2CleanAir (9.83)
 MQUnifiedsensor MQ2(Board, Voltage_Resolution, ADC_Bit_Resolution, Pin, Type);

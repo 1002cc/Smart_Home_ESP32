@@ -63,6 +63,9 @@ const int stepDelay = 1;
 const int totalSteps = 200;
 unsigned long startTime = 0;
 TaskHandle_t curtainForwardReverseTaskHandle;
+TaskHandle_t devicesTaskHandle = NULL;
+
+extern String FirmwareVersion;
 
 /********************************************************************
                          LED
@@ -364,7 +367,7 @@ void sensor_init()
 
 void startSensorTask()
 {
-    xTaskCreatePinnedToCore(sensorTask, "sensor_task", 1024 * 5, NULL, 2, NULL, 0);
+    xTaskCreatePinnedToCore(sensorTask, "sensor_task", 1024 * 5, NULL, 2, &devicesTaskHandle, 0);
 }
 
 /********************************************************************
@@ -454,5 +457,10 @@ void initDevicesDatas()
     int enableDoorContactTimeoutData = ReadintData("dco");
     if (enableDoorContactTimeoutData != 1000) {
         enableDoorContactTimeout = enableDoorContactTimeoutData;
+    }
+
+    String Version = ReadData("Version");
+    if (Version != "null") {
+        FirmwareVersion = Version;
     }
 }

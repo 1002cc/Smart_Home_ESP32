@@ -37,6 +37,8 @@ bool publishMQTT(const char payload[]);
 bool subscribeMQTT(const char topic[]);
 void publishSensorData(const SensorData &data);
 void publishGetDatas();
+void publishDeviceState();
+void publishDeviceVersion();
 bool pulishSwitchDatas(const lampButtonData &data);
 void mqtt_disconnect(void);
 bool getMqttStart();

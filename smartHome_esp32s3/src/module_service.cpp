@@ -309,7 +309,7 @@ void update_finished()
 void update_progress(int cur, int total)
 {
     lv_updataOATbar(cur * 100.0 / total);
-    Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes[%.1f%%]...\n", cur, total, cur * 100.0 / total);
+    // Serial.printf("CALLBACK:  HTTP update process at %d of %d bytes[%.1f%%]...\n", cur, total, cur * 100.0 / total);
 }
 
 // 当升级失败时，打印日志
@@ -380,6 +380,8 @@ void startOTA(void *pvParameter)
     t_httpUpdate_return ret = updateBin(ota_url); // 开始升级
     switch (ret) {
     case HTTP_UPDATE_FAILED: // 当升级失败
+        vTaskResume(devicesTaskHandle);
+        vTaskResume(speakTaskHandle);
         Serial.println("[update] Update failed.");
         break;
     case HTTP_UPDATE_NO_UPDATES: // 当无升级

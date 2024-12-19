@@ -18,7 +18,8 @@ enum class AUDIO_NAME {
     DC1,       // 门窗已打开
     DC2,       // 检测到门窗长时间未关闭
     DC3,       // 警报警报，非法闯入
-    BL         // 当前为蓝牙模式，如需网络服务请重启设备配置
+    BL,        // 当前为蓝牙模式，如需网络服务请重启设备配置
+    OTA,       //  OTA升级
 };
 
 enum ConnectionMode {
@@ -46,5 +47,10 @@ void startAudioTack();
 void audioPause();
 void audioSpeak(const String &text);
 void playAudio(const AUDIO_NAME &index);
+
+String getAccessToken();
+bool getOTAVersion();
+void startOTA();
+void startOTATask();
 
 #endif

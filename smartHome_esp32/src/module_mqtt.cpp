@@ -35,10 +35,9 @@ extern lampButtonData mqttSwitchState;
 extern bool enableOpenSound;
 extern bool enableDoorContactTimeout;
 extern int doorOpenTimeoutThreshold;
-// extern ConnectionMode cMode;
+extern String FirmwareVersion;
 
-static void
-mqtt_callback(char *topic, byte *payload, unsigned int length);
+static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
 extern void sendImgPieces(void);
 
@@ -64,7 +63,7 @@ bool initMQTTConfig(void)
 void mqttMontage(const String &user)
 {
     mqtt_wroom_sub = "/smartHome/" + user + "/#";
-    mqtt_pub = "/smartHome/" + user + "/esp32_wroom_pub";
+    mqtt_pub = "/smartHome/" + user + "/esp32wroom";
 
     Serial.printf("mqtt_sub:%s\n", mqtt_wroom_sub.c_str());
     Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
@@ -202,6 +201,24 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 wifiConfig();
             }
         }
+        cJSON *heartbeat_j = cJSON_GetObjectItem(root, "heartbeat");
+        if (heartbeat_j != NULL) {
+            publishDeviceState();
+        }
+        cJSON *version_j = cJSON_GetObjectItem(root, "getVersion");
+        if (version_j != NULL) {
+            publishDeviceVersion();
+        }
+        cJSON *update_j = cJSON_GetObjectItem(root, "update");
+        if (update_j != NULL) {
+            String updateID = update_j->valuestring;
+            if (updateID == "esp32wroom") {
+                if (getOTAVersion()) {
+                    playAudio(AUDIO_NAME::OTA);
+                    startOTATask();
+                }
+            }
+        }
     }
     cJSON_Delete(root);
     Serial.println("\n----------------END----------------");
@@ -260,6 +277,24 @@ void pulishState(const String &object, const bool &state, const String &item)
     } else {
         Serial.println("mqtt disconnect");
     }
+}
+
+void publishDeviceState()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "devices", "esp32wroom");
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishDeviceVersion()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "version", FirmwareVersion.c_str());
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
 }
 
 void pulishSwitchDatas(const lampButtonData &data)

@@ -54,6 +54,7 @@ void lv_speakState(const SpeakState_t &state);
 void lv_ai_control(const String &handl, bool state);
 void lv_ai_control_offline(const String &handl, int state);
 void lv_updataOATbar(int value);
+void msgboxBarTip();
 
 void ui_calender_update(void);
 void startCameraTask();
