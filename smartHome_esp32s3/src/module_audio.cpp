@@ -166,6 +166,11 @@ void playMQAlarm()
     audio.connecttoFS(LittleFS, "/yw.mp3");
 }
 
+void playOTA()
+{
+    audio.connecttoFS(LittleFS, "/ota.mp3");
+}
+
 void audioTask(void *pt)
 {
     Serial.println("start audio Task");

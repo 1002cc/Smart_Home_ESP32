@@ -197,6 +197,10 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 mqttSwitchState.doorcontact = buttonDoorcontact_j->valueint;
                 lv_setButtonDoorContact(mqttSwitchState.doorcontact);
             }
+            cJSON *motorRunTime_j = cJSON_GetObjectItem(switches, "motorRunTime");
+            if (motorRunTime_j != NULL) {
+                lv_setCurtainRunTime(motorRunTime_j->valueint);
+            }
             cJSON *doorContactOpenSound_j = cJSON_GetObjectItem(switches, "doorContactOpenSound");
             if (doorContactOpenSound_j != NULL) {
                 mqttSwitchState.openSound = doorContactOpenSound_j->valueint;
@@ -316,7 +320,6 @@ bool pulishState(const String &object, const bool &state, const String &item)
         cJSON_AddItemToObject(root, item.c_str(), datas);
         cJSON_AddBoolToObject(datas, object.c_str(), state);
         char *jsonStr = cJSON_PrintUnformatted(root);
-
         Serial.println(jsonStr);
         mqttClient.publish(mqtt_pub.c_str(), jsonStr);
         cJSON_Delete(root);
@@ -360,6 +363,11 @@ bool sendRePW()
         Serial.println("mqtt disconnect");
         return false;
     }
+}
+
+bool sendMQAlarm(const bool &state)
+{
+    pulishState("fanf", state, "switches");
 }
 
 void publishGetDatas()

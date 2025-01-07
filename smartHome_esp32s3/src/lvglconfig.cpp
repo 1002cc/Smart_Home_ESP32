@@ -42,11 +42,12 @@ bool isStartCamera = false;
 static lv_style_t main_black_style;
 
 static const int chartSize = 200;
-lv_coord_t pos_array[5][5] = {
+lv_coord_t pos_array[6][5] = {
     {10, 10, 10, 10, 10},
-    {10, 20, 30, 20, 10},
+    {30, 10, 20, 10, 30},
     {50, 40, 10, 40, 50},
     {20, 40, 50, 40, 20},
+    {10, 20, 40, 20, 10},
     {50, 40, 30, 40, 50}};
 
 extern SpeakState_t speakState;
@@ -54,7 +55,7 @@ extern int useAIMode;
 
 extern int updatetimentp;
 extern String FirmwareVersion;
-extern String newFirmwareVersion;
+extern String latestFirmware;
 
 /********************************************************************
                          BUILD UI
@@ -110,7 +111,6 @@ static lv_obj_t *ui_timeoutSwitch;
 static lv_obj_t *ui_doorContactButtonsure;
 static lv_obj_t *ui_doorContactLabelsure;
 static lv_obj_t *ui_doorContactLabelTime;
-static TaskHandle_t cameraTaskHandle = NULL;
 static lv_obj_t *ui_curtainPanel;
 static lv_obj_t *ui_curtainLabeltitle;
 static lv_obj_t *ui_curtainLabelsound;
@@ -119,13 +119,17 @@ static lv_obj_t *ui_curtainLabelsure;
 static lv_obj_t *ui_curtainLabelTime;
 static lv_obj_t *ui_curtainButtonq;
 static lv_obj_t *ui_curtainLabelsure2;
-static lv_obj_t *ui_curtainDropdown;
+// static lv_obj_t *ui_curtainDropdown;
+static lv_obj_t *ui_curtainTextarea;
+static lv_obj_t *inputKeyboardNumber;
 static lv_obj_t *ui_LabelBLE;
 static lv_obj_t *ui_BLESwitch;
 static lv_obj_t *ui_Panel4;
 static lv_obj_t *ui_otaBar;
 static lv_obj_t *ui_otaNumLabel;
 static lv_obj_t *ui_otaLabel;
+
+static TaskHandle_t cameraTaskHandle = NULL;
 
 lampButtonData mqttSwitchState = {false, false, false, false, false, false, false};
 detectionDate detectiondatas = {false, false, false};
@@ -134,6 +138,7 @@ extern String upassword;
 extern bool loginState;
 extern bool enableBLE;
 int enble_startAudio = 1;
+String curtainTime = "0";
 
 void ui_timer_init(void);
 void ui_clock_update(lv_timer_t *timer);
@@ -281,17 +286,29 @@ void doorContactCB1(lv_event_t *e)
 
 void curtainCB(lv_event_t *e)
 {
+
+    lv_obj_clear_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
+
     lv_obj_clear_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);
 }
 
 void curtainCB1(lv_event_t *e)
 {
+    lv_obj_add_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);
 }
 
 void curtainCB2(lv_event_t *e)
 {
-    // lv_obj_add_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);
+    String runtimestr = lv_textarea_get_text(ui_curtainTextarea);
+    if (!runtimestr.isEmpty()) {
+        StoreData("runtime", runtimestr.c_str());
+        curtainTime = runtimestr;
+        Serial.printf("curtainTime:%s\n", curtainTime.c_str());
+        pulishState_int("motorRunTime", curtainTime.toInt(), "switches");
+    }
+    lv_obj_add_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ui_curtainPanel, LV_OBJ_FLAG_HIDDEN);
 }
 
 void openSoundSwitchCB(lv_event_t *e)
@@ -557,10 +574,9 @@ void lv_updataOATbar(int value)
     lv_bar_set_value(ui_otaBar, value, LV_ANIM_OFF);
     String text;
     if (value >= 100) {
-        text = "OTA升级完成,重启中...";
-    } else {
-        text = String(value) + "%";
+        lv_label_set_text(ui_otaLabel, "OTA升级完成,重启中...");
     }
+    text = String(value) + "%";
     lv_label_set_text(ui_otaNumLabel, text.c_str());
 }
 
@@ -776,6 +792,12 @@ void lv_setDropdownDoorContactTimeoutTime(int time)
     lv_dropdown_set_selected(ui_Dropdowntime, time - 1);
 }
 
+void lv_setCurtainRunTime(int runTime)
+{
+    curtainTime = String(runTime);
+    lv_textarea_set_placeholder_text(ui_curtainTextarea, String(runTime).c_str());
+}
+
 void lv_setPriButtonState(bool state)
 {
     if (state) {
@@ -927,6 +949,38 @@ static void settext_input_event_cb(lv_event_t *e)
     if (code == LV_EVENT_DEFOCUSED) {
         lv_keyboard_set_textarea(inputKeyboard, NULL);
         lv_obj_add_flag(inputKeyboard, LV_OBJ_FLAG_HIDDEN);
+    }
+}
+
+static void kbClear_cb1(lv_event_t *event)
+{
+    lv_keyboard_t *kb = (lv_keyboard_t *)event->target;
+    lv_textarea_set_text(kb->ta, "");
+}
+static void kbHide_cb1(lv_event_t *event)
+{
+    lv_obj_add_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void settext_input_number_event_cb(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t *ta = lv_event_get_target(e);
+
+    if (code == LV_EVENT_FOCUSED) {
+        lv_obj_move_foreground(inputKeyboardNumber);
+        lv_keyboard_set_textarea(inputKeyboardNumber, ta);
+        lv_obj_clear_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    if (code == LV_EVENT_CLICKED) {
+        lv_obj_move_foreground(inputKeyboardNumber);
+        lv_obj_clear_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
+    }
+
+    if (code == LV_EVENT_DEFOCUSED) {
+        lv_keyboard_set_textarea(inputKeyboardNumber, NULL);
+        lv_obj_add_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
     }
 }
 
@@ -1229,7 +1283,7 @@ void lv_deviceOTA(lv_event_t *e)
     Serial.println("lv_deviceOTA");
     if (getwifistate()) {
         if (getOTAVersion()) {
-            String verstr = "新版本:V" + newFirmwareVersion + ",是否升级";
+            String verstr = "新版本:V" + latestFirmware + ",是否升级";
             msgboxTip1(verstr.c_str());
         } else {
             msgboxTip("当前是最新版本");
@@ -1599,6 +1653,12 @@ void initDataUI()
         Serial.printf("device city: %s\n", cityIDStr);
         lv_textarea_set_placeholder_text(weatherTextarea, cityIDStr.c_str());
         updateCityID(cityIDStr);
+    }
+
+    String runtime1 = ReadData("runtime");
+    if (runtime1 != "null") {
+        lv_textarea_set_placeholder_text(ui_curtainTextarea, runtime1.c_str());
+        curtainTime = runtime1;
     }
 
     String updatetime = ReadData("updatetime");
@@ -2023,14 +2083,21 @@ void initDeviceUI(void)
     lv_label_set_text(ui_curtainLabelsure2, "取消");
     lv_obj_set_style_text_font(ui_curtainLabelsure2, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_curtainDropdown = lv_dropdown_create(ui_curtainPanel);
-    lv_dropdown_set_options(ui_curtainDropdown, "5\n10\n20\n30\n40\n50");
-    lv_obj_set_width(ui_curtainDropdown, 53);
-    lv_obj_set_height(ui_curtainDropdown, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_curtainDropdown, 36);
-    lv_obj_set_y(ui_curtainDropdown, -17);
-    lv_obj_set_align(ui_curtainDropdown, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_curtainDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    ui_curtainTextarea = lv_textarea_create(ui_curtainPanel);
+    lv_obj_set_width(ui_curtainTextarea, 53);
+    lv_obj_set_height(ui_curtainTextarea, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_curtainTextarea, 36);
+    lv_obj_set_y(ui_curtainTextarea, -17);
+    lv_textarea_set_one_line(ui_curtainTextarea, true);
+    lv_obj_set_align(ui_curtainTextarea, LV_ALIGN_CENTER);
+
+    inputKeyboardNumber = lv_keyboard_create(ui_lampScreen);
+    lv_obj_add_event_cb(inputKeyboardNumber, kbClear_cb1, LV_EVENT_CANCEL, NULL);
+    lv_obj_add_event_cb(inputKeyboardNumber, kbHide_cb1, LV_EVENT_READY, NULL);
+    lv_obj_add_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
+    lv_keyboard_set_mode(inputKeyboardNumber, LV_KEYBOARD_MODE_NUMBER);
+
+    lv_obj_add_event_cb(ui_curtainTextarea, settext_input_number_event_cb, LV_EVENT_ALL, inputKeyboardNumber);
 
 #if USE_BLE
     ui_LabelBLE = lv_label_create(ui_w1);

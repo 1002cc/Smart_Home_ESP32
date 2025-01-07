@@ -17,6 +17,7 @@ void audioPause();
 void audioSetPer(int per);
 void playStartAudio();
 void playMQAlarm();
+void playOTA();
 bool getaudioPlayStatus();
 void audioLoop();
 

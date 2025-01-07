@@ -8,11 +8,17 @@ void timeAvailable(struct timeval *t);
 void initNtpTime();
 
 void initWedServer();
-void cameraserver_task(void *pvParameter);
+void startCameraServerTask();
+;
 
 void StoreData(const char *key, const char *val);
 String ReadData(const char *val);
 void StoreintData(const char *key, int val);
 int ReadintData(const char *val);
+
+String getAccessToken();
+bool getOTAVersion();
+void startOTA();
+void startOTATask();
 
 #endif

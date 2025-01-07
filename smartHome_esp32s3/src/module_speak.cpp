@@ -649,51 +649,51 @@ bool instructionRecognitionSign(int sign)
     switch (sign) {
     case 5:
         Serial.println("打开1号灯");
-        lv_ai_control_offline("lampButton1", 1);
+        lv_ai_control("lampButton1", 1);
         break;
     case 6:
         Serial.println("关闭1号灯");
-        lv_ai_control_offline("lampButton1", 0);
+        lv_ai_control("lampButton1", 0);
         break;
     case 7:
         Serial.println("打开2号灯");
-        lv_ai_control_offline("lampButton2", 1);
+        lv_ai_control("lampButton2", 1);
         break;
     case 8:
         Serial.println("关闭2号灯");
-        lv_ai_control_offline("lampButton2", 0);
+        lv_ai_control("lampButton2", 0);
         break;
     case 9:
         Serial.println("打开感应");
-        lv_ai_control_offline("pri", 1);
+        lv_ai_control("pri", 1);
         break;
     case 10:
         Serial.println("关闭感应");
-        lv_ai_control_offline("pri", 0);
+        lv_ai_control("pri", 0);
         break;
     case 11:
         Serial.println("打开声控");
-        lv_ai_control_offline("voiceControl", 1);
+        lv_ai_control("voiceControl", 1);
         break;
     case 12:
         Serial.println("关闭声控");
-        lv_ai_control_offline("voiceControl", 0);
+        lv_ai_control("voiceControl", 0);
         break;
     case 13:
         Serial.println("打开风扇");
-        lv_ai_control_offline("fan", 1);
+        lv_ai_control("fan", 1);
         break;
     case 14:
         Serial.println("关闭风扇");
-        lv_ai_control_offline("fan", 0);
+        lv_ai_control("fan", 0);
         break;
     case 15:
         Serial.println("打开窗帘");
-        lv_ai_control_offline("curtain", 1);
+        lv_ai_control("curtain", 1);
         break;
     case 16:
         Serial.println("关闭窗帘");
-        lv_ai_control_offline("curtain", 0);
+        lv_ai_control("curtain", 0);
         break;
     default:
         isSuccess = false;
@@ -713,11 +713,16 @@ void speakTask(void *pvParameter)
             receivedData.trim();
             convertedInt = receivedData.toInt();
             Serial.printf("receivedData: %d\n", convertedInt);
+            // 打断回复
+            audio.stopSong();
+            webSocketClient_stt.close();
+            webSocketClient_llm.close();
             if (convertedInt == 1) {
-                // 打断回复
-                audio.stopSong();
-                webSocketClient_stt.close();
                 speakState = WAKEUP;
+            } else if (convertedInt >= 5 && convertedInt <= 16) {
+                instructionRecognitionSign(convertedInt);
+                voiceModuleSerial.print(convertedInt);
+                lv_speakState(SpeakState_t::NO_DIALOGUE);
             }
         }
         webSocketClient_stt.poll();

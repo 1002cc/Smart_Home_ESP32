@@ -157,10 +157,10 @@ void ui_MainScreen_screen_init(void)
     ui_Label11 = lv_label_create(ui_Button5);
     lv_obj_set_width(ui_Label11, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label11, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label11, 30);
+    lv_obj_set_x(ui_Label11, 15);
     lv_obj_set_y(ui_Label11, 0);
     lv_obj_set_align(ui_Label11, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_Label11, "LED灯");
+    lv_label_set_text(ui_Label11, "设备");
     ui_object_set_themeable_style_property(ui_Label11, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
                                            _ui_theme_color_font);
     ui_object_set_themeable_style_property(ui_Label11, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,

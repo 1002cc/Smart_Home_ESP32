@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 18 px
  * Bpp: 1
- * Opts: --bpp 1 --size 18 --font E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets/SourceHanSansCN-Normal-2.otf -o E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets\ui_font_tipFont.c --format lvgl -r 0x20-0x7f --symbols 正在连接WIFI失败服务器当前为离线模式加载中请在配置中设置WiFi成功已未取消确定校时时长网络不可用无法请检查密码音乐电台关闭说话识别录发送人制语型思考能为空设备账号天气城市端口解绑登陆账号密码主题切换深浅色屏幕亮度开机测系统重新体有声雨滴回答唤醒启置门磁定超分窗帘秒时长取消升级当前版本检查最是否正在升级中完 --no-compress --no-prefilter
+ * Opts: --bpp 1 --size 18 --font E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets/SourceHanSansCN-Normal-2.otf -o E:/Smart_Home/Smart_Home_ESP32/smartHome_esp32s3/guiproject/assets\ui_font_tipFont.c --format lvgl -r 0x20-0x7f --symbols 正在连接WIFI失败服务器当前为离线模式加载中请在配置中设置WiFi成功已未取消确定校时时长网络不可用无法请检查密码音乐电台关闭说话识别录发送人制语型思考能为空设备账号天气城市端口解绑登陆账号密码主题切换深浅色屏幕亮度开机测系统重新体有声雨滴回答唤醒启置门磁定超分窗帘秒时长取消当前版本检查最是否正在升级中完成重启中 --no-compress --no-prefilter
  ******************************************************************************/
 
 #include "../ui.h"

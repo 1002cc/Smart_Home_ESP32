@@ -3,6 +3,7 @@
 #include <ESP32Servo.h>
 Servo myservo;
 int servoPos = 0;
+extern String FirmwareVersion;
 
 void initLED()
 {
@@ -41,6 +42,11 @@ void initServo()
     if (value != 1000) {
         servoPos = value;
         myservo.write(servoPos);
+    }
+
+    String Version = ReadData("Version");
+    if (Version != "null") {
+        FirmwareVersion = Version;
     }
 }
 

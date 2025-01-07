@@ -2303,7 +2303,7 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          30,
+                          15,
                           0
                         ],
                         "InheritedType": 7
@@ -2374,7 +2374,7 @@
                       {
                         "nid": 821414913,
                         "strtype": "LABEL/Text",
-                        "strval": "LED灯",
+                        "strval": "设备",
                         "InheritedType": 10
                       },
                       {
@@ -2628,8 +2628,7 @@
                     "InheritedType": 4
                   }
                 ],
-                "saved_objtypeKey": "BUTTON",
-                "tree_closed": true
+                "saved_objtypeKey": "BUTTON"
               },
               {
                 "guid": "GUID53743487-535173S45343155",
@@ -3140,8 +3139,7 @@
                     "InheritedType": 4
                   }
                 ],
-                "saved_objtypeKey": "BUTTON",
-                "tree_closed": true
+                "saved_objtypeKey": "BUTTON"
               },
               {
                 "guid": "GUID77598485-196519S255733106",
@@ -3663,8 +3661,7 @@
                     "InheritedType": 4
                   }
                 ],
-                "saved_objtypeKey": "BUTTON",
-                "tree_closed": true
+                "saved_objtypeKey": "BUTTON"
               },
               {
                 "guid": "GUID65334639-1474686S35803159",
@@ -4175,8 +4172,7 @@
                     "InheritedType": 4
                   }
                 ],
-                "saved_objtypeKey": "BUTTON",
-                "tree_closed": true
+                "saved_objtypeKey": "BUTTON"
               },
               {
                 "guid": "GUID68288744-1477511S6863159",
@@ -5542,7 +5538,7 @@
                   {
                     "nid": 887544771,
                     "strtype": "LABEL/Text",
-                    "strval": "20°C",
+                    "strval": "0°C",
                     "InheritedType": 10
                   },
                   {
@@ -6284,7 +6280,7 @@
                   {
                     "nid": 76012391,
                     "strtype": "LABEL/Text",
-                    "strval": "60%",
+                    "strval": "0%",
                     "InheritedType": 10
                   },
                   {
@@ -6602,7 +6598,6 @@
                   {
                     "nid": 1181064414,
                     "strtype": "ARC/Value",
-                    "integer": 50,
                     "InheritedType": 6
                   },
                   {
@@ -6882,8 +6877,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "PANEL",
-            "tree_closed": true
+            "saved_objtypeKey": "PANEL"
           },
           {
             "guid": "GUID94267159-990480S307083109",
@@ -7000,7 +6994,7 @@
                   {
                     "nid": -1853848838,
                     "strtype": "LABEL/Text",
-                    "strval": "20°C",
+                    "strval": "0%",
                     "InheritedType": 10
                   },
                   {
@@ -7329,7 +7323,6 @@
                   {
                     "nid": 1879278195,
                     "strtype": "ARC/Value",
-                    "integer": 20,
                     "InheritedType": 6
                   },
                   {
@@ -29044,7 +29037,7 @@
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 2890,
+    "backup_cnt": 2896,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

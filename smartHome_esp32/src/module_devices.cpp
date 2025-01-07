@@ -24,13 +24,13 @@ int lastDoorContactState = 0;
 // 用于防抖处理，记录连续读取到相同状态的次数
 int debounceCount = 0;
 // 防抖阈值，连续多少次读取到相同状态才认为状态稳定，可根据实际情况调整
-const int debounceThreshold = 5;
+const int debounceThreshold = 3;
 // 记录门打开的时间戳（以毫秒为单位）
 unsigned long doorOpenTime = 0;
 // 记录门关闭的时间戳（以毫秒为单位）
 unsigned long doorCloseTime = 0;
-// 门打开超时时间阈值（以秒为单位），超过此时间门没关闭视为超时未关闭，可按需调整
-int doorOpenTimeoutThreshold = 30;
+// 门打开超时时间阈值（以分为单位），超过此时间门没关闭视为超时未关闭，可按需调整
+int doorOpenTimeoutThreshold = 1;
 
 bool mqttVoice = false;
 bool mqttPri = false;
@@ -163,15 +163,20 @@ void sensorTask(void *pt)
             pirState = analogRead(PIR_CHANNL);
             if (pirState > 0) {
                 priTime = millis();
-                if (millis() - priLongTime >= DETECTIONLONGTIME) {
-                    playAudio(AUDIO_NAME::LT);
-                }
 
+                // 发送人体感应状态
                 if (!mqttPri) {
                     mqttPri = true;
                     priLongTime = millis();
                     pulishState("priState", true);
                 }
+
+                if (millis() - priLongTime >= DETECTIONLONGTIME) {
+                    priLongTime = millis();
+                    Serial.println("has long people");
+                    playAudio(AUDIO_NAME::LT);
+                }
+
                 Serial.println("has people");
             } else {
                 if (mqttPri && millis() - priTime >= DETECTIONTIME) {
@@ -239,7 +244,7 @@ void sensorTask(void *pt)
             if (debounceCount >= debounceThreshold) {
                 // 状态稳定，进行后续判断处理
                 if (isDoorContact == HIGH) {
-                    Serial.println("The door is open");
+                    // Serial.println("The door is open");
                     if (doorContactState == 0) {
                         doorContactState = 1;
                         doorOpenTime = millis(); // 记录门打开的时间
@@ -249,7 +254,7 @@ void sensorTask(void *pt)
                         pulishState("doorcontact", true, "switches");
                     }
                 } else {
-                    Serial.println("The door is closed");
+                    // Serial.println("The door is closed");
                     if (doorContactState == 1) {
                         doorContactState = 0;
                         pulishState("doorcontact", false, "switches");
@@ -258,7 +263,7 @@ void sensorTask(void *pt)
                 }
                 // 判断门是否超时未关闭
                 if (enableDoorContactTimeout) {
-                    if (millis() - doorOpenTime >= doorOpenTimeoutThreshold * 1000 * 60 && doorContactState == 0) {
+                    if (millis() - doorOpenTime >= doorOpenTimeoutThreshold * 1000 * 60 && doorContactState == 1) {
                         Serial.println("The door has been open for too long and is overdue!");
                         playAudio(AUDIO_NAME::DC2);
                     }
@@ -392,9 +397,6 @@ void electrical_machinery_init()
 
 void fan_on()
 {
-    if (enable_fanf) {
-        fanf_off();
-    }
     digitalWrite(FAN_PINA, HIGH);
 }
 void fan_off()
@@ -447,6 +449,17 @@ void initDevicesDatas()
     int voiceControlData = ReadintData("voiceControl");
     if (voiceControlData != 1000) {
         enable_VoiceControl = voiceControlData;
+    }
+
+    int rtData = ReadintData("rt");
+    if (rtData != 1000) {
+        motorRunTime = rtData;
+    }
+
+    int curtain_directionData = ReadintData("cuo");
+    if (curtain_directionData != 1000) {
+        curtain_direction = curtain_directionData;
+        pulishState("curtain", curtain_direction, "switches");
     }
 
     int enableOpenSoundData = ReadintData("dcos");

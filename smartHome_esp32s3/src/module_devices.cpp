@@ -14,6 +14,7 @@
 #define ADC_Bit_Resolution (12)
 #define RatioMQ2CleanAir (9.83)
 MQUnifiedsensor MQ2(Board, Voltage_Resolution, ADC_Bit_Resolution, Pin, Type);
+bool enabledMQ = false;
 
 #endif
 
@@ -52,60 +53,6 @@ void WSLED_OFF()
     leds[0] = CRGB::Black;
     FastLED.show();
 }
-
-/********************************************************************
-                         RGBled
-*******************************************************************
-
-void rgbled_init()
-{
-    pinMode(PIN_R, OUTPUT);
-    pinMode(PIN_G, OUTPUT);
-    pinMode(PIN_B, OUTPUT);
-}
-
-void setColor(int r, int g, int b)
-{
-    analogWrite(PIN_R, r);
-    analogWrite(PIN_G, g);
-    analogWrite(PIN_B, b);
-}
-
-void redled_on()
-{
-    digitalWrite(PIN_R, 1);
-}
-
-void redled_off()
-{
-    digitalWrite(PIN_R, 0);
-}
-
-void greenled_on()
-{
-    digitalWrite(PIN_G, 1);
-}
-
-void greenled_off()
-{
-    digitalWrite(PIN_G, 0);
-}
-
-void blueled_on()
-{
-    digitalWrite(PIN_B, 1);
-}
-
-void blueled_off()
-{
-    digitalWrite(PIN_B, 0);
-}
-
-void rgbled_setColor(int r, int g, int b)
-{
-    setColor(r, g, b);
-}
-*/
 
 /********************************************************************
                          mq2
@@ -173,14 +120,14 @@ float dhtReadHumidity()
 
 void sensor_task(void *pvParameter)
 {
-    float temperature, humidity, mq2sensorValue;
+    float temperature, humidity, mq2sensorValue = 0;
     char temp_char[12];
+    bool hasAlarm = false;
     unsigned long int lastPrintTime, lastMQTime;
-    int MQSure = 0;
+    int mqSure = 0;
     while (1) {
         temperature = dht.readTemperature();
         humidity = dht.readHumidity();
-        mq2sensorValue = readmq2();
 
         if (isnan(temperature) || isnan(humidity)) {
             temperature = 0;
@@ -195,35 +142,43 @@ void sensor_task(void *pvParameter)
             lv_label_set_text(ui_HumidityLabel, temp_char);
         }
 
-        if (isnan(mq2sensorValue)) {
-            mq2sensorValue = 0;
-            Serial.println("Failed to read from MQ2 sensor!");
-        } else {
-            if (mq2sensorValue >= 30) {
-                MQSure++;
-                if (MQSure >= 3) {
-                    MQSure = 0;
-                    if (MQSure > 300) {
-                        initmq2();
-                        MQSure = 0;
+        if (enabledMQ) {
+            mq2sensorValue = readmq2();
+
+            if (isnan(mq2sensorValue)) {
+                mq2sensorValue = 0;
+                Serial.println("Failed to read from MQ2 sensor!");
+            } else {
+                if (mq2sensorValue >= 30) {
+                    mq2sensorValue = readmq2();
+                    if (mq2sensorValue >= 30) {
+                        hasAlarm = true;
+                        if (millis() - lastMQTime > 6000) {
+                            lastMQTime = millis();
+                            playMQAlarm();
+                            sendMQAlarm(true);
+                        }
                     }
-                    if (millis() - lastMQTime > 6000) {
-                        lastMQTime = millis();
-                        playMQAlarm();
+                } else {
+                    mqSure++;
+                    if (mqSure >= 5) {
+                        mqSure = 0;
+                        if (hasAlarm) {
+                            sendMQAlarm(false);
+                            hasAlarm = false;
+                        }
                     }
                 }
-            } else {
-                MQSure = 0;
+                lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
+                snprintf(temp_char, sizeof(temp_char), "%.0f%%", mq2sensorValue);
+                lv_label_set_text(ui_MQLabel, temp_char);
             }
-            lv_arc_set_value(ui_MQArc, (int16_t)mq2sensorValue);
-            snprintf(temp_char, sizeof(temp_char), "%.0f%%", mq2sensorValue);
-            lv_label_set_text(ui_MQLabel, temp_char);
         }
 
-        // if (millis() - lastPrintTime > 10000) {
-        //     Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
-        //     lastPrintTime = millis();
-        // }
+        if (millis() - lastPrintTime > 20 * 1000) {
+            Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
+            lastPrintTime = millis();
+        }
 
         if (getMqttStart()) {
             SensorData sensorData = {
@@ -233,9 +188,23 @@ void sensor_task(void *pvParameter)
             };
             publishSensorData(sensorData);
         }
-        vTaskDelay(4000 / portTICK_PERIOD_MS);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
+}
+
+void mqTimerCallback(TimerHandle_t xTimer)
+{
+    Serial.println("init mq2");
+    initmq2();
+    enabledMQ = true;
+}
+
+void startMQTimer()
+{
+    TimerHandle_t mqTimerHandle;
+    mqTimerHandle = xTimerCreate((const char *)"mqTimer", pdMS_TO_TICKS(20 * 1000), pdFALSE, (void *)1, (TimerCallbackFunction_t)mqTimerCallback);
+    xTimerStart(mqTimerHandle, 0);
 }
 
 /********************************************************************
@@ -247,7 +216,8 @@ void initDevices()
     Serial.println("Init Devices ...");
     initWSrgbled();
     initDHT();
-    initmq2();
+    // 烟雾传感器预热20秒
+    startMQTimer();
     xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, &devicesTaskHandle, 0);
     Serial.println("Init Devices Done");
 }

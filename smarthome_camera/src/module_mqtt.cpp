@@ -9,7 +9,6 @@
 const char *mqtt_url = "47.115.139.166";
 String mqtt_sub = "";
 String mqtt_pub = "";
-String mqtt_qt_pub = "";
 const uint16_t mqtt_broker_port = 1883;
 const uint16_t mqtt_client_buff_size = 5 * 1024;
 const char *mqtt_username = "chen";
@@ -26,6 +25,8 @@ extern bool mqttControl;
 extern bool videoStreamEnable;
 
 extern int servoPos;
+
+extern String FirmwareVersion;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
@@ -50,11 +51,9 @@ bool initMQTTConfig(void)
 void mqttMontage(const String &user)
 {
     mqtt_sub = "/smartHome/" + user + "/esp32_cam_pub";
-    mqtt_pub = "/smartHome/" + user + "/esp32_sub";
-    mqtt_qt_pub = "/smartHome/" + user + "/esp32_qt_pub";
+    mqtt_pub = "/smartHome/" + user + "/esp32cam";
     Serial.printf("mqtt_sub:%s\n", mqtt_sub.c_str());
     Serial.printf("mqtt_pub:%s\n", mqtt_pub.c_str());
-    Serial.printf("mqtt_qt_pub:%s\n", mqtt_qt_pub.c_str());
 
     if (mqttClient.connected()) {
         mqttClient.subscribe(mqtt_sub.c_str());
@@ -142,6 +141,24 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 }
             }
         }
+        cJSON *heartbeat_j = cJSON_GetObjectItem(root, "heartbeat");
+        if (heartbeat_j != NULL) {
+            publishDeviceState();
+        }
+        cJSON *version_j = cJSON_GetObjectItem(root, "getVersion");
+        if (version_j != NULL) {
+            publishDeviceVersion();
+        }
+        cJSON *update_j = cJSON_GetObjectItem(root, "update");
+        if (update_j != NULL) {
+            String updateID = update_j->valuestring;
+            if (updateID == "esp32cam") {
+                if (getOTAVersion()) {
+                    blinkLED(5, 500);
+                    startOTATask();
+                }
+            }
+        }
     }
     cJSON_Delete(root);
     Serial.println("\n----------------END----------------");
@@ -166,7 +183,25 @@ void pulishAllDatas()
     cJSON_AddBoolToObject(switches, "Stream", videoStreamEnable);
     char *jsonStr = cJSON_PrintUnformatted(root);
     Serial.println(jsonStr);
-    mqttClient.publish(mqtt_qt_pub.c_str(), jsonStr);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishDeviceState()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "devices", "esp32wroom");
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishDeviceVersion()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "version", FirmwareVersion.c_str());
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
     cJSON_Delete(root);
 }
 

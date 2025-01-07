@@ -27,8 +27,8 @@ void setup()
     // 初始化wedsocket服务
     initWedServer();
 
-    // 开始视频流服务
-    xTaskCreatePinnedToCore(cameraserver_task, "cameraserver_task", 5 * 1024, NULL, 5, NULL, 1);
+    // 创建视频流任务
+    startCameraServerTask();
 }
 void loop()
 {

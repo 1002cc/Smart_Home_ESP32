@@ -48,6 +48,7 @@ void lv_setButtonDoorContact(bool state);
 void lv_setButtonDoorContactOpenSound(bool state);
 void lv_setButtonDoorContactTimeout(bool state);
 void lv_setDropdownDoorContactTimeoutTime(int time);
+void lv_setCurtainRunTime(int runTime);
 void lv_setPriButtonState(bool state);
 void lv_setVoiceButtonState(bool state);
 void lv_speakState(const SpeakState_t &state);

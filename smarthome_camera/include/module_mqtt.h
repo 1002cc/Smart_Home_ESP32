@@ -22,6 +22,8 @@ bool subscribeMQTT(const char topic[]);
 void mqtt_disconnect(void);
 bool getMqttStart();
 void sendCameraState(bool state);
+void publishDeviceState();
+void publishDeviceVersion();
 void mqttMontage(const String &user);
 void pulishAllDatas();
 

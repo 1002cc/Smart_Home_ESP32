@@ -33,7 +33,7 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_width(ui_TemperatureLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_TemperatureLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_TemperatureLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_TemperatureLabel, "20°C");
+    lv_label_set_text(ui_TemperatureLabel, "0°C");
     ui_object_set_themeable_style_property(ui_TemperatureLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
                                            _ui_theme_color_font);
     ui_object_set_themeable_style_property(ui_TemperatureLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
@@ -85,7 +85,7 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_width(ui_HumidityLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_HumidityLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_HumidityLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_HumidityLabel, "60%");
+    lv_label_set_text(ui_HumidityLabel, "0%");
     ui_object_set_themeable_style_property(ui_HumidityLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
                                            _ui_theme_color_font);
     ui_object_set_themeable_style_property(ui_HumidityLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
@@ -112,7 +112,7 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_y(ui_HumidityArc, 10);
     lv_obj_set_align(ui_HumidityArc, LV_ALIGN_CENTER);
     lv_obj_clear_flag(ui_HumidityArc, LV_OBJ_FLAG_CLICKABLE);      /// Flags
-    lv_arc_set_value(ui_HumidityArc, 50);
+    lv_arc_set_value(ui_HumidityArc, 0);
     lv_arc_set_bg_angles(ui_HumidityArc, 180, 0);
 
     lv_obj_set_style_bg_color(ui_HumidityArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);
@@ -136,7 +136,7 @@ void ui_DateScreen_screen_init(void)
     lv_obj_set_width(ui_MQLabel, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_MQLabel, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_MQLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_MQLabel, "20°C");
+    lv_label_set_text(ui_MQLabel, "0%");
     ui_object_set_themeable_style_property(ui_MQLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
                                            _ui_theme_color_font);
     ui_object_set_themeable_style_property(ui_MQLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
@@ -165,7 +165,7 @@ void ui_DateScreen_screen_init(void)
     lv_obj_clear_flag(ui_MQArc, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_PRESS_LOCK |
                       LV_OBJ_FLAG_CLICK_FOCUSABLE);      /// Flags
     lv_arc_set_range(ui_MQArc, 0, 120);
-    lv_arc_set_value(ui_MQArc, 20);
+    lv_arc_set_value(ui_MQArc, 0);
     lv_arc_set_bg_angles(ui_MQArc, 180, 0);
 
     lv_obj_set_style_bg_color(ui_MQArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT);

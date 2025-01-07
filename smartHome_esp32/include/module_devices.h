@@ -11,7 +11,7 @@
 // 检测结果保存时长
 #define DETECTIONTIME 3000
 // 检测长时间停留时长
-#define DETECTIONLONGTIME 15000
+#define DETECTIONLONGTIME 10 * 1000
 
 // RGBLED灯
 #define AUTOLED_PIN 19

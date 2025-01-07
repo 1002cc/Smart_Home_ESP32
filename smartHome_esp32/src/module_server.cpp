@@ -25,7 +25,7 @@ Preferences preferences;
 extern TaskHandle_t devicesTaskHandle;
 
 String FirmwareVersion = "1.0";
-String newFirmwareVersion = "1.0";
+String latestFirmware = "1.0";
 String FirmwareUrlCheck = "http://47.115.139.166:3005/firmware_lists/esp32wroom";
 String FirmwareUrl = "http://47.115.139.166:3005/download/esp32wroom/firmwareV";
 
@@ -208,7 +208,7 @@ void update_started()
 // 当升级结束时，打印日志
 void update_finished()
 {
-    FirmwareVersion = newFirmwareVersion;
+    FirmwareVersion = latestFirmware;
     StoreData("Version", FirmwareVersion.c_str());
     // vTaskResume(speakTaskHandle);
     delay(600);
@@ -254,18 +254,26 @@ bool getOTAVersion()
         DynamicJsonDocument doc(512);
         deserializeJson(doc, response);
         if (doc.is<JsonArray>() && doc.size() > 0) {
-            String fileName = doc[0].as<String>();
-            int startIndex = fileName.indexOf("V");
-            int endIndex = fileName.lastIndexOf(".bin");
-            if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
-                newFirmwareVersion = fileName.substring(startIndex + 1, endIndex);
-                if (newFirmwareVersion.toFloat() > FirmwareVersion.toFloat()) {
-                    Serial.println(FirmwareVersion);
+            String latestVersion = "0.0";
+            for (int i = 0; i < doc.size(); i++) {
+                String fileName = doc[i].as<String>();
+                int startIndex = fileName.indexOf("V");
+                int endIndex = fileName.lastIndexOf(".bin");
+                if (startIndex != -1 && endIndex != -1 && startIndex < endIndex) {
+                    String firmwareVersion = fileName.substring(startIndex + 1, endIndex);
+                    if (firmwareVersion.toFloat() > latestVersion.toFloat()) {
+                        latestVersion = firmwareVersion;
+                    }
                 } else {
-                    return false;
+                    Serial.println("无法从文件名中提取有效版本号: " + fileName);
                 }
+            }
+            if (latestVersion != "0.0" && latestVersion.toFloat() > FirmwareVersion.toFloat()) {
+                latestFirmware = latestVersion;
+                Serial.println("最新固件版本: V" + latestFirmware);
+                return true;
             } else {
-                Serial.println("无法从文件名中提取有效版本号");
+                Serial.println("未找到有效固件版本");
                 return false;
             }
         } else {
@@ -277,13 +285,13 @@ bool getOTAVersion()
         return false;
     }
     http.end();
-    return true;
+    return false;
 }
 
 void startOTA(void *pvParameter)
 {
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    String ota_url = FirmwareUrl + newFirmwareVersion + ".bin";
+    String ota_url = FirmwareUrl + latestFirmware + ".bin";
     Serial.println(ota_url);
     t_httpUpdate_return ret = updateBin(ota_url); // 开始升级
     switch (ret) {
