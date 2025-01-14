@@ -7,8 +7,7 @@ void initSpeakConfig();
 void speakloop();
 int speakPerid(int num);
 String instructionRecognition(const String &command);
-bool instructionRecognitionSign(int sign);
-void voicePlay(String text);
+String instructionRecognitionSign(int sign);
 void sendSTTData();
 void llmRequest();
 String wedUrlXF(const char *Secret, const char *Key, String request, String host);
@@ -17,6 +16,7 @@ String postDouBaoAnswer(String *answerlist, int listnum);
 String getMiniMaxAnswer(String inputText);
 String getXunfeiAnswer(const String &inputText);
 String getDoubaoAnswer(const String &inputText);
+void SerialFlush();
 
 // 更新百度合成taken
 // String tok = getAccessToken();

@@ -406,6 +406,5 @@ void startOTATask()
 {
     vTaskSuspend(devicesTaskHandle);
     vTaskSuspend(speakTaskHandle);
-    playOTA();
     xTaskCreatePinnedToCore(startOTA, "startOTA", 10000, NULL, 1, NULL, 0);
 }

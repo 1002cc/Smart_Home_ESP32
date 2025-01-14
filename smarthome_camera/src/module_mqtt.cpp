@@ -87,6 +87,10 @@ void mqttLoop(void)
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length)
 {
+    if (strcmp(topic, mqtt_pub.c_str()) == 0) {
+        return;
+    }
+
     Serial.printf("Message arrived in topic %s, length %d\n", topic, length);
     Serial.print("Message:");
     for (int i = 0; i < length; i++) {
@@ -190,7 +194,7 @@ void pulishAllDatas()
 void publishDeviceState()
 {
     cJSON *root = cJSON_CreateObject();
-    cJSON_AddStringToObject(root, "devices", "esp32wroom");
+    cJSON_AddStringToObject(root, "devices", "esp32cam");
     char *jsonStr = cJSON_PrintUnformatted(root);
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);
     cJSON_Delete(root);

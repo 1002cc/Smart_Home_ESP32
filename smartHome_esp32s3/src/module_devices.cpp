@@ -149,14 +149,14 @@ void sensor_task(void *pvParameter)
                 mq2sensorValue = 0;
                 Serial.println("Failed to read from MQ2 sensor!");
             } else {
-                if (mq2sensorValue >= 30) {
+                if (mq2sensorValue >= 20) {
                     mq2sensorValue = readmq2();
-                    if (mq2sensorValue >= 30) {
+                    if (mq2sensorValue >= 20) {
                         hasAlarm = true;
                         if (millis() - lastMQTime > 6000) {
                             lastMQTime = millis();
                             playMQAlarm();
-                            sendMQAlarm(true);
+                            pulishState("fanf", true, "switches");
                         }
                     }
                 } else {
@@ -164,7 +164,7 @@ void sensor_task(void *pvParameter)
                     if (mqSure >= 5) {
                         mqSure = 0;
                         if (hasAlarm) {
-                            sendMQAlarm(false);
+                            pulishState("fanf", false, "switches");
                             hasAlarm = false;
                         }
                     }
@@ -175,7 +175,7 @@ void sensor_task(void *pvParameter)
             }
         }
 
-        if (millis() - lastPrintTime > 20 * 1000) {
+        if (millis() - lastPrintTime > 5 * 1000) {
             Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
             lastPrintTime = millis();
         }
@@ -188,7 +188,7 @@ void sensor_task(void *pvParameter)
             };
             publishSensorData(sensorData);
         }
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }

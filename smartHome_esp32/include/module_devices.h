@@ -5,13 +5,13 @@
 // wifi连接超时
 #define CONNECTTIMEOUT 10
 // 雨滴检测时长
-#define RAINTIME 2000
+#define RAINTIME 500
 // 感应灯时长
 #define AUTOLAMPTIME 3000
 // 检测结果保存时长
 #define DETECTIONTIME 3000
 // 检测长时间停留时长
-#define DETECTIONLONGTIME 10 * 1000
+#define DETECTIONLONGTIME 8 * 1000
 
 // RGBLED灯
 #define AUTOLED_PIN 19

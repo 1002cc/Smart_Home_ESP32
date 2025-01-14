@@ -48,6 +48,7 @@ extern AudioHelpr audio;
 SpeakState_t speakState = NO_DIALOGUE;
 int useAIMode = 0;
 
+bool enbeleWakeUp = true;
 SoftwareSerial voiceModuleSerial(RX_PIN, TX_PIN);
 
 // 语音识别时间
@@ -642,74 +643,93 @@ String instructionRecognition(const String &command)
     return command_f;
 }
 
-bool instructionRecognitionSign(int sign)
+String instructionRecognitionSign(int sign)
 {
     Serial.printf("sign: %d\n", sign);
-    bool isSuccess = true;
+    String command_f = "";
     switch (sign) {
     case 5:
         Serial.println("打开1号灯");
         lv_ai_control("lampButton1", 1);
+        command_f = "1号灯已打开";
         break;
     case 6:
         Serial.println("关闭1号灯");
         lv_ai_control("lampButton1", 0);
+        command_f = "1号灯已关闭";
         break;
     case 7:
         Serial.println("打开2号灯");
         lv_ai_control("lampButton2", 1);
+        command_f = "2号灯已打开";
         break;
     case 8:
         Serial.println("关闭2号灯");
         lv_ai_control("lampButton2", 0);
+        command_f = "2号灯已关闭";
         break;
     case 9:
         Serial.println("打开感应");
         lv_ai_control("pri", 1);
+        command_f = "已打开感应";
         break;
     case 10:
         Serial.println("关闭感应");
         lv_ai_control("pri", 0);
+        command_f = "已关闭感应";
         break;
     case 11:
         Serial.println("打开声控");
         lv_ai_control("voiceControl", 1);
+        command_f = "已打开声控";
         break;
     case 12:
         Serial.println("关闭声控");
         lv_ai_control("voiceControl", 0);
+        command_f = "已关闭声控";
         break;
     case 13:
         Serial.println("打开风扇");
         lv_ai_control("fan", 1);
+        command_f = "已打开风扇";
         break;
     case 14:
         Serial.println("关闭风扇");
         lv_ai_control("fan", 0);
+        command_f = "已关闭风扇";
         break;
     case 15:
         Serial.println("打开窗帘");
         lv_ai_control("curtain", 1);
+        command_f = "已打开窗帘";
         break;
     case 16:
         Serial.println("关闭窗帘");
         lv_ai_control("curtain", 0);
+        command_f = "已关闭窗帘";
         break;
     default:
-        isSuccess = false;
         Serial.println("无效的指令标识");
+        command_f = "null";
         break;
     }
-    return isSuccess;
+    return command_f;
+}
+
+void SerialFlush()
+{
+    voiceModuleSerial.flush();
+    voiceModuleSerial.read();
 }
 
 void speakTask(void *pvParameter)
 {
     Serial.println("start speakTask");
     while (1) {
-        if (voiceModuleSerial.available()) {
+        if (enbeleWakeUp && voiceModuleSerial.available()) {
             int convertedInt = 0;
             String receivedData = voiceModuleSerial.readStringUntil('\n');
+            voiceModuleSerial.flush();
             receivedData.trim();
             convertedInt = receivedData.toInt();
             Serial.printf("receivedData: %d\n", convertedInt);
@@ -719,12 +739,17 @@ void speakTask(void *pvParameter)
             webSocketClient_llm.close();
             if (convertedInt == 1) {
                 speakState = WAKEUP;
+                playWakeup();
+                lv_speakState(SpeakState_t::RECORDING);
             } else if (convertedInt >= 5 && convertedInt <= 16) {
-                instructionRecognitionSign(convertedInt);
-                voiceModuleSerial.print(convertedInt);
+                String rec = instructionRecognitionSign(convertedInt);
+                if (rec != "null" || rec != "") {
+                    audio.connecttospeech(rec.c_str(), "zh");
+                }
                 lv_speakState(SpeakState_t::NO_DIALOGUE);
             }
         }
+
         webSocketClient_stt.poll();
 #if USE_WED
         webSocketClient_llm.poll();

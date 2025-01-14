@@ -334,8 +334,8 @@ void ui_set1Screen_screen_init(void)
     ui_Label32 = lv_label_create(ui_W4);
     lv_obj_set_width(ui_Label32, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label32, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label32, -110);
-    lv_obj_set_y(ui_Label32, -36);
+    lv_obj_set_x(ui_Label32, -109);
+    lv_obj_set_y(ui_Label32, -4);
     lv_obj_set_align(ui_Label32, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label32, "发音人");
     ui_object_set_themeable_style_property(ui_Label32, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -348,8 +348,8 @@ void ui_set1Screen_screen_init(void)
     lv_dropdown_set_options(ui_speechDropdown, "xiaomei\nxiaoyu\nxiaoyao\nyaya");
     lv_obj_set_width(ui_speechDropdown, 150);
     lv_obj_set_height(ui_speechDropdown, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_speechDropdown, 28);
-    lv_obj_set_y(ui_speechDropdown, -36);
+    lv_obj_set_x(ui_speechDropdown, 30);
+    lv_obj_set_y(ui_speechDropdown, -4);
     lv_obj_set_align(ui_speechDropdown, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_speechDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     ui_object_set_themeable_style_property(ui_speechDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -367,8 +367,8 @@ void ui_set1Screen_screen_init(void)
     ui_Label33 = lv_label_create(ui_W4);
     lv_obj_set_width(ui_Label33, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label33, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Label33, -108);
-    lv_obj_set_y(ui_Label33, 17);
+    lv_obj_set_x(ui_Label33, -109);
+    lv_obj_set_y(ui_Label33, 53);
     lv_obj_set_align(ui_Label33, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label33, "AI模型");
     ui_object_set_themeable_style_property(ui_Label33, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -378,11 +378,11 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_style_text_font(ui_Label33, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_aimodeDropdown = lv_dropdown_create(ui_W4);
-    lv_dropdown_set_options(ui_aimodeDropdown, "Xunfei\nDoubao");
+    lv_dropdown_set_options(ui_aimodeDropdown, "Xunfei");
     lv_obj_set_width(ui_aimodeDropdown, 150);
     lv_obj_set_height(ui_aimodeDropdown, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_aimodeDropdown, 28);
-    lv_obj_set_y(ui_aimodeDropdown, 19);
+    lv_obj_set_x(ui_aimodeDropdown, 29);
+    lv_obj_set_y(ui_aimodeDropdown, 50);
     lv_obj_set_align(ui_aimodeDropdown, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_aimodeDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     ui_object_set_themeable_style_property(ui_aimodeDropdown, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,

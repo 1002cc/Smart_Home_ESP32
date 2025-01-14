@@ -57,6 +57,8 @@ extern int updatetimentp;
 extern String FirmwareVersion;
 extern String latestFirmware;
 
+extern bool enbeleWakeUp;
+
 /********************************************************************
                          BUILD UI
 ********************************************************************/
@@ -128,6 +130,9 @@ static lv_obj_t *ui_Panel4;
 static lv_obj_t *ui_otaBar;
 static lv_obj_t *ui_otaNumLabel;
 static lv_obj_t *ui_otaLabel;
+
+static lv_obj_t *ui_wakeUpLabel;
+static lv_obj_t *ui_wakeUpSwitch;
 
 static TaskHandle_t cameraTaskHandle = NULL;
 
@@ -322,12 +327,23 @@ void openSoundSwitchCB(lv_event_t *e)
         pulishState_int("timeoutTime", mqttSwitchState.timeoutTime, "switches");
     }
 }
+
 void doorContactDropdownCB(lv_event_t *e)
 {
     char tmp_buf[32];
     lv_dropdown_get_selected_str(ui_Dropdowntime, tmp_buf, sizeof(tmp_buf));
     mqttSwitchState.timeoutTime = atoi(tmp_buf);
     Serial.printf("timeoutTime:%d\n", mqttSwitchState.timeoutTime);
+}
+
+void wakeUpSwitchCB(lv_event_t *e)
+{
+    lv_obj_t *btn = lv_event_get_target(e);
+    bool is_on = lv_obj_has_state(btn, LV_STATE_CHECKED);
+    SerialFlush();
+    if (btn == ui_wakeUpSwitch) {
+        enbeleWakeUp = is_on;
+    }
 }
 
 void detectionCB(lv_event_t *e)
@@ -2237,6 +2253,27 @@ void initSetConfigUI()
     lv_obj_set_style_text_opa(portTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
     lv_textarea_set_one_line(portTextarea, true);
 
+    ui_wakeUpLabel = lv_label_create(ui_W4);
+    lv_obj_set_width(ui_wakeUpLabel, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_wakeUpLabel, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_wakeUpLabel, -110);
+    lv_obj_set_y(ui_wakeUpLabel, -54);
+    lv_obj_set_align(ui_wakeUpLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_wakeUpLabel, "语音唤醒");
+    ui_object_set_themeable_style_property(ui_wakeUpLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_wakeUpLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_wakeUpLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_wakeUpSwitch = lv_switch_create(ui_W4);
+    lv_obj_set_width(ui_wakeUpSwitch, 50);
+    lv_obj_set_height(ui_wakeUpSwitch, 25);
+    lv_obj_set_x(ui_wakeUpSwitch, -15);
+    lv_obj_set_y(ui_wakeUpSwitch, -54);
+    lv_obj_set_align(ui_wakeUpSwitch, LV_ALIGN_CENTER);
+    lv_obj_add_state(ui_wakeUpSwitch, enbeleWakeUp ? LV_STATE_CHECKED : LV_STATE_DEFAULT);
+
     lv_obj_add_event_cb(subTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
     lv_obj_add_event_cb(pubTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
     lv_obj_add_event_cb(weatherTextarea, settext_input_event_cb, LV_EVENT_ALL, inputKeyboard);
@@ -2251,6 +2288,8 @@ void initSetConfigUI()
 
     lv_obj_add_event_cb(deviceRePwButton, lv_deviceRepwCD, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(otaButton, lv_deviceOTA, LV_EVENT_CLICKED, NULL);
+
+    lv_obj_add_event_cb(ui_wakeUpSwitch, wakeUpSwitchCB, LV_EVENT_CLICKED, NULL);
 
     lv_style_init(&main_black_style);
     lv_style_set_border_width(&main_black_style, 0);

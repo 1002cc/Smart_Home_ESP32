@@ -22581,8 +22581,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -110,
-                          -36
+                          -109,
+                          -4
                         ],
                         "InheritedType": 7
                       },
@@ -22740,8 +22740,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          28,
-                          -36
+                          30,
+                          -4
                         ],
                         "InheritedType": 7
                       },
@@ -22948,8 +22948,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          -108,
-                          17
+                          -109,
+                          53
                         ],
                         "InheritedType": 7
                       },
@@ -23107,8 +23107,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          28,
-                          19
+                          29,
+                          50
                         ],
                         "InheritedType": 7
                       },
@@ -23172,7 +23172,7 @@
                       {
                         "nid": -1857434064,
                         "strtype": "DROPDOWN/Options",
-                        "strval": "Xunfei\\nDoubao",
+                        "strval": "Xunfei",
                         "InheritedType": 10
                       },
                       {
@@ -29037,7 +29037,7 @@
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 2896,
+    "backup_cnt": 2898,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

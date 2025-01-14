@@ -110,7 +110,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         Serial.print((char)payload[i]);
     }
 
-    if (topic == mqtt_pub.c_str()) {
+    if (strcmp(topic, mqtt_pub.c_str()) == 0) {
         return;
     }
 
@@ -155,6 +155,12 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             if (fanfjson != NULL) {
                 enable_fanf = fanfjson->valueint;
                 enable_fanf ? fanf_on() : fanf_off();
+                if (enable_fanf && curtain_direction == 0) {
+                    enable_curtain = true;
+                    curtain_direction = 1;
+                    StoreintData("cuo", curtain_direction);
+                    pulishState("curtain", curtain_direction, "switches");
+                }
                 Serial.printf("fanfjson: %d  enable_fanf:%d\n", fanfjson->valueint, enable_fanf);
             }
             cJSON *curtainjson = cJSON_GetObjectItem(switches, "curtain");
@@ -191,7 +197,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         }
         cJSON *getdatas = cJSON_GetObjectItem(root, "getdatas");
         if (getdatas != NULL) {
-            Serial.printf("getdatas:%d", getdatas->valueint);
+            Serial.printf("getdatas:%d\n", getdatas->valueint);
             pulishAllSwitchDatas();
         }
         cJSON *repw = cJSON_GetObjectItem(root, "repw");
@@ -325,7 +331,7 @@ void pulishAllSwitchDatas()
     cJSON_AddBoolToObject(switches, "curtain", curtain_direction);
 
     // 配置信息
-    cJSON_AddBoolToObject(switches, "motorRunTime", motorRunTime);
+    cJSON_AddNumberToObject(switches, "motorRunTime", motorRunTime);
     cJSON_AddBoolToObject(switches, "doorContactOpenSound", enableOpenSound);
     cJSON_AddBoolToObject(switches, "enableDoorContactTimeout", enableDoorContactTimeout);
     cJSON_AddNumberToObject(switches, "timeoutTime", doorOpenTimeoutThreshold);

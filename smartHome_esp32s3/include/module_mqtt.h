@@ -47,6 +47,6 @@ bool pulishState(const String &object, const bool &state, const String &item);
 bool pulishState_int(const String &object, const int &num, const String &item);
 void publishVideoAbout(int value);
 bool sendRePW();
-bool sendMQAlarm(const bool &state);
+bool sendMQAlarm(bool state);
 
 #endif

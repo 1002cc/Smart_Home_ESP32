@@ -42,7 +42,7 @@ bool enable_fanf = false;
 // 窗帘开关
 bool enable_curtain = false;
 // 控制窗帘的方向
-bool curtain_direction = 1;
+bool curtain_direction = 0;
 // 电机运行时长
 int motorRunTime = 10;
 // 电机参数
@@ -66,6 +66,14 @@ TaskHandle_t curtainForwardReverseTaskHandle;
 TaskHandle_t devicesTaskHandle = NULL;
 
 extern String FirmwareVersion;
+
+// 触摸按键检测
+unsigned long lastDebounceTime = 0; // 上次按钮状态变化的时间
+unsigned long debounceDelay = 50;   // 去抖动延迟时间，单位为毫秒
+int lastButton1State = LOW;         // 上次读取的按钮状态
+int button1State = LOW;             // 当前按钮状态
+int lastButton2State = LOW;         // 上次读取的按钮状态
+int button2State = LOW;             // 当前按钮状态
 
 /********************************************************************
                          LED
@@ -154,6 +162,12 @@ void sensorTask(void *pt)
             rainTime = 0;
             rainFlag = 1;
             Serial.println("has rain");
+            if (curtain_direction == 1) {
+                enable_curtain = true;
+                curtain_direction = 0;
+                StoreintData("cuo", curtain_direction);
+                pulishState("curtain", curtain_direction, "switches");
+            }
             playAudio(AUDIO_NAME::RAIN);
             pulishState("rainState", isRain);
         }
@@ -163,27 +177,25 @@ void sensorTask(void *pt)
             pirState = analogRead(PIR_CHANNL);
             if (pirState > 0) {
                 priTime = millis();
-
                 // 发送人体感应状态
                 if (!mqttPri) {
                     mqttPri = true;
                     priLongTime = millis();
                     pulishState("priState", true);
                 }
-
-                if (millis() - priLongTime >= DETECTIONLONGTIME) {
-                    priLongTime = millis();
-                    Serial.println("has long people");
-                    playAudio(AUDIO_NAME::LT);
-                }
-
-                Serial.println("has people");
+                // Serial.println("has people");
             } else {
                 if (mqttPri && millis() - priTime >= DETECTIONTIME) {
                     mqttPri = false;
                     pulishState("priState", false);
+                    priLongTime = millis();
                 }
+                // Serial.println("no people");
+            }
+            if (millis() - priLongTime >= DETECTIONLONGTIME && mqttPri) {
                 priLongTime = millis();
+                Serial.println("has long people");
+                playAudio(AUDIO_NAME::LT);
             }
         } else {
             if (mqttPri) {
@@ -230,7 +242,7 @@ void sensorTask(void *pt)
         }
 
         // 打印传感器数据
-        if (millis() - lastPrintTime > 2000) {
+        if (millis() - lastPrintTime > 5000) {
             Serial.printf("rainState = %d  soundState = %d  pirState = %d  activeEnableAutoLamp = %d\n", rainState, soundState, pirState, activeEnableAutoLamp);
             lastPrintTime = millis();
         }
@@ -257,6 +269,9 @@ void sensorTask(void *pt)
                     // Serial.println("The door is closed");
                     if (doorContactState == 1) {
                         doorContactState = 0;
+                        if (enableOpenSound) {
+                            playAudio(AUDIO_NAME::DC12);
+                        }
                         pulishState("doorcontact", false, "switches");
                     }
                     doorOpenTime = millis();
@@ -264,6 +279,7 @@ void sensorTask(void *pt)
                 // 判断门是否超时未关闭
                 if (enableDoorContactTimeout) {
                     if (millis() - doorOpenTime >= doorOpenTimeoutThreshold * 1000 * 60 && doorContactState == 1) {
+                        doorOpenTime = millis() - (doorOpenTimeoutThreshold * 1000 * (60 - 5));
                         Serial.println("The door has been open for too long and is overdue!");
                         playAudio(AUDIO_NAME::DC2);
                     }
@@ -284,26 +300,42 @@ void sensorTask(void *pt)
         }
 
         // 开关1
-        if (digitalRead(BUTTON_PIN1)) {
-            delay(30);
-            if (digitalRead(BUTTON_PIN1)) {
-                Serial.println("BUTTON_PIN1");
-                mqttSwitchState.lampButton1 = !led3w_state();
-                mqttSwitchState.lampButton1 ? led3w_on() : led3w_off();
-                pulishState("lampButton1", mqttSwitchState.lampButton1, "switches");
-            }
+        int reading1 = digitalRead(BUTTON_PIN1);
+        if (reading1 != lastButton1State) {
+            lastDebounceTime = millis();
         }
 
-        // 开关2
-        if (digitalRead(BUTTON_PIN2)) {
-            delay(30);
-            if (digitalRead(BUTTON_PIN2)) {
-                Serial.println("BUTTON_PIN2");
-                mqttSwitchState.lampButton2 = !autoled_state();
-                mqttSwitchState.lampButton2 ? autoled_on() : autoled_off();
-                pulishState("lampButton2", mqttSwitchState.lampButton2, "switches");
+        if ((millis() - lastDebounceTime) > debounceDelay) {
+            if (reading1 != button1State) {
+                button1State = reading1;
+                if (button1State == HIGH) {
+                    Serial.println("BUTTON_PIN1");
+                    mqttSwitchState.lampButton1 = !led3w_state();
+                    mqttSwitchState.lampButton1 ? led3w_on() : led3w_off();
+                    pulishState("lampButton1", mqttSwitchState.lampButton1, "switches");
+                }
             }
         }
+        lastButton1State = reading1;
+
+        // 开关2
+        int reading2 = digitalRead(BUTTON_PIN2);
+        if (reading2 != lastButton2State) {
+            lastDebounceTime = millis();
+        }
+
+        if ((millis() - lastDebounceTime) > debounceDelay) {
+            if (reading2 != button2State) {
+                button2State = reading2;
+                if (button2State == HIGH) {
+                    Serial.println("BUTTON_PIN2");
+                    enable_fan = !enable_fan;
+                    enable_fan ? fan_on() : fan_off();
+                    pulishState("fan", enable_fan, "switches");
+                }
+            }
+        }
+        lastButton2State = reading2;
         vTaskDelay(100);
     }
     vTaskDelete(NULL);

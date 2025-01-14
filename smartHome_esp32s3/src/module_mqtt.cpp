@@ -365,7 +365,7 @@ bool sendRePW()
     }
 }
 
-bool sendMQAlarm(const bool &state)
+bool sendMQAlarm(bool state)
 {
     pulishState("fanf", state, "switches");
 }
