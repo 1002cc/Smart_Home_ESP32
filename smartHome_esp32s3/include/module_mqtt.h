@@ -23,6 +23,7 @@ struct lampButtonData {
     bool voiceButton;
     bool fan;
     bool curtain;
+    bool window;
     bool doorcontact;
     bool openSound;
     bool timeout;

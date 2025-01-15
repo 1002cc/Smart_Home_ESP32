@@ -284,6 +284,8 @@ LV_IMG_DECLARE(ui_img_fan_png);    // assets/fan.png
 LV_IMG_DECLARE(ui_img_curtain1_png);    // assets/curtain1.png
 LV_IMG_DECLARE(ui_img_fan1_png);    // assets/fan1.png
 LV_IMG_DECLARE(ui_img_doorcontact_png);    // assets/doorcontact.png
+LV_IMG_DECLARE(ui_img_o111_png);    // assets/o111.png
+LV_IMG_DECLARE(ui_img_c111_png);    // assets/c111.png
 LV_IMG_DECLARE(ui_img_vv1_png);    // assets/vv1.png
 LV_IMG_DECLARE(ui_img_sound1_png);    // assets/sound1.png
 LV_IMG_DECLARE(ui_img_a1_png);    // assets/a1.png

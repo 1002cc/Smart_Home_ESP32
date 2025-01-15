@@ -37,7 +37,10 @@ bool mqttPri = false;
 
 // 风扇开关
 bool enable_fan = false;
-bool enable_fanf = false;
+// 窗户开关
+bool enable_window = false;
+bool windowState = false;
+int servoPos = 0;
 
 // 窗帘开关
 bool enable_curtain = false;
@@ -292,6 +295,27 @@ void sensorTask(void *pt)
             lastDoorContactState = isDoorContact;
         }
 
+        if (enable_window) {
+            if (windowState) {
+                Serial.println("window open");
+                if (servoPos <= 0) {
+                    for (servoPos = 0; servoPos <= 180; servoPos += 1) {
+                        sg90_setAngle(servoPos);
+                        vTaskDelay(15);
+                    }
+                }
+            } else {
+                Serial.println("window close");
+                if (servoPos >= 180) {
+                    for (servoPos = 180; servoPos >= 0; servoPos -= 1) {
+                        sg90_setAngle(servoPos);
+                        vTaskDelay(15);
+                    }
+                }
+            }
+            enable_window = false;
+        }
+
         // 窗帘控制
         if (enable_curtain) {
             if (curtainForwardReverseTaskHandle == NULL) {
@@ -416,8 +440,11 @@ void electrical_machinery_init()
     // 风扇
     pinMode(FAN_PINA, OUTPUT);
     fan_off();
-    pinMode(FAN_PINB, OUTPUT);
-    fanf_off();
+    // 窗户
+    pinMode(WINDOW_PIN, OUTPUT);
+    ledcSetup(1, 50, 8);
+    ledcAttachPin(WINDOW_PIN, 1);
+
     // 门磁
     pinMode(DOOR_CONTACT_PIN, INPUT_PULLUP);
     // 窗帘电机
@@ -436,14 +463,9 @@ void fan_off()
     digitalWrite(FAN_PINA, LOW);
 }
 
-void fanf_on()
+void sg90_setAngle(int angle)
 {
-    fan_off();
-    digitalWrite(FAN_PINB, HIGH);
-}
-void fanf_off()
-{
-    digitalWrite(FAN_PINB, LOW);
+    ledcWrite(1, angle);
 }
 
 void setStep(int pin1, int pin2, int pin3, int pin4)
@@ -492,6 +514,12 @@ void initDevicesDatas()
     if (curtain_directionData != 1000) {
         curtain_direction = curtain_directionData;
         pulishState("curtain", curtain_direction, "switches");
+    }
+
+    int windowData = ReadintData("wd");
+    if (windowData != 1000) {
+        windowState = windowData;
+        pulishState("window", windowState, "switches");
     }
 
     int enableOpenSoundData = ReadintData("dcos");

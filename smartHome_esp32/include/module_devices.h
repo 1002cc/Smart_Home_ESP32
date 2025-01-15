@@ -38,8 +38,12 @@
 
 // 电机设备
 // 风扇
-#define FAN_PINA 18
-#define FAN_PINB 33
+// #define FAN_PINA 18
+#define FAN_PINA 33
+// #define FAN_PINB 33
+
+// 窗户
+#define WINDOW_PIN 18
 
 // 窗帘
 #define CURTAIN_PIN1 25
@@ -70,8 +74,6 @@ void sg90_setAngle(int angle);
 
 void fan_on();
 void fan_off();
-void fanf_on();
-void fanf_off();
 
 void setStep(int pin1, int pin2, int pin3, int pin4);
 

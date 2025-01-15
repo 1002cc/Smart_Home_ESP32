@@ -10185,6 +10185,104 @@
                                   }
                                 ],
                                 "InheritedType": 10
+                              },
+                              {
+                                "nid": 1000044,
+                                "strtype": "_event/action",
+                                "strval": "IMAGE_PROPERTY",
+                                "childs": [
+                                  {
+                                    "nid": 1000045,
+                                    "strtype": "IMAGE_PROPERTY/Name",
+                                    "strval": "IMAGE_PROPERTY",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000046,
+                                    "strtype": "IMAGE_PROPERTY/Call",
+                                    "strval": "SetImageProperty(<{Target}>, '<{Property}>', <{Value}>, <{Value_}>)",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000047,
+                                    "strtype": "IMAGE_PROPERTY/CallC",
+                                    "strval": "_ui_image_set_property(<{Target}>, _UI_IMAGE_PROPERTY_<{Property}>,& <{Value}>);",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000048,
+                                    "strtype": "IMAGE_PROPERTY/Target",
+                                    "strval": "GUID82469797-434298S7793237",
+                                    "InheritedType": 9
+                                  },
+                                  {
+                                    "nid": 1000049,
+                                    "strtype": "IMAGE_PROPERTY/Property",
+                                    "strval": "Image",
+                                    "InheritedType": 3
+                                  },
+                                  {
+                                    "nid": 1000050,
+                                    "strtype": "IMAGE_PROPERTY/Value",
+                                    "strval": "assets/o111.png",
+                                    "InheritedType": 5
+                                  },
+                                  {
+                                    "nid": 1000051,
+                                    "strtype": "IMAGE_PROPERTY/Value_",
+                                    "InheritedType": 6
+                                  }
+                                ],
+                                "InheritedType": 10
+                              },
+                              {
+                                "nid": 1000052,
+                                "strtype": "_event/action",
+                                "strval": "IMAGE_PROPERTY",
+                                "childs": [
+                                  {
+                                    "nid": 1000053,
+                                    "strtype": "IMAGE_PROPERTY/Name",
+                                    "strval": "IMAGE_PROPERTY",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000054,
+                                    "strtype": "IMAGE_PROPERTY/Call",
+                                    "strval": "SetImageProperty(<{Target}>, '<{Property}>', <{Value}>, <{Value_}>)",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000055,
+                                    "strtype": "IMAGE_PROPERTY/CallC",
+                                    "strval": "_ui_image_set_property(<{Target}>, _UI_IMAGE_PROPERTY_<{Property}>,& <{Value}>);",
+                                    "InheritedType": 10
+                                  },
+                                  {
+                                    "nid": 1000056,
+                                    "strtype": "IMAGE_PROPERTY/Target",
+                                    "strval": "GUID82469797-434298S7793237",
+                                    "InheritedType": 9
+                                  },
+                                  {
+                                    "nid": 1000057,
+                                    "strtype": "IMAGE_PROPERTY/Property",
+                                    "strval": "Image",
+                                    "InheritedType": 3
+                                  },
+                                  {
+                                    "nid": 1000058,
+                                    "strtype": "IMAGE_PROPERTY/Value",
+                                    "strval": "assets/c111.png",
+                                    "InheritedType": 5
+                                  },
+                                  {
+                                    "nid": 1000059,
+                                    "strtype": "IMAGE_PROPERTY/Value_",
+                                    "InheritedType": 6
+                                  }
+                                ],
+                                "InheritedType": 10
                               }
                             ],
                             "InheritedType": 4
@@ -29037,7 +29135,7 @@
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 2898,
+    "backup_cnt": 2905,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
@@ -29053,7 +29151,7 @@
     "drive_fatfs_path": "",
     "naming": "Name",
     "naming_force_lowercase": false,
-    "nidcnt": 1000044,
+    "nidcnt": 1000060,
     "BitDepth": 16,
     "Name": "SquareLine_Project"
   }

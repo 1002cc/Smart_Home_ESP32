@@ -99,6 +99,10 @@ static lv_obj_t *ButtonCurtain;
 static lv_obj_t *stateLabelCurtain;
 static lv_obj_t *stateImageCurtain;
 static lv_obj_t *nameLabelCurtain;
+static lv_obj_t *ButtonWindow;
+static lv_obj_t *stateLabelWindow;
+static lv_obj_t *stateImageWindow;
+static lv_obj_t *nameLabelWindow;
 static lv_obj_t *ui_ButtonDoorContact;
 static lv_obj_t *ui_stateLabelDoorContact;
 static lv_obj_t *ui_stateImageDoorContact;
@@ -136,7 +140,7 @@ static lv_obj_t *ui_wakeUpSwitch;
 
 static TaskHandle_t cameraTaskHandle = NULL;
 
-lampButtonData mqttSwitchState = {false, false, false, false, false, false, false};
+lampButtonData mqttSwitchState = {false, false, false, false, false, false, false, false};
 detectionDate detectiondatas = {false, false, false};
 extern String username;
 extern String upassword;
@@ -276,6 +280,8 @@ void lampButtonCB(lv_event_t *e)
         lv_ai_control("fan", is_on);
     } else if (btn == ButtonCurtain) {
         lv_ai_control("curtain", is_on);
+    } else if (btn == ButtonWindow) {
+        lv_ai_control("window", is_on);
     }
 }
 
@@ -756,6 +762,20 @@ void lv_setButtonFan(bool state)
         lv_img_set_src(stateImageFan, &ui_img_fan1_png);
     }
 }
+
+void lv_setButtonWindow(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ButtonWindow, LV_STATE_CHECKED);
+        lv_label_set_text(stateLabelWindow, "ON");
+        lv_img_set_src(stateImageWindow, &ui_img_o111_png);
+    } else {
+        lv_obj_clear_state(ButtonWindow, LV_STATE_CHECKED);
+        lv_label_set_text(stateLabelWindow, "OFF");
+        lv_img_set_src(stateImageWindow, &ui_img_c111_png);
+    }
+}
+
 void lv_setButtonCurtain(bool state)
 {
     if (state) {
@@ -857,6 +877,13 @@ void lv_ai_control(const String &handl, bool state)
             msgboxTip("请登录账号!!!");
         }
         lv_setButtonFan(mqttSwitchState.fan);
+    } else if (handl == "window") {
+        if (isSuccess) {
+            mqttSwitchState.window = state;
+        } else {
+            msgboxTip("请登录账号!!!");
+        }
+        lv_setButtonWindow(mqttSwitchState.window);
     } else if (handl == "curtain") {
         if (isSuccess) {
             mqttSwitchState.curtain = state;
@@ -1968,7 +1995,7 @@ void initDeviceUI(void)
     lv_obj_set_x(ui_doorContactLabelsound, -67);
     lv_obj_set_y(ui_doorContactLabelsound, -24);
     lv_obj_set_align(ui_doorContactLabelsound, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_doorContactLabelsound, "开机语音设置:");
+    lv_label_set_text(ui_doorContactLabelsound, "开启语音设置:");
     lv_obj_set_style_text_font(ui_doorContactLabelsound, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_openSoundSwitch = lv_switch_create(ui_doorContactPanel);
@@ -2113,7 +2140,66 @@ void initDeviceUI(void)
     lv_obj_add_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
     lv_keyboard_set_mode(inputKeyboardNumber, LV_KEYBOARD_MODE_NUMBER);
 
-    lv_obj_add_event_cb(ui_curtainTextarea, settext_input_number_event_cb, LV_EVENT_ALL, inputKeyboardNumber);
+    ButtonWindow = lv_btn_create(ui_TabPage2);
+    lv_obj_set_width(ButtonWindow, 115);
+    lv_obj_set_height(ButtonWindow, 80);
+    lv_obj_set_x(ButtonWindow, 75);
+    lv_obj_set_y(ButtonWindow, 58);
+    lv_obj_set_align(ButtonWindow, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ButtonWindow, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ButtonWindow, LV_OBJ_FLAG_SCROLLABLE);                            /// Flags
+    ui_object_set_themeable_style_property(ButtonWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ButtonWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_bg_color(ButtonWindow, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ButtonWindow, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ButtonWindow, 150, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ButtonWindow, 10, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_spread(ButtonWindow, 5, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonWindow, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonWindow, lv_color_hex(0xA94949), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    stateLabelWindow = lv_label_create(ButtonWindow);
+    lv_obj_set_width(stateLabelWindow, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateLabelWindow, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateLabelWindow, 30);
+    lv_obj_set_y(stateLabelWindow, -20);
+    lv_obj_set_align(stateLabelWindow, LV_ALIGN_CENTER);
+    lv_label_set_text(stateLabelWindow, "OFF");
+    lv_obj_clear_flag(stateLabelWindow, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE); /// Flags
+    ui_object_set_themeable_style_property(stateLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(stateLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(stateLabelWindow, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    stateImageWindow = lv_img_create(ButtonWindow);
+    lv_img_set_src(stateImageWindow, &ui_img_c111_png);
+    lv_obj_set_width(stateImageWindow, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateImageWindow, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateImageWindow, -27);
+    lv_obj_set_y(stateImageWindow, -16);
+    lv_obj_set_align(stateImageWindow, LV_ALIGN_CENTER);
+    lv_obj_add_flag(stateImageWindow, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(stateImageWindow, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_img_set_zoom(stateImageWindow, 80);
+
+    nameLabelWindow = lv_label_create(ButtonWindow);
+    lv_obj_set_width(nameLabelWindow, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(nameLabelWindow, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(nameLabelWindow, -30);
+    lv_obj_set_y(nameLabelWindow, 22);
+    lv_obj_set_align(nameLabelWindow, LV_ALIGN_CENTER);
+    lv_label_set_text(nameLabelWindow, "窗户");
+    ui_object_set_themeable_style_property(nameLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(nameLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(nameLabelWindow, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 #if USE_BLE
     ui_LabelBLE = lv_label_create(ui_w1);
@@ -2140,9 +2226,10 @@ void initDeviceUI(void)
     lv_obj_add_event_cb(ui_BLESwitch, chooseBtEventCD, LV_EVENT_ALL, NULL);
 
 #endif
-
+    lv_obj_add_event_cb(ui_curtainTextarea, settext_input_number_event_cb, LV_EVENT_ALL, inputKeyboardNumber);
     lv_obj_add_event_cb(ButtonFan, lampButtonCB, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ButtonCurtain, lampButtonCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ButtonWindow, lampButtonCB, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(stateImageCurtain, curtainCB, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ui_curtainButtonsure, curtainCB2, LV_EVENT_CLICKED, NULL);
     lv_obj_add_event_cb(ui_curtainButtonq, curtainCB1, LV_EVENT_CLICKED, NULL);

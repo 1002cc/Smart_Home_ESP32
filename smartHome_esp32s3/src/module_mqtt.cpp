@@ -187,6 +187,11 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 mqttSwitchState.fan = buttonFan_j->valueint;
                 lv_setButtonFan(mqttSwitchState.fan);
             }
+            cJSON *buttonWindow_j = cJSON_GetObjectItem(switches, "window");
+            if (buttonWindow_j != NULL) {
+                mqttSwitchState.window = buttonWindow_j->valueint;
+                lv_setButtonWindow(mqttSwitchState.window);
+            }
             cJSON *buttonCurtain_j = cJSON_GetObjectItem(switches, "curtain");
             if (buttonCurtain_j != NULL) {
                 mqttSwitchState.curtain = buttonCurtain_j->valueint;

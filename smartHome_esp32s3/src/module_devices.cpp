@@ -149,14 +149,14 @@ void sensor_task(void *pvParameter)
                 mq2sensorValue = 0;
                 Serial.println("Failed to read from MQ2 sensor!");
             } else {
-                if (mq2sensorValue >= 20) {
+                if (mq2sensorValue >= 30) {
                     mq2sensorValue = readmq2();
-                    if (mq2sensorValue >= 20) {
+                    if (mq2sensorValue >= 30) {
                         hasAlarm = true;
                         if (millis() - lastMQTime > 6000) {
                             lastMQTime = millis();
                             playMQAlarm();
-                            pulishState("fanf", true, "switches");
+                            pulishState("fan", true, "switches");
                         }
                     }
                 } else {
@@ -164,7 +164,7 @@ void sensor_task(void *pvParameter)
                     if (mqSure >= 5) {
                         mqSure = 0;
                         if (hasAlarm) {
-                            pulishState("fanf", false, "switches");
+                            pulishState("fan", false, "switches");
                             hasAlarm = false;
                         }
                     }

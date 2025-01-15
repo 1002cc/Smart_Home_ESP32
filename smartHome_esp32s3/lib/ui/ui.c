@@ -259,7 +259,7 @@ lv_obj_t * ui____initial_actions0;
 
 // IMAGES AND IMAGE SETS
 const lv_img_dsc_t * ui_imgset_a[1] = {&ui_img_a1_png};
-const lv_img_dsc_t * ui_imgset_c[1] = {&ui_img_c1_png};
+const lv_img_dsc_t * ui_imgset_c[2] = {&ui_img_c1_png, &ui_img_c111_png};
 const lv_img_dsc_t * ui_imgset_cc[1] = {&ui_img_cc1_png};
 const lv_img_dsc_t * ui_imgset_curtain[1] = {&ui_img_curtain1_png};
 const lv_img_dsc_t * ui_imgset_dd[2] = {&ui_img_dd1_png, &ui_img_dd2_png};
@@ -274,6 +274,7 @@ const lv_img_dsc_t * ui_imgset_t[1] = {&ui_img_t2_png};
 const lv_img_dsc_t * ui_imgset_vv[1] = {&ui_img_vv1_png};
 const lv_img_dsc_t * ui_imgset_w[1] = {&ui_img_w1_png};
 const lv_img_dsc_t * ui_imgset_ww[2] = {&ui_img_ww2_png, &ui_img_ww3_png};
+const lv_img_dsc_t * ui_imgset_o[1] = {&ui_img_o111_png};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -476,6 +477,8 @@ void ui_event_stateImage1(lv_event_t * e)
         _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_curtain1_png);
         _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_fan1_png);
         _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_doorcontact_png);
+        _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_o111_png);
+        _ui_image_set_property(ui_stateImage1, _UI_IMAGE_PROPERTY_IMAGE, & ui_img_c111_png);
     }
 }
 

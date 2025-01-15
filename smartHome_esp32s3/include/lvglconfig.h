@@ -43,6 +43,7 @@ void lv_setUser(const String &user);
 void lv_setLampButton1(bool state);
 void lv_setLampButton2(bool state);
 void lv_setButtonFan(bool state);
+void lv_setButtonWindow(bool state);
 void lv_setButtonCurtain(bool state);
 void lv_setButtonDoorContact(bool state);
 void lv_setButtonDoorContactOpenSound(bool state);

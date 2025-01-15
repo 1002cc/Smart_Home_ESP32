@@ -708,6 +708,16 @@ String instructionRecognitionSign(int sign)
         lv_ai_control("curtain", 0);
         command_f = "已关闭窗帘";
         break;
+    case 17:
+        Serial.println("打开窗户");
+        lv_ai_control("window", 1);
+        command_f = "已打开窗户";
+        break;
+    case 18:
+        Serial.println("关闭窗户");
+        lv_ai_control("window", 0);
+        command_f = "已关闭窗户";
+        break;
     default:
         Serial.println("无效的指令标识");
         command_f = "null";
@@ -729,7 +739,7 @@ void speakTask(void *pvParameter)
         if (enbeleWakeUp && voiceModuleSerial.available()) {
             int convertedInt = 0;
             String receivedData = voiceModuleSerial.readStringUntil('\n');
-            voiceModuleSerial.flush();
+            SerialFlush();
             receivedData.trim();
             convertedInt = receivedData.toInt();
             Serial.printf("receivedData: %d\n", convertedInt);
@@ -741,7 +751,7 @@ void speakTask(void *pvParameter)
                 speakState = WAKEUP;
                 playWakeup();
                 lv_speakState(SpeakState_t::RECORDING);
-            } else if (convertedInt >= 5 && convertedInt <= 16) {
+            } else if (convertedInt >= 5) {
                 String rec = instructionRecognitionSign(convertedInt);
                 if (rec != "null" || rec != "") {
                     audio.connecttospeech(rec.c_str(), "zh");

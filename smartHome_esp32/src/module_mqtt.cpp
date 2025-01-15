@@ -36,6 +36,8 @@ extern bool enableOpenSound;
 extern bool enableDoorContactTimeout;
 extern int doorOpenTimeoutThreshold;
 extern String FirmwareVersion;
+extern bool enable_window;
+extern bool windowState;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
 
@@ -151,17 +153,12 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 enable_fan ? fan_on() : fan_off();
                 Serial.printf("fanjson: %d  enable_fan:%d\n", fanjson->valueint, enable_fan);
             }
-            cJSON *fanfjson = cJSON_GetObjectItem(switches, "fanf");
-            if (fanfjson != NULL) {
-                enable_fanf = fanfjson->valueint;
-                enable_fanf ? fanf_on() : fanf_off();
-                if (enable_fanf && curtain_direction == 0) {
-                    enable_curtain = true;
-                    curtain_direction = 1;
-                    StoreintData("cuo", curtain_direction);
-                    pulishState("curtain", curtain_direction, "switches");
-                }
-                Serial.printf("fanfjson: %d  enable_fanf:%d\n", fanfjson->valueint, enable_fanf);
+            cJSON *windowjson = cJSON_GetObjectItem(switches, "window");
+            if (windowjson != NULL) {
+                enable_window = true;
+                windowState = windowjson->valueint;
+                StoreintData("wd", windowState);
+                Serial.printf("windowjson: %d  enable_window:%d\n", windowjson->valueint, enable_window);
             }
             cJSON *curtainjson = cJSON_GetObjectItem(switches, "curtain");
             if (curtainjson != NULL) {

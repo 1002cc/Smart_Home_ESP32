@@ -37,6 +37,8 @@ SET(SOURCES screens/ui_StartupScreen.c
     images/ui_img_curtain1_png.c
     images/ui_img_fan1_png.c
     images/ui_img_doorcontact_png.c
+    images/ui_img_o111_png.c
+    images/ui_img_c111_png.c
     images/ui_img_vv1_png.c
     images/ui_img_sound1_png.c
     images/ui_img_a1_png.c
