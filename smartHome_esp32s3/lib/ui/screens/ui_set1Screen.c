@@ -303,19 +303,6 @@ void ui_set1Screen_screen_init(void)
     lv_obj_add_state(ui_startAudioSwitch, LV_STATE_CHECKED);       /// States
 
 
-    ui_pwLabel = lv_label_create(ui_w3);
-    lv_obj_set_width(ui_pwLabel, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_pwLabel, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_pwLabel, -81);
-    lv_obj_set_y(ui_pwLabel, 65);
-    lv_obj_set_align(ui_pwLabel, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_pwLabel, "检测设备重新配网");
-    ui_object_set_themeable_style_property(ui_pwLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_font);
-    ui_object_set_themeable_style_property(ui_pwLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_alpha_font);
-    lv_obj_set_style_text_font(ui_pwLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
-
     ui_W4 = lv_tabview_add_tab(ui_chooseTabView, "S");
 
     ui_Label19 = lv_label_create(ui_W4);
@@ -455,6 +442,47 @@ void ui_set1Screen_screen_init(void)
     ui_object_set_themeable_style_property(ui_Label35, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
                                            _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_Label35, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_D1 = lv_tabview_add_tab(ui_chooseTabView, "d");
+
+    ui_pwLabel = lv_label_create(ui_D1);
+    lv_obj_set_width(ui_pwLabel, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_pwLabel, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_pwLabel, -75);
+    lv_obj_set_y(ui_pwLabel, -3);
+    lv_obj_set_align(ui_pwLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_pwLabel, "检测设备重新配网");
+    ui_object_set_themeable_style_property(ui_pwLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_pwLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_pwLabel, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_control11Label = lv_label_create(ui_D1);
+    lv_obj_set_width(ui_control11Label, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_control11Label, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_control11Label, 0);
+    lv_obj_set_y(ui_control11Label, -90);
+    lv_obj_set_align(ui_control11Label, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_control11Label, "检测设备配置");
+    ui_object_set_themeable_style_property(ui_control11Label, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_control11Label, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_control11Label, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_control1Label7 = lv_label_create(ui_D1);
+    lv_obj_set_width(ui_control1Label7, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_control1Label7, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_control1Label7, -110);
+    lv_obj_set_y(ui_control1Label7, -47);
+    lv_obj_set_align(ui_control1Label7, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_control1Label7, "入侵警报");
+    ui_object_set_themeable_style_property(ui_control1Label7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_control1Label7, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_control1Label7, &ui_font_tipFont, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     lv_obj_add_event_cb(ui_mqttuseButton, ui_event_mqttuseButton, LV_EVENT_ALL, NULL);
     lv_obj_add_event_cb(ui_timeuseButton, ui_event_timeuseButton, LV_EVENT_ALL, NULL);

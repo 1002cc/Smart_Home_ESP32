@@ -2,8 +2,10 @@
 #include "module_mqtt.h"
 #include "module_server.h"
 #include "module_wifi.h"
+#include <ESP32Servo.h>
 
 extern bool enable_pri;
+extern bool enable_priAlarm;
 extern bool enable_VoiceControl;
 extern bool activeEnableAutoLamp;
 int rainState = 0, soundState = 1, pirState = 0;
@@ -40,7 +42,7 @@ bool enable_fan = false;
 // 窗户开关
 bool enable_window = false;
 bool windowState = false;
-int servoPos = 0;
+Servo windowServo;
 
 // 窗帘开关
 bool enable_curtain = false;
@@ -165,11 +167,11 @@ void sensorTask(void *pt)
             rainTime = 0;
             rainFlag = 1;
             Serial.println("has rain");
-            if (curtain_direction == 1) {
-                enable_curtain = true;
-                curtain_direction = 0;
-                StoreintData("cuo", curtain_direction);
-                pulishState("curtain", curtain_direction, "switches");
+            if (windowState == 1) {
+                enable_window = true;
+                windowState = 0;
+                StoreintData("wd", windowState);
+                pulishState("window", windowState, "switches");
             }
             playAudio(AUDIO_NAME::RAIN);
             pulishState("rainState", isRain);
@@ -185,6 +187,10 @@ void sensorTask(void *pt)
                     mqttPri = true;
                     priLongTime = millis();
                     pulishState("priState", true);
+                    // 入侵报警
+                    if (enable_priAlarm) {
+                        playAudio(AUDIO_NAME::PA);
+                    }
                 }
                 // Serial.println("has people");
             } else {
@@ -298,20 +304,14 @@ void sensorTask(void *pt)
         if (enable_window) {
             if (windowState) {
                 Serial.println("window open");
-                if (servoPos <= 0) {
-                    for (servoPos = 0; servoPos <= 180; servoPos += 1) {
-                        sg90_setAngle(servoPos);
-                        vTaskDelay(15);
-                    }
-                }
+                windowServo.writeMicroseconds(1800);
+                delay(500);
+                windowServo.writeMicroseconds(1500);
             } else {
                 Serial.println("window close");
-                if (servoPos >= 180) {
-                    for (servoPos = 180; servoPos >= 0; servoPos -= 1) {
-                        sg90_setAngle(servoPos);
-                        vTaskDelay(15);
-                    }
-                }
+                windowServo.writeMicroseconds(1200);
+                delay(500);
+                windowServo.writeMicroseconds(1500);
             }
             enable_window = false;
         }
@@ -441,9 +441,13 @@ void electrical_machinery_init()
     pinMode(FAN_PINA, OUTPUT);
     fan_off();
     // 窗户
-    pinMode(WINDOW_PIN, OUTPUT);
-    ledcSetup(1, 50, 8);
-    ledcAttachPin(WINDOW_PIN, 1);
+    ESP32PWM::allocateTimer(0);
+    ESP32PWM::allocateTimer(1);
+    ESP32PWM::allocateTimer(2);
+    ESP32PWM::allocateTimer(3);
+    windowServo.setPeriodHertz(50);
+    windowServo.attach(WINDOW_PIN, 1000, 2000);
+    windowServo.writeMicroseconds(1500);
 
     // 门磁
     pinMode(DOOR_CONTACT_PIN, INPUT_PULLUP);
@@ -461,11 +465,6 @@ void fan_on()
 void fan_off()
 {
     digitalWrite(FAN_PINA, LOW);
-}
-
-void sg90_setAngle(int angle)
-{
-    ledcWrite(1, angle);
 }
 
 void setStep(int pin1, int pin2, int pin3, int pin4)
@@ -498,6 +497,11 @@ void initDevicesDatas()
     int priData = ReadintData("pri");
     if (priData != 1000) {
         enable_pri = priData;
+    }
+
+    int priaData = ReadintData("pa");
+    if (priaData != 1000) {
+        enable_priAlarm = priaData;
     }
 
     int voiceControlData = ReadintData("voiceControl");

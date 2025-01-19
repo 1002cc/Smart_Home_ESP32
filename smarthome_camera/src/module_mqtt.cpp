@@ -24,8 +24,6 @@ bool enable_mqtt = true;
 extern bool mqttControl;
 extern bool videoStreamEnable;
 
-extern int servoPos;
-
 extern String FirmwareVersion;
 
 static void mqtt_callback(char *topic, byte *payload, unsigned int length);
@@ -136,7 +134,7 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                         Serial.println("about:Right");
                         ServoRight();
                     }
-                    Serial.printf("about: %d  servoPos:%d\n", about_j->valueint, servoPos);
+                    Serial.printf("about: %d\n", about_j->valueint);
                 }
                 cJSON *getStream = cJSON_GetObjectItem(datas, "getStream");
                 if (getStream != NULL) {

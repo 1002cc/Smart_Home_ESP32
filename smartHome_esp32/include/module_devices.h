@@ -39,11 +39,11 @@
 // 电机设备
 // 风扇
 // #define FAN_PINA 18
-#define FAN_PINA 33
+#define FAN_PINA 18
 // #define FAN_PINB 33
 
 // 窗户
-#define WINDOW_PIN 18
+#define WINDOW_PIN 33
 
 // 窗帘
 #define CURTAIN_PIN1 25

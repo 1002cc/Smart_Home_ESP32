@@ -37,6 +37,7 @@ void lv_setIPinfo(const char *text);
 void lv_setstatusbarLabel(int status);
 void msgboxTip(const char *text);
 void lv_setPriState(bool state);
+void lv_setPriAlarmState(bool state);
 void lv_setVoiceState(bool state);
 void lv_setRainState(bool state);
 void lv_setUser(const String &user);

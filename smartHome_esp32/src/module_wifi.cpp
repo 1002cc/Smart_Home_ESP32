@@ -50,7 +50,7 @@ void handleConfigWifi()
     if (server.hasArg("ssid")) {
         Serial.print("got ssid:");
         wifi_ssid = server.arg("ssid");
-        if (wifi_ssid.length() <= 1) {
+        if (wifi_ssid.length() < 1) {
             server.send(200, "text/html", "<meta charset='UTF-8'>请输入wifi名称,wifi名称不能空");
             return;
         }
@@ -64,7 +64,7 @@ void handleConfigWifi()
     if (server.hasArg("password")) {
         Serial.print("got password:");
         wifi_pass = server.arg("password");
-        if (wifi_pass.length() <= 1) {
+        if (wifi_pass.length() < 1) {
             server.send(200, "text/html", "<meta charset='UTF-8'>请输入wifi密码,wifi密码不能空");
             return;
         }
@@ -78,7 +78,7 @@ void handleConfigWifi()
     if (server.hasArg("username")) {
         Serial.print("got username:");
         username = server.arg("username");
-        if (username.length() <= 1) {
+        if (username.length() < 1) {
             server.send(200, "text/html", "<meta charset='UTF-8'>请输入用户名,用户名不能空");
             return;
         }

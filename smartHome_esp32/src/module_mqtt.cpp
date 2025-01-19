@@ -23,6 +23,7 @@ extern String username;
 
 bool enable_mqtt = true;
 bool enable_pri = true;
+bool enable_priAlarm = false;
 bool enable_VoiceControl = true;
 bool activeEnableAutoLamp = false;
 extern bool mqttPri;
@@ -130,6 +131,16 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 StoreintData("pri", enable_pri);
                 Serial.printf("startPri: %d  enable_pri:%d\n", startPri->valueint, enable_pri);
             }
+            cJSON *startPriA = cJSON_GetObjectItem(switches, "priAlarm");
+            if (startPriA != NULL) {
+                enable_priAlarm = startPriA->valueint;
+                if (enable_priAlarm) {
+                    enable_pri = true;
+                    pulishState("pri", enable_pri, "switches");
+                }
+                StoreintData("pa", enable_priAlarm);
+                Serial.printf("startPriA: %d  enable_priAlarm:%d\n", startPriA->valueint, enable_priAlarm);
+            }
             cJSON *startVoiceControl = cJSON_GetObjectItem(switches, "voiceControl");
             if (startVoiceControl != NULL) {
                 enable_VoiceControl = startVoiceControl->valueint;
@@ -155,9 +166,12 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             }
             cJSON *windowjson = cJSON_GetObjectItem(switches, "window");
             if (windowjson != NULL) {
-                enable_window = true;
-                windowState = windowjson->valueint;
-                StoreintData("wd", windowState);
+                bool windowState_t = windowjson->valueint;
+                if (windowState_t != windowState) {
+                    enable_window = true;
+                    windowState = windowState_t;
+                    StoreintData("wd", windowState);
+                }
                 Serial.printf("windowjson: %d  enable_window:%d\n", windowjson->valueint, enable_window);
             }
             cJSON *curtainjson = cJSON_GetObjectItem(switches, "curtain");
@@ -196,6 +210,35 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
         if (getdatas != NULL) {
             Serial.printf("getdatas:%d\n", getdatas->valueint);
             pulishAllSwitchDatas();
+        }
+        cJSON *mqa = cJSON_GetObjectItem(root, "mqAlarm");
+        if (mqa != NULL) {
+            Serial.printf("mqa:%d\n", mqa->valueint);
+            if (mqa->valueint) {
+                if (!enable_fan) {
+                    enable_fan = true;
+                    fan_on();
+                    pulishState("fan", enable_fan, "switches");
+                }
+                if (!curtain_direction) {
+                    enable_curtain = true;
+                    curtain_direction = true;
+                    StoreintData("cuo", curtain_direction);
+                    pulishState("curtain", curtain_direction, "switches");
+                }
+                if (!windowState) {
+                    enable_window = true;
+                    windowState = true;
+                    StoreintData("wd", windowState);
+                    pulishState("winfow", windowState, "switches");
+                }
+            } else {
+                if (enable_fan) {
+                    enable_fan = false;
+                    fan_off();
+                    pulishState("fan", enable_fan, "switches");
+                }
+            }
         }
         cJSON *repw = cJSON_GetObjectItem(root, "repw");
         if (repw != NULL) {

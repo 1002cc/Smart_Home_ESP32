@@ -34,7 +34,7 @@ void led_on();
 void blinkLED(int n, int t);
 
 void initServo();
-
+void ServoStop();
 void ServoLeft();
 void ServoRight();
 

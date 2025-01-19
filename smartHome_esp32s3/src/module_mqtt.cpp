@@ -226,6 +226,11 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 mqttSwitchState.priButton = pri_j->valueint;
                 lv_setPriButtonState(mqttSwitchState.priButton);
             }
+            cJSON *startPriA = cJSON_GetObjectItem(switches, "priAlarm");
+            if (startPriA != NULL) {
+                mqttSwitchState.priAlarm = startPriA->valueint;
+                lv_setPriAlarmState(mqttSwitchState.priAlarm);
+            }
             cJSON *voice_j = cJSON_GetObjectItem(switches, "voiceControl");
             if (voice_j != NULL) {
                 mqttSwitchState.voiceButton = voice_j->valueint;
@@ -372,7 +377,16 @@ bool sendRePW()
 
 bool sendMQAlarm(bool state)
 {
-    pulishState("fanf", state, "switches");
+    pulishState("fan", state, "switches");
+}
+
+void publishMQAlarm(bool state)
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddBoolToObject(root, "mqAlarm", state);
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
 }
 
 void publishGetDatas()

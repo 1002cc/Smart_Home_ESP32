@@ -145,10 +145,6 @@ void ui_event_setchooseScreen(lv_event_t * e);
 extern lv_obj_t * ui_setchooseScreen;
 extern lv_obj_t * ui_Label20;
 extern lv_obj_t * ui_Container2;
-void ui_event_speechSetButton(lv_event_t * e);
-extern lv_obj_t * ui_speechSetButton;
-extern lv_obj_t * ui_Label30;
-extern lv_obj_t * ui_Image12;
 void ui_event_timeSetButton(lv_event_t * e);
 extern lv_obj_t * ui_timeSetButton;
 extern lv_obj_t * ui_Label15;
@@ -162,10 +158,11 @@ extern lv_obj_t * ui_wifiSetButton;
 extern lv_obj_t * ui_Label12;
 extern lv_obj_t * ui_Image9;
 extern lv_obj_t * ui_Panel9;
-void ui_event_monitorSetButton(lv_event_t * e);
-extern lv_obj_t * ui_monitorSetButton;
-extern lv_obj_t * ui_Label34;
-extern lv_obj_t * ui_Image13;
+void ui_event_controlSetButton(lv_event_t * e);
+extern lv_obj_t * ui_controlSetButton;
+extern lv_obj_t * ui_control1Label;
+void ui_event_control1Image(lv_event_t * e);
+extern lv_obj_t * ui_control1Image;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_set1Screen
@@ -204,7 +201,6 @@ void ui_event_Slider1(lv_event_t * e);
 extern lv_obj_t * ui_Slider1;
 void ui_event_startAudioSwitch(lv_event_t * e);
 extern lv_obj_t * ui_startAudioSwitch;
-extern lv_obj_t * ui_pwLabel;
 extern lv_obj_t * ui_W4;
 extern lv_obj_t * ui_Label19;
 extern lv_obj_t * ui_Label32;
@@ -218,6 +214,10 @@ void ui_event_cameraButton(lv_event_t * e);
 extern lv_obj_t * ui_cameraButton;
 extern lv_obj_t * ui_cameraipLabel;
 extern lv_obj_t * ui_Label35;
+extern lv_obj_t * ui_D1;
+extern lv_obj_t * ui_pwLabel;
+extern lv_obj_t * ui_control11Label;
+extern lv_obj_t * ui_control1Label7;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_speechScreen
@@ -288,11 +288,12 @@ LV_IMG_DECLARE(ui_img_o111_png);    // assets/o111.png
 LV_IMG_DECLARE(ui_img_c111_png);    // assets/c111.png
 LV_IMG_DECLARE(ui_img_vv1_png);    // assets/vv1.png
 LV_IMG_DECLARE(ui_img_sound1_png);    // assets/sound1.png
-LV_IMG_DECLARE(ui_img_a1_png);    // assets/a1.png
 LV_IMG_DECLARE(ui_img_t2_png);    // assets/t2.png
 LV_IMG_DECLARE(ui_img_w1_png);    // assets/w1.png
 LV_IMG_DECLARE(ui_img_wifi_png);    // assets/wifi.png
+LV_IMG_DECLARE(ui_img_jc_png);    // assets/jc.png
 LV_IMG_DECLARE(ui_img_c1_png);    // assets/c1.png
+LV_IMG_DECLARE(ui_img_a1_png);    // assets/a1.png
 LV_IMG_DECLARE(ui_img_cc1_png);    // assets/cc1.png
 LV_IMG_DECLARE(ui_img_ww2_png);    // assets/ww2.png
 LV_IMG_DECLARE(ui_img_ww3_png);    // assets/ww3.png

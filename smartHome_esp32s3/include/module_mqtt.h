@@ -20,6 +20,7 @@ struct lampButtonData {
     bool lampButton1;
     bool lampButton2;
     bool priButton;
+    bool priAlarm;
     bool voiceButton;
     bool fan;
     bool curtain;
@@ -49,5 +50,6 @@ bool pulishState_int(const String &object, const int &num, const String &item);
 void publishVideoAbout(int value);
 bool sendRePW();
 bool sendMQAlarm(bool state);
+void publishMQAlarm(bool state);
 
 #endif

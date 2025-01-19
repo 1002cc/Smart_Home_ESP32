@@ -156,7 +156,7 @@ void sensor_task(void *pvParameter)
                         if (millis() - lastMQTime > 6000) {
                             lastMQTime = millis();
                             playMQAlarm();
-                            pulishState("fan", true, "switches");
+                            publishMQAlarm(true);
                         }
                     }
                 } else {
@@ -164,7 +164,7 @@ void sensor_task(void *pvParameter)
                     if (mqSure >= 5) {
                         mqSure = 0;
                         if (hasAlarm) {
-                            pulishState("fan", false, "switches");
+                            publishMQAlarm(false);
                             hasAlarm = false;
                         }
                     }
@@ -175,7 +175,7 @@ void sensor_task(void *pvParameter)
             }
         }
 
-        if (millis() - lastPrintTime > 5 * 1000) {
+        if (millis() - lastPrintTime > 20 * 1000) {
             Serial.printf("Temperature: %.2f °C, Humidity: %.2f%%, mq2: %.2f%%\n", temperature, humidity, mq2sensorValue);
             lastPrintTime = millis();
         }

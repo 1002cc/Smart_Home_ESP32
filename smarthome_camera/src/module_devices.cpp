@@ -2,7 +2,6 @@
 #include "module_server.h"
 #include <ESP32Servo.h>
 Servo myservo;
-int servoPos = 0;
 extern String FirmwareVersion;
 
 void initLED()
@@ -37,12 +36,7 @@ void initServo()
     ESP32PWM::allocateTimer(3);
     myservo.setPeriodHertz(50);
     myservo.attach(SERVO_NUM, 1000, 2000);
-    // 读取历史位置,,并恢复
-    int value = ReadintData("pos");
-    if (value != 1000) {
-        servoPos = value;
-        myservo.write(servoPos);
-    }
+    ServoStop();
 
     String Version = ReadData("Version");
     if (Version != "null") {
@@ -50,36 +44,19 @@ void initServo()
     }
 }
 
+void ServoStop()
+{
+    myservo.writeMicroseconds(1500);
+}
 void ServoLeft()
 {
-    int value = myservo.read();
-    value -= 30;
-    if (value <= 0) {
-        value = 0;
-    }
-    if (value >= 180) {
-        value = 180;
-    }
-
-    for (; servoPos > value; servoPos -= 1) {
-        myservo.write(servoPos);
-        delay(15);
-    }
-    StoreintData("pos", servoPos);
+    myservo.writeMicroseconds(1800);
+    delay(200);
+    myservo.writeMicroseconds(1500);
 }
 void ServoRight()
 {
-    int value = myservo.read();
-    value += 30;
-    if (value <= 0) {
-        value = 0;
-    }
-    if (value >= 180) {
-        value = 180;
-    }
-    for (; servoPos < value; servoPos += 1) {
-        myservo.write(servoPos);
-        delay(15);
-    }
-    StoreintData("pos", servoPos);
+    myservo.writeMicroseconds(1200);
+    delay(200);
+    myservo.writeMicroseconds(1500);
 }

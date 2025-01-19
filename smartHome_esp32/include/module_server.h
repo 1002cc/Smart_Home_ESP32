@@ -15,6 +15,7 @@ enum class AUDIO_NAME {
     WC,        // 欢迎语
     RAIN,      // 雨滴
     LT,        // 长时间停留
+    PA,        // 入侵报警
     DC1,       // 门窗已打开
     DC12,      // 门窗已关闭
     DC2,       // 检测到门窗长时间未关闭

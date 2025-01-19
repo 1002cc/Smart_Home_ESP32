@@ -135,12 +135,22 @@ static lv_obj_t *ui_otaBar;
 static lv_obj_t *ui_otaNumLabel;
 static lv_obj_t *ui_otaLabel;
 
+static lv_obj_t *ui_speechSetButton;
+static lv_obj_t *ui_Label30;
+static lv_obj_t *ui_Image12;
+
+static lv_obj_t *ui_monitorSetButton;
+static lv_obj_t *ui_Label34;
+static lv_obj_t *ui_Image13;
+
+static lv_obj_t *ui_priAlrameSwitch;
+
 static lv_obj_t *ui_wakeUpLabel;
 static lv_obj_t *ui_wakeUpSwitch;
 
 static TaskHandle_t cameraTaskHandle = NULL;
 
-lampButtonData mqttSwitchState = {false, false, false, false, false, false, false, false};
+lampButtonData mqttSwitchState = {false, false, false, false, false, false, false, false, false};
 detectionDate detectiondatas = {false, false, false};
 extern String username;
 extern String upassword;
@@ -165,6 +175,9 @@ static void lv_deviceRepwCD(lv_event_t *e);
 static void lv_deviceOTA(lv_event_t *e);
 void monitorAboutCD(lv_event_t *e);
 void msgboxBarTip();
+
+void ui_event_speechSetButton(lv_event_t *e);
+void ui_event_monitorSetButton(lv_event_t *e);
 /********************************************************************
                          TFT INIT
 ********************************************************************/
@@ -349,6 +362,17 @@ void wakeUpSwitchCB(lv_event_t *e)
     SerialFlush();
     if (btn == ui_wakeUpSwitch) {
         enbeleWakeUp = is_on;
+    }
+}
+
+void priAlarmSwitchCB(lv_event_t *e)
+{
+    lv_obj_t *btn = lv_event_get_target(e);
+    bool is_on = lv_obj_has_state(btn, LV_STATE_CHECKED);
+    SerialFlush();
+    if (btn == ui_priAlrameSwitch) {
+        mqttSwitchState.priAlarm = is_on;
+        pulishState("priAlarm", mqttSwitchState.priAlarm, "switches");
     }
 }
 
@@ -842,6 +866,16 @@ void lv_setPriButtonState(bool state)
         lv_obj_clear_state(ui_Switch1, LV_STATE_CHECKED);
     }
 }
+
+void lv_setPriAlarmState(bool state)
+{
+    if (state) {
+        lv_obj_add_state(ui_priAlrameSwitch, LV_STATE_CHECKED);
+    } else {
+        lv_obj_clear_state(ui_priAlrameSwitch, LV_STATE_CHECKED);
+    }
+}
+
 void lv_setVoiceButtonState(bool state)
 {
     if (state) {
@@ -1049,6 +1083,8 @@ void setChooseScreenCD(lv_event_t *e)
         lv_tabview_set_act(ui_chooseTabView, 1, LV_ANIM_OFF);
     } else if (setbt == ui_timeSetButton) {
         lv_tabview_set_act(ui_chooseTabView, 2, LV_ANIM_OFF);
+    } else if (setbt == ui_controlSetButton) {
+        lv_tabview_set_act(ui_chooseTabView, 5, LV_ANIM_OFF);
     } else if (setbt == ui_speechSetButton) {
         lv_tabview_set_act(ui_chooseTabView, 3, LV_ANIM_OFF);
     } else if (setbt == ui_monitorSetButton) {
@@ -1448,6 +1484,32 @@ static void timerForNetwork(lv_timer_t *timer1)
     }
     default:
         break;
+    }
+}
+
+void ui_event_speechSetButton(lv_event_t *e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_MainScreen_screen_init);
+    }
+    if (event_code == LV_EVENT_CLICKED) {
+        setChooseScreenCD(e);
+    }
+}
+
+void ui_event_monitorSetButton(lv_event_t *e)
+{
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+    if (event_code == LV_EVENT_GESTURE && lv_indev_get_gesture_dir(lv_indev_get_act()) == LV_DIR_TOP) {
+        lv_indev_wait_release(lv_indev_get_act());
+        _ui_screen_change(&ui_MainScreen, LV_SCR_LOAD_ANIM_MOVE_RIGHT, 500, 0, &ui_MainScreen_screen_init);
+    }
+    if (event_code == LV_EVENT_CLICKED) {
+        setChooseScreenCD(e);
     }
 }
 
@@ -2242,6 +2304,85 @@ void initDeviceUI(void)
 
 void initSetConfigUI()
 {
+    ui_speechSetButton = lv_btn_create(ui_Container2);
+    lv_obj_set_width(ui_speechSetButton, 87);
+    lv_obj_set_height(ui_speechSetButton, 172);
+    lv_obj_set_x(ui_speechSetButton, 315);
+    lv_obj_set_y(ui_speechSetButton, 0);
+    lv_obj_set_align(ui_speechSetButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_speechSetButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ui_speechSetButton, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
+    ui_object_set_themeable_style_property(ui_speechSetButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_speechSetButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_bg_grad_color(ui_speechSetButton, lv_color_hex(0xC2BBCD), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label30 = lv_label_create(ui_speechSetButton);
+    lv_obj_set_width(ui_Label30, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_Label30, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_Label30, 0);
+    lv_obj_set_y(ui_Label30, 67);
+    lv_obj_set_align(ui_Label30, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label30, "AI设置");
+    ui_object_set_themeable_style_property(ui_Label30, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label30, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_Label30, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Image12 = lv_img_create(ui_speechSetButton);
+    lv_img_set_src(ui_Image12, &ui_img_a1_png);
+    lv_obj_set_width(ui_Image12, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_Image12, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_Image12, -15);
+    lv_obj_set_y(ui_Image12, -60);
+    lv_obj_set_align(ui_Image12, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Image12, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(ui_Image12, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_img_set_zoom(ui_Image12, 80);
+
+    ui_monitorSetButton = lv_btn_create(ui_Container2);
+    lv_obj_set_width(ui_monitorSetButton, 87);
+    lv_obj_set_height(ui_monitorSetButton, 172);
+    lv_obj_set_x(ui_monitorSetButton, 420);
+    lv_obj_set_y(ui_monitorSetButton, 0);
+    lv_obj_set_align(ui_monitorSetButton, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_monitorSetButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ui_monitorSetButton, LV_OBJ_FLAG_SCROLLABLE);    /// Flags
+    ui_object_set_themeable_style_property(ui_monitorSetButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ui_monitorSetButton, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_bg_grad_color(ui_monitorSetButton, lv_color_hex(0xC2BBCD), LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label34 = lv_label_create(ui_monitorSetButton);
+    lv_obj_set_width(ui_Label34, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_Label34, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_Label34, 0);
+    lv_obj_set_y(ui_Label34, 67);
+    lv_obj_set_align(ui_Label34, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_Label34, "监控设置");
+    ui_object_set_themeable_style_property(ui_Label34, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(ui_Label34, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(ui_Label34, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Image13 = lv_img_create(ui_monitorSetButton);
+    lv_img_set_src(ui_Image13, &ui_img_c1_png);
+    lv_obj_set_width(ui_Image13, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(ui_Image13, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(ui_Image13, -15);
+    lv_obj_set_y(ui_Image13, -60);
+    lv_obj_set_align(ui_Image13, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Image13, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(ui_Image13, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_img_set_zoom(ui_Image13, 80);
+
+    lv_obj_add_event_cb(ui_speechSetButton, ui_event_speechSetButton, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_monitorSetButton, ui_event_monitorSetButton, LV_EVENT_ALL, NULL);
+
     inputKeyboard = lv_keyboard_create(ui_set1Screen);
     lv_obj_add_event_cb(inputKeyboard, kbClear_cb, LV_EVENT_CANCEL, NULL);
     lv_obj_add_event_cb(inputKeyboard, kbHide_cb, LV_EVENT_READY, NULL);
@@ -2283,7 +2424,13 @@ void initSetConfigUI()
     lv_obj_set_style_text_opa(weatherTextarea, 255, LV_PART_TEXTAREA_PLACEHOLDER | LV_STATE_DEFAULT);
     lv_textarea_set_one_line(weatherTextarea, true);
 
-    deviceRePwButton = lv_btn_create(ui_w3);
+    ui_priAlrameSwitch = lv_switch_create(ui_D1);
+    lv_obj_set_width(ui_priAlrameSwitch, 50);
+    lv_obj_set_height(ui_priAlrameSwitch, 25);
+    lv_obj_align_to(ui_priAlrameSwitch, ui_control1Label7, LV_ALIGN_LEFT_MID, 160, 0);
+    lv_obj_add_state(ui_priAlrameSwitch, mqttSwitchState.priAlarm ? LV_STATE_CHECKED : LV_STATE_DEFAULT);
+
+    deviceRePwButton = lv_btn_create(ui_D1);
     lv_obj_set_width(deviceRePwButton, 46);
     lv_obj_set_height(deviceRePwButton, 28);
     lv_obj_align_to(deviceRePwButton, ui_pwLabel, LV_ALIGN_LEFT_MID, 160, 0);
@@ -2301,7 +2448,7 @@ void initSetConfigUI()
     lv_obj_set_width(otaLabel, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(otaLabel, LV_SIZE_CONTENT); /// 1
     lv_obj_set_x(otaLabel, -96);
-    lv_obj_set_y(otaLabel, 98);
+    lv_obj_set_y(otaLabel, 60);
     lv_obj_set_align(otaLabel, LV_ALIGN_CENTER);
     lv_label_set_text(otaLabel, "当前版本: V1.0");
     ui_object_set_themeable_style_property(otaLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -2377,6 +2524,7 @@ void initSetConfigUI()
     lv_obj_add_event_cb(otaButton, lv_deviceOTA, LV_EVENT_CLICKED, NULL);
 
     lv_obj_add_event_cb(ui_wakeUpSwitch, wakeUpSwitchCB, LV_EVENT_CLICKED, NULL);
+    lv_obj_add_event_cb(ui_priAlrameSwitch, priAlarmSwitchCB, LV_EVENT_CLICKED, NULL);
 
     lv_style_init(&main_black_style);
     lv_style_set_border_width(&main_black_style, 0);
