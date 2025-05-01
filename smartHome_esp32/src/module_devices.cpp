@@ -7,7 +7,6 @@
 extern bool enable_pri;
 extern bool enable_priAlarm;
 extern bool enable_VoiceControl;
-extern bool activeEnableAutoLamp;
 int rainState = 0, soundState = 1, pirState = 0;
 
 // 触摸按钮
@@ -190,6 +189,7 @@ void sensorTask(void *pt)
                     // 入侵报警
                     if (enable_priAlarm) {
                         playAudio(AUDIO_NAME::PA);
+                        sendSMSMessage("检测到非法入侵警报,请注意!!!");
                     }
                 }
                 // Serial.println("has people");
@@ -238,24 +238,6 @@ void sensorTask(void *pt)
             soundState = 1;
         }
 
-        // 自动灯延迟打开和关闭
-        if (pirState > 0 || !soundState || activeEnableAutoLamp) {
-            autoLampTime = millis();
-            if (!autoled_state()) {
-                autoled_on();
-            }
-        } else {
-            if (autoled_state() && millis() - autoLampTime >= AUTOLAMPTIME) {
-                autoled_off();
-            }
-        }
-
-        // 打印传感器数据
-        if (millis() - lastPrintTime > 5000) {
-            Serial.printf("rainState = %d  soundState = %d  pirState = %d  activeEnableAutoLamp = %d\n", rainState, soundState, pirState, activeEnableAutoLamp);
-            lastPrintTime = millis();
-        }
-
         // 门磁检测
         // 读取门磁传感器的当前状态
         isDoorContact = digitalRead(DOOR_CONTACT_PIN);
@@ -301,8 +283,26 @@ void sensorTask(void *pt)
             lastDoorContactState = isDoorContact;
         }
 
+        // 自动灯延迟打开和关闭
+        if (pirState > 0 || !soundState || doorContactState || mqttSwitchState.lampButton2) {
+            autoLampTime = millis();
+            if (!autoled_state()) {
+                autoled_on();
+            }
+        } else {
+            if (autoled_state() && millis() - autoLampTime >= AUTOLAMPTIME) {
+                autoled_off();
+            }
+        }
+
+        // 打印传感器数据
+        if (millis() - lastPrintTime > 5000) {
+            Serial.printf("rainState = %d  soundState = %d  pirState = %d  mqttSwitchState.lampButton2 = %d\n", rainState, soundState, pirState, mqttSwitchState.lampButton2);
+            lastPrintTime = millis();
+        }
+
         if (enable_window) {
-            if (windowState) {
+            if (!windowState) {
                 Serial.println("window open");
                 windowServo.writeMicroseconds(1800);
                 delay(500);

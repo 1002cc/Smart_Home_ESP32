@@ -163,6 +163,11 @@ void onMessageCallbackSST(WebsocketsMessage message)
                 lv_speakState(SpeakState_t::SPEAKING);
                 return;
             }
+            if (stttext.indexOf("你是谁") != -1) {
+                playMY();
+                lv_speakState(SpeakState_t::SPEAKING);
+                return;
+            }
 #if USE_WED
             llmRequest();
 #else
@@ -574,15 +579,15 @@ int speakPerid(int num)
     // 度小宇=1，度小美=0，度逍遥（基础）=3，度丫丫=4
     switch (num) {
     case 0:
-        return 0;
+        return 103;
     case 1:
-        return 1;
+        return 111;
     case 2:
-        return 3;
+        return 106;
     case 3:
-        return 4;
+        return 5003;
     default:
-        return 0;
+        return 103;
     }
 }
 

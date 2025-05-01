@@ -283,7 +283,7 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 760,
+        "editor_posx": 400,
         "editor_posy": -400,
         "dont_export": false,
         "locked": false,
@@ -5294,7 +5294,7 @@
         ],
         "isPage": true,
         "editor_posx": 760,
-        "editor_posy": -740,
+        "editor_posy": -700,
         "dont_export": false,
         "locked": false,
         "properties": [
@@ -9381,7 +9381,7 @@
         ],
         "isPage": true,
         "editor_posx": 400,
-        "editor_posy": -740,
+        "editor_posy": -700,
         "dont_export": false,
         "locked": false,
         "properties": [
@@ -13506,7 +13506,7 @@
         ],
         "isPage": true,
         "editor_posx": 1140,
-        "editor_posy": -740,
+        "editor_posy": -700,
         "dont_export": false,
         "locked": false,
         "properties": [
@@ -13956,7 +13956,7 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 1140,
+        "editor_posx": 760,
         "editor_posy": -400,
         "dont_export": false,
         "locked": false,
@@ -17113,8 +17113,8 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 1140,
-        "editor_posy": -1060,
+        "editor_posx": 760,
+        "editor_posy": -1020,
         "dont_export": false,
         "locked": false,
         "properties": [
@@ -19958,7 +19958,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           -120,
-                          -67
+                          -65
                         ],
                         "InheritedType": 7
                       },
@@ -20116,7 +20116,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           -120,
-                          -33
+                          -29
                         ],
                         "InheritedType": 7
                       },
@@ -20274,7 +20274,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           -120,
-                          0
+                          7
                         ],
                         "InheritedType": 7
                       },
@@ -20591,7 +20591,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           128,
-                          -97
+                          -96
                         ],
                         "InheritedType": 7
                       },
@@ -20770,7 +20770,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           28,
-                          -67
+                          -65
                         ],
                         "InheritedType": 7
                       },
@@ -20928,7 +20928,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           94,
-                          -67
+                          -65
                         ],
                         "InheritedType": 7
                       },
@@ -21105,7 +21105,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           -119,
-                          31
+                          39
                         ],
                         "InheritedType": 7
                       },
@@ -21264,7 +21264,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           21,
-                          33
+                          39
                         ],
                         "InheritedType": 7
                       },
@@ -21465,7 +21465,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           -47,
-                          -67
+                          -65
                         ],
                         "InheritedType": 7
                       },
@@ -21847,8 +21847,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "TABPAGE",
-                "tree_closed": true
+                "saved_objtypeKey": "TABPAGE"
               },
               {
                 "guid": "GUID9983782-785487S9703183",
@@ -24954,8 +24953,8 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 760,
-        "editor_posy": -1400,
+        "editor_posx": 1140,
+        "editor_posy": -1020,
         "dont_export": false,
         "locked": false,
         "properties": [
@@ -28255,8 +28254,8 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 760,
-        "editor_posy": -1060,
+        "editor_posx": 400,
+        "editor_posy": -1020,
         "dont_export": false,
         "locked": false,
         "properties": [
@@ -29001,8 +29000,8 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 400,
-        "editor_posy": -1060,
+        "editor_posx": 1140,
+        "editor_posy": -400,
         "dont_export": false,
         "locked": false,
         "properties": [
@@ -29229,7 +29228,7 @@
     "uiExportFolderPath": "E:\\Smart_Home\\Smart_Home_ESP32\\smartHome_esp32s3\\lib\\ui",
     "projectExportFolderPath": "",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 2937,
+    "backup_cnt": 2944,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

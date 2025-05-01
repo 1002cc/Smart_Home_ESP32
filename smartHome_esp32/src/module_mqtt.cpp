@@ -25,7 +25,6 @@ bool enable_mqtt = true;
 bool enable_pri = true;
 bool enable_priAlarm = false;
 bool enable_VoiceControl = true;
-bool activeEnableAutoLamp = false;
 extern bool mqttPri;
 extern bool enable_fan;
 extern bool enable_fanf;
@@ -155,13 +154,16 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             }
             cJSON *lampButton2json = cJSON_GetObjectItem(switches, "lampButton2");
             if (lampButton2json != NULL) {
-                activeEnableAutoLamp = lampButton2json->valueint;
-                Serial.printf("lampButton2json: %d  lampButton2:%d  activeEnableAutoLamp:%d\n", lampButton2json->valueint, mqttSwitchState.lampButton2, activeEnableAutoLamp);
+                mqttSwitchState.lampButton2 = lampButton2json->valueint;
+                Serial.printf("lampButton2json: %d  lampButton2:%d \n", lampButton2json->valueint, mqttSwitchState.lampButton2);
             }
             cJSON *fanjson = cJSON_GetObjectItem(switches, "fan");
             if (fanjson != NULL) {
-                enable_fan = fanjson->valueint;
-                enable_fan ? fan_on() : fan_off();
+                bool enable_fan_t = fanjson->valueint;
+                if (enable_fan_t != enable_fan) {
+                    enable_fan = enable_fan_t;
+                    enable_fan ? fan_on() : fan_off();
+                }
                 Serial.printf("fanjson: %d  enable_fan:%d\n", fanjson->valueint, enable_fan);
             }
             cJSON *windowjson = cJSON_GetObjectItem(switches, "window");
@@ -176,9 +178,12 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
             }
             cJSON *curtainjson = cJSON_GetObjectItem(switches, "curtain");
             if (curtainjson != NULL) {
-                curtain_direction = curtainjson->valueint;
-                StoreintData("cuo", curtain_direction);
-                enable_curtain = true;
+                int curtain_direction_t = curtainjson->valueint;
+                if (curtain_direction_t != curtain_direction) {
+                    enable_curtain = true;
+                    curtain_direction = curtain_direction_t;
+                    StoreintData("cuo", curtain_direction);
+                }
                 Serial.printf("curtainjson: %d  curtain_direction:%d\n", curtainjson->valueint, curtain_direction);
             }
             cJSON *motorRunTimejson = cJSON_GetObjectItem(switches, "motorRunTime");
@@ -366,9 +371,14 @@ void pulishAllSwitchDatas()
     cJSON_AddBoolToObject(switches, "lampButton2", mqttSwitchState.lampButton2);
     // 传感器状态
     cJSON_AddBoolToObject(switches, "pri", enable_pri);
+    cJSON_AddBoolToObject(switches, "priAlarm", enable_priAlarm);
     cJSON_AddBoolToObject(switches, "voiceControl", enable_VoiceControl);
+    // 窗户
+    cJSON_AddBoolToObject(switches, "window", windowState);
     // 窗帘
     cJSON_AddBoolToObject(switches, "curtain", curtain_direction);
+    // 窗帘
+    cJSON_AddBoolToObject(switches, "fan", enable_fan);
 
     // 配置信息
     cJSON_AddNumberToObject(switches, "motorRunTime", motorRunTime);

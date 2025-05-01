@@ -28,6 +28,7 @@ bool enable_mqtt = true;
 extern bool loginState;
 String username = "hich";
 extern String FirmwareVersion;
+extern String userEmail;
 
 static void
 mqtt_callback(char *topic, byte *payload, unsigned int length);
@@ -263,6 +264,14 @@ static void mqtt_callback(char *topic, byte *payload, unsigned int length)
                 }
             }
         }
+        cJSON *updateEmail_j = cJSON_GetObjectItem(root, "updateEmail");
+        if (updateEmail_j != NULL) {
+            String updateEmail = updateEmail_j->valuestring;
+            if (!updateEmail.isEmpty() && updateEmail.length() > 5 && updateEmail.indexOf("@") != -1) {
+                StoreData("email", updateEmail.c_str());
+                userEmail = updateEmail;
+            }
+        }
         cJSON_Delete(root);
     }
     Serial.println("\n----------------END----------------");
@@ -393,6 +402,15 @@ void publishGetDatas()
 {
     cJSON *root = cJSON_CreateObject();
     cJSON_AddBoolToObject(root, "getdatas", true);
+    char *jsonStr = cJSON_PrintUnformatted(root);
+    mqttClient.publish(mqtt_pub.c_str(), jsonStr);
+    cJSON_Delete(root);
+}
+
+void publishGeteamil()
+{
+    cJSON *root = cJSON_CreateObject();
+    cJSON_AddStringToObject(root, "updateEmail", userEmail.c_str());
     char *jsonStr = cJSON_PrintUnformatted(root);
     mqttClient.publish(mqtt_pub.c_str(), jsonStr);
     cJSON_Delete(root);

@@ -2,6 +2,7 @@
 #include "DHT.h"
 #include "module_audio.h"
 #include "module_mqtt.h"
+#include "module_service.h"
 #include "ui.h"
 #include <FastLED.h>
 #if USE_MQU
@@ -144,7 +145,6 @@ void sensor_task(void *pvParameter)
 
         if (enabledMQ) {
             mq2sensorValue = readmq2();
-
             if (isnan(mq2sensorValue)) {
                 mq2sensorValue = 0;
                 Serial.println("Failed to read from MQ2 sensor!");
@@ -157,6 +157,7 @@ void sensor_task(void *pvParameter)
                             lastMQTime = millis();
                             playMQAlarm();
                             publishMQAlarm(true);
+                            sendSMSMessage("检测到气体或烟雾浓度超标,请注意");
                         }
                     }
                 } else {
@@ -218,6 +219,6 @@ void initDevices()
     initDHT();
     // 烟雾传感器预热20秒
     startMQTimer();
-    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 3 * 1024, NULL, 5, &devicesTaskHandle, 0);
+    xTaskCreatePinnedToCore(sensor_task, "sensor_task", 5 * 1024, NULL, 5, &devicesTaskHandle, 0);
     Serial.println("Init Devices Done");
 }

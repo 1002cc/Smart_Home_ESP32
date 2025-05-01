@@ -38,6 +38,14 @@ String FirmwareUrl = "http://47.115.139.166:3005/download/esp32s3/firmwareV";
 extern TaskHandle_t devicesTaskHandle;
 extern TaskHandle_t speakTaskHandle;
 
+String userEmail = "482103445@qq.com";
+String smtpEmail = "hgcchen@163.com";
+const char *smtpCode = "YDhNYxRBwFLMstbC";
+const char *smtpCodeType = "163";
+
+unsigned long lastSMSsendTime = 0;        // 记录上一次发送短信的时间
+const unsigned long SMS_INTERVAL = 30000; // 30秒的时间间隔，单位为毫秒
+
 /********************************************************************
                          ntp服务
 ********************************************************************/
@@ -407,4 +415,35 @@ void startOTATask()
     vTaskSuspend(devicesTaskHandle);
     vTaskSuspend(speakTaskHandle);
     xTaskCreatePinnedToCore(startOTA, "startOTA", 10000, NULL, 1, NULL, 0);
+}
+
+// 短信发送服务
+// 发送邮件的函数，收件人，标腿，主题，内容
+void sendEmailMessage(String recipient, String fromTitle, String subject, String messageContent)
+{
+    HTTPClient http;
+    http.begin("https://luckycola.com.cn/tools/customMail");
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    String postPayload = "ColaKey=KUicLNsZKkHO0U17453886940234t5BdeCSjU&tomail=" + recipient + "&fromTitle=" + fromTitle + "&subject=" + subject + "&content=" + messageContent + "&smtpCode=" + smtpCode + "&smtpEmail=" + smtpEmail + "&smtpCodeType=" + smtpCodeType + "&isTextContent=true";
+    Serial.println(postPayload);
+    int responseCode = http.POST(postPayload);
+    // if (responseCode > 0) {
+    //     String response = http.getString();
+    //     Serial.println(response);
+    // } else {
+    //     Serial.println("Error on HTTP request");
+    // }
+    http.end();
+}
+
+void sendSMSMessage(String messageContent)
+{
+    unsigned long currentTime = millis() + SMS_INTERVAL;
+    if (currentTime - lastSMSsendTime >= SMS_INTERVAL) {
+        Serial.println("发送短信");
+        sendEmailMessage(userEmail, "智能家居控制系统小欧", messageContent, "请注意");
+        lastSMSsendTime = millis() + SMS_INTERVAL;
+    } else {
+        Serial.println("短信发送间隔未到，忽略此次发送");
+    }
 }

@@ -195,7 +195,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label22, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label22, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label22, -120);
-    lv_obj_set_y(ui_Label22, -67);
+    lv_obj_set_y(ui_Label22, -65);
     lv_obj_set_align(ui_Label22, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label22, "开机语音");
     ui_object_set_themeable_style_property(ui_Label22, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -208,7 +208,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label23, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label23, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label23, -120);
-    lv_obj_set_y(ui_Label23, -33);
+    lv_obj_set_y(ui_Label23, -29);
     lv_obj_set_align(ui_Label23, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label23, "校时时长");
     ui_object_set_themeable_style_property(ui_Label23, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -221,7 +221,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label10, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label10, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label10, -120);
-    lv_obj_set_y(ui_Label10, 0);
+    lv_obj_set_y(ui_Label10, 7);
     lv_obj_set_align(ui_Label10, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label10, "天气城市");
     ui_object_set_themeable_style_property(ui_Label10, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -234,7 +234,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_timeuseButton, 49);
     lv_obj_set_height(ui_timeuseButton, 28);
     lv_obj_set_x(ui_timeuseButton, 128);
-    lv_obj_set_y(ui_timeuseButton, -97);
+    lv_obj_set_y(ui_timeuseButton, -96);
     lv_obj_set_align(ui_timeuseButton, LV_ALIGN_CENTER);
     lv_obj_add_flag(ui_timeuseButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
     lv_obj_clear_flag(ui_timeuseButton, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
@@ -252,7 +252,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label31, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label31, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label31, 28);
-    lv_obj_set_y(ui_Label31, -67);
+    lv_obj_set_y(ui_Label31, -65);
     lv_obj_set_align(ui_Label31, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label31, "深色主题");
     ui_object_set_themeable_style_property(ui_Label31, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -265,7 +265,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_themeSwitch, 50);
     lv_obj_set_height(ui_themeSwitch, 25);
     lv_obj_set_x(ui_themeSwitch, 94);
-    lv_obj_set_y(ui_themeSwitch, -67);
+    lv_obj_set_y(ui_themeSwitch, -65);
     lv_obj_set_align(ui_themeSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_themeSwitch, LV_STATE_CHECKED);       /// States
 
@@ -274,7 +274,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Label36, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_Label36, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_Label36, -119);
-    lv_obj_set_y(ui_Label36, 31);
+    lv_obj_set_y(ui_Label36, 39);
     lv_obj_set_align(ui_Label36, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label36, "屏幕亮度");
     ui_object_set_themeable_style_property(ui_Label36, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
@@ -290,7 +290,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_Slider1, 170);
     lv_obj_set_height(ui_Slider1, 10);
     lv_obj_set_x(ui_Slider1, 21);
-    lv_obj_set_y(ui_Slider1, 33);
+    lv_obj_set_y(ui_Slider1, 39);
     lv_obj_set_align(ui_Slider1, LV_ALIGN_CENTER);
 
 
@@ -298,7 +298,7 @@ void ui_set1Screen_screen_init(void)
     lv_obj_set_width(ui_startAudioSwitch, 50);
     lv_obj_set_height(ui_startAudioSwitch, 25);
     lv_obj_set_x(ui_startAudioSwitch, -47);
-    lv_obj_set_y(ui_startAudioSwitch, -67);
+    lv_obj_set_y(ui_startAudioSwitch, -65);
     lv_obj_set_align(ui_startAudioSwitch, LV_ALIGN_CENTER);
     lv_obj_add_state(ui_startAudioSwitch, LV_STATE_CHECKED);       /// States
 

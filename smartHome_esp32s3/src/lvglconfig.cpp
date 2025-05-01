@@ -58,13 +58,13 @@ extern String FirmwareVersion;
 extern String latestFirmware;
 
 extern bool enbeleWakeUp;
+extern String userEmail;
 
 /********************************************************************
                          BUILD UI
 ********************************************************************/
 
 static lv_obj_t *wfList;
-// static lv_obj_t *wfListtitle;
 static lv_obj_t *mboxConnect;
 static lv_obj_t *mboxTitle;
 static lv_obj_t *mboxPassword;
@@ -125,7 +125,6 @@ static lv_obj_t *ui_curtainLabelsure;
 static lv_obj_t *ui_curtainLabelTime;
 static lv_obj_t *ui_curtainButtonq;
 static lv_obj_t *ui_curtainLabelsure2;
-// static lv_obj_t *ui_curtainDropdown;
 static lv_obj_t *ui_curtainTextarea;
 static lv_obj_t *inputKeyboardNumber;
 static lv_obj_t *ui_LabelBLE;
@@ -816,9 +815,9 @@ void lv_setButtonCurtain(bool state)
 void lv_setButtonDoorContact(bool state)
 {
     if (state) {
-        lv_label_set_text(ui_nameLabelDoorContact, "ON");
+        lv_label_set_text(ui_stateLabelDoorContact, "ON");
     } else {
-        lv_label_set_text(ui_nameLabelDoorContact, "OFF");
+        lv_label_set_text(ui_stateLabelDoorContact, "OFF");
     }
 }
 
@@ -1830,6 +1829,12 @@ void initDataUI()
         lv_slider_set_value(ui_Slider1, brightness, LV_ANIM_OFF);
         Serial.printf("brightness: %d\n", brightness);
     }
+
+    String email = ReadData("email");
+    if (email != "null") {
+        userEmail = email;
+        publishGeteamil();
+    }
 }
 
 void perinit()
@@ -2022,7 +2027,7 @@ void initDeviceUI(void)
     ui_nameLabelDoorContact = lv_label_create(ui_ButtonDoorContact);
     lv_obj_set_width(ui_nameLabelDoorContact, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(ui_nameLabelDoorContact, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(ui_nameLabelDoorContact, 0);
+    lv_obj_set_x(ui_nameLabelDoorContact, -5);
     lv_obj_set_y(ui_nameLabelDoorContact, 22);
     lv_obj_set_align(ui_nameLabelDoorContact, LV_ALIGN_CENTER);
     lv_label_set_text(ui_nameLabelDoorContact, "门磁感应");
@@ -2031,6 +2036,67 @@ void initDeviceUI(void)
     ui_object_set_themeable_style_property(ui_nameLabelDoorContact, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
                                            _ui_theme_alpha_font);
     lv_obj_set_style_text_font(ui_nameLabelDoorContact, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ButtonWindow = lv_btn_create(ui_TabPage2);
+    lv_obj_set_width(ButtonWindow, 115);
+    lv_obj_set_height(ButtonWindow, 80);
+    lv_obj_set_x(ButtonWindow, 75);
+    lv_obj_set_y(ButtonWindow, 58);
+    lv_obj_set_align(ButtonWindow, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ButtonWindow, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
+    lv_obj_clear_flag(ButtonWindow, LV_OBJ_FLAG_SCROLLABLE);                            /// Flags
+    ui_object_set_themeable_style_property(ButtonWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
+                                           _ui_theme_color_btn);
+    ui_object_set_themeable_style_property(ButtonWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
+                                           _ui_theme_alpha_btn);
+    lv_obj_set_style_bg_color(ButtonWindow, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_bg_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_color(ButtonWindow, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_opa(ButtonWindow, 150, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_width(ButtonWindow, 10, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_shadow_spread(ButtonWindow, 5, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonWindow, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_CHECKED);
+    lv_obj_set_style_text_color(ButtonWindow, lv_color_hex(0xA94949), LV_PART_MAIN | LV_STATE_FOCUSED);
+    lv_obj_set_style_text_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
+
+    stateLabelWindow = lv_label_create(ButtonWindow);
+    lv_obj_set_width(stateLabelWindow, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateLabelWindow, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateLabelWindow, 30);
+    lv_obj_set_y(stateLabelWindow, -20);
+    lv_obj_set_align(stateLabelWindow, LV_ALIGN_CENTER);
+    lv_label_set_text(stateLabelWindow, "OFF");
+    lv_obj_clear_flag(stateLabelWindow, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE); /// Flags
+    ui_object_set_themeable_style_property(stateLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(stateLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(stateLabelWindow, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    stateImageWindow = lv_img_create(ButtonWindow);
+    lv_img_set_src(stateImageWindow, &ui_img_c111_png);
+    lv_obj_set_width(stateImageWindow, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(stateImageWindow, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(stateImageWindow, -27);
+    lv_obj_set_y(stateImageWindow, -16);
+    lv_obj_set_align(stateImageWindow, LV_ALIGN_CENTER);
+    lv_obj_add_flag(stateImageWindow, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+    lv_obj_clear_flag(stateImageWindow, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+    lv_img_set_zoom(stateImageWindow, 80);
+
+    nameLabelWindow = lv_label_create(ButtonWindow);
+    lv_obj_set_width(nameLabelWindow, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height(nameLabelWindow, LV_SIZE_CONTENT); /// 1
+    lv_obj_set_x(nameLabelWindow, -30);
+    lv_obj_set_y(nameLabelWindow, 22);
+    lv_obj_set_align(nameLabelWindow, LV_ALIGN_CENTER);
+    lv_label_set_text(nameLabelWindow, "窗户");
+    ui_object_set_themeable_style_property(nameLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
+                                           _ui_theme_color_font);
+    ui_object_set_themeable_style_property(nameLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
+                                           _ui_theme_alpha_font);
+    lv_obj_set_style_text_font(nameLabelWindow, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_doorContactPanel = lv_obj_create(ui_TabPage2);
     lv_obj_set_width(ui_doorContactPanel, 255);
@@ -2201,67 +2267,6 @@ void initDeviceUI(void)
     lv_obj_add_event_cb(inputKeyboardNumber, kbHide_cb1, LV_EVENT_READY, NULL);
     lv_obj_add_flag(inputKeyboardNumber, LV_OBJ_FLAG_HIDDEN);
     lv_keyboard_set_mode(inputKeyboardNumber, LV_KEYBOARD_MODE_NUMBER);
-
-    ButtonWindow = lv_btn_create(ui_TabPage2);
-    lv_obj_set_width(ButtonWindow, 115);
-    lv_obj_set_height(ButtonWindow, 80);
-    lv_obj_set_x(ButtonWindow, 75);
-    lv_obj_set_y(ButtonWindow, 58);
-    lv_obj_set_align(ButtonWindow, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ButtonWindow, LV_OBJ_FLAG_CHECKABLE | LV_OBJ_FLAG_SCROLL_ON_FOCUS); /// Flags
-    lv_obj_clear_flag(ButtonWindow, LV_OBJ_FLAG_SCROLLABLE);                            /// Flags
-    ui_object_set_themeable_style_property(ButtonWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR,
-                                           _ui_theme_color_btn);
-    ui_object_set_themeable_style_property(ButtonWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA,
-                                           _ui_theme_alpha_btn);
-    lv_obj_set_style_bg_color(ButtonWindow, lv_color_hex(0xAB79F7), LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_bg_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_shadow_color(ButtonWindow, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_shadow_opa(ButtonWindow, 150, LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_shadow_width(ButtonWindow, 10, LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_shadow_spread(ButtonWindow, 5, LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_text_color(ButtonWindow, lv_color_hex(0x728BFF), LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_text_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_CHECKED);
-    lv_obj_set_style_text_color(ButtonWindow, lv_color_hex(0xA94949), LV_PART_MAIN | LV_STATE_FOCUSED);
-    lv_obj_set_style_text_opa(ButtonWindow, 255, LV_PART_MAIN | LV_STATE_FOCUSED);
-
-    stateLabelWindow = lv_label_create(ButtonWindow);
-    lv_obj_set_width(stateLabelWindow, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(stateLabelWindow, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(stateLabelWindow, 30);
-    lv_obj_set_y(stateLabelWindow, -20);
-    lv_obj_set_align(stateLabelWindow, LV_ALIGN_CENTER);
-    lv_label_set_text(stateLabelWindow, "OFF");
-    lv_obj_clear_flag(stateLabelWindow, LV_OBJ_FLAG_PRESS_LOCK | LV_OBJ_FLAG_CLICK_FOCUSABLE); /// Flags
-    ui_object_set_themeable_style_property(stateLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_font);
-    ui_object_set_themeable_style_property(stateLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_alpha_font);
-    lv_obj_set_style_text_font(stateLabelWindow, &lv_font_montserrat_18, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    stateImageWindow = lv_img_create(ButtonWindow);
-    lv_img_set_src(stateImageWindow, &ui_img_c111_png);
-    lv_obj_set_width(stateImageWindow, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(stateImageWindow, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(stateImageWindow, -27);
-    lv_obj_set_y(stateImageWindow, -16);
-    lv_obj_set_align(stateImageWindow, LV_ALIGN_CENTER);
-    lv_obj_add_flag(stateImageWindow, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
-    lv_obj_clear_flag(stateImageWindow, LV_OBJ_FLAG_SCROLLABLE); /// Flags
-    lv_img_set_zoom(stateImageWindow, 80);
-
-    nameLabelWindow = lv_label_create(ButtonWindow);
-    lv_obj_set_width(nameLabelWindow, LV_SIZE_CONTENT);  /// 1
-    lv_obj_set_height(nameLabelWindow, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(nameLabelWindow, -30);
-    lv_obj_set_y(nameLabelWindow, 22);
-    lv_obj_set_align(nameLabelWindow, LV_ALIGN_CENTER);
-    lv_label_set_text(nameLabelWindow, "窗户");
-    ui_object_set_themeable_style_property(nameLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,
-                                           _ui_theme_color_font);
-    ui_object_set_themeable_style_property(nameLabelWindow, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA,
-                                           _ui_theme_alpha_font);
-    lv_obj_set_style_text_font(nameLabelWindow, &ui_font_unit, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 #if USE_BLE
     ui_LabelBLE = lv_label_create(ui_w1);
@@ -2447,8 +2452,8 @@ void initSetConfigUI()
     otaLabel = lv_label_create(ui_w3);
     lv_obj_set_width(otaLabel, LV_SIZE_CONTENT);  /// 1
     lv_obj_set_height(otaLabel, LV_SIZE_CONTENT); /// 1
-    lv_obj_set_x(otaLabel, -96);
-    lv_obj_set_y(otaLabel, 60);
+    lv_obj_set_x(otaLabel, -97);
+    lv_obj_set_y(otaLabel, 65);
     lv_obj_set_align(otaLabel, LV_ALIGN_CENTER);
     lv_label_set_text(otaLabel, "当前版本: V1.0");
     ui_object_set_themeable_style_property(otaLabel, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR,

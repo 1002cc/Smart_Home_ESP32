@@ -29,6 +29,15 @@ String latestFirmware = "1.0";
 String FirmwareUrlCheck = "http://47.115.139.166:3005/firmware_lists/esp32wroom";
 String FirmwareUrl = "http://47.115.139.166:3005/download/esp32wroom/firmwareV";
 
+// 邮箱发送服务
+String userEmail = "482103445@qq.com";
+String smtpEmail = "hgcchen@163.com";
+const char *smtpCode = "YDhNYxRBwFLMstbC";
+const char *smtpCodeType = "163";
+
+unsigned long lastSMSsendTime = 0;        // 记录上一次发送短信的时间
+const unsigned long SMS_INTERVAL = 30000; // 30秒的时间间隔，单位为毫秒
+
 /********************************************************************
                          NTP SERVER
 *********************************************************************/
@@ -176,7 +185,7 @@ void playAudio(const AUDIO_NAME &index)
         audio.connecttoFS(LittleFS, "/LT.mp3");
         break;
     case AUDIO_NAME::PA:
-        audio.connecttoFS(LittleFS, "/PA.mp3");
+        audio.connecttoFS(LittleFS, "/pa.mp3");
         break;
     case AUDIO_NAME::DC1:
         audio.connecttoFS(LittleFS, "/dc1.mp3");
@@ -318,4 +327,39 @@ void startOTATask()
 {
     vTaskSuspend(devicesTaskHandle);
     xTaskCreatePinnedToCore(startOTA, "startOTA", 10000, NULL, 1, NULL, 0);
+}
+
+/********************************************************************
+                         邮箱发送服务
+********************************************************************/
+// 发送邮件的函数，收件人，标腿，主题，内容
+void sendEmailMessage(String recipient, String fromTitle, String subject, String messageContent)
+{
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi not connected");
+        return;
+    }
+    HTTPClient http;
+    // 构建POST请求的数据，拼接各项参数,创建一个HTTPClient对象，用于后续发送
+    String postPayload = "ColaKey=DTTxStx6k9LQH91740127360271dCE4FOfp5A&tomail=" + recipient + "&fromTitle=" + fromTitle + "&subject=" + subject + "&content=" + messageContent + "&smtpCode=" + smtpCode + "&smtpEmail=" + smtpEmail + "&smtpCodeType=" + smtpCodeType + "&isTextContent=true";
+    // 开始连接指定的邮件发送服务URL??
+    http.begin("https://luckycola.com.cn/tools/customMail");
+    // 设置请求头，指定内容类型为表单数据格式,为了让邮件发送服务能正确解析接收
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    // 发送POST请求
+    int responseCode = http.POST(postPayload);
+    http.end();
+}
+
+void sendSMSMessage(String messageContent)
+{
+    unsigned long currentTime = millis() + SMS_INTERVAL;
+
+    if (currentTime - lastSMSsendTime >= SMS_INTERVAL) {
+        Serial.println("发送短信");
+        sendEmailMessage(userEmail, "智能家居控制系统小欧", messageContent, "请注意");
+        lastSMSsendTime = currentTime + SMS_INTERVAL;
+    } else {
+        Serial.println("短信发送间隔未到，忽略此次发送");
+    }
 }

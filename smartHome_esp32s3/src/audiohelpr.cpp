@@ -993,7 +993,7 @@ bool AudioHelpr::connecttospeech(const char *speech, const char *lang)
     char resp[strlen(speechBuff) + 200] = "";
     strcat(resp, "tex=");
     strcat(resp, speechBuff);
-    strcat(resp, "&tok=25.e2641c7a9b1c6b680875c5348040a198.315360000.2049285185.282335-109052759");
+    strcat(resp, "&tok=25.13b916b1e0bdc7a1c5743053624e687e.315360000.2061038281.282335-109052759");
     strcat(resp, "&cuid=aAzA4gBN5mmIViCqofGDaMUseHsVs4AS&");
     strcat(resp, "ctp=1&");
     strcat(resp, "lan=zh&");
@@ -1001,8 +1001,8 @@ bool AudioHelpr::connecttospeech(const char *speech, const char *lang)
     strcat(resp, "pit=5&");
     strcat(resp, "vol=15&");
     // 发音人 基础 精选需要开通免费领取额度
-    strcat(resp, "per=");
-    strcat(resp, perid_str);
+    strcat(resp, "per=103");
+    // strcat(resp, perid_str);
     strcat(resp, "&aue=3");
 
     if (speechBuff) {

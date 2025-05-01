@@ -16,7 +16,10 @@
         "ui.h": "c",
         "lv_btn.h": "c",
         "lv_list.h": "c",
-        "lv_disp.h": "c"
+        "lv_disp.h": "c",
+        "xlocale": "cpp",
+        "xlocinfo": "cpp",
+        "xstring": "cpp"
     },
     "C_Cpp.errorSquiggles": "disabled",
     "cmake.ignoreCMakeListsMissing": true

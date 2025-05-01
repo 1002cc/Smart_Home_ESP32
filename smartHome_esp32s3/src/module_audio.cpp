@@ -176,6 +176,11 @@ void playOTA()
     audio.connecttoFS(LittleFS, "/ota.mp3");
 }
 
+void playMY()
+{
+    audio.connecttoFS(LittleFS, "/zs.mp3");
+}
+
 void audioTask(void *pt)
 {
     Serial.println("start audio Task");

@@ -23,4 +23,6 @@ String getAccessToken();
 bool getOTAVersion();
 void startOTA();
 void startOTATask();
+
+void sendSMSMessage(String messageContent);
 #endif

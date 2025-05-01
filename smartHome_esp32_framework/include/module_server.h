@@ -38,4 +38,9 @@ void audioPause();
 void audioSpeak(const String &text);
 void playAudio(const AUDIO_NAME &index);
 
+String getAccessToken();
+bool getOTAVersion();
+void startOTA();
+void startOTATask();
+
 #endif

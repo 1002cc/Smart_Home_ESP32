@@ -19,6 +19,7 @@ void playStartAudio();
 void playMQAlarm();
 void playWakeup();
 void playOTA();
+void playMY();
 bool getaudioPlayStatus();
 void audioLoop();
 
